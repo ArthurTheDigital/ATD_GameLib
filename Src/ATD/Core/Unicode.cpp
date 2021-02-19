@@ -1,12 +1,14 @@
 /**
- * @file     
- * @brief    Unicode processing implementation.
- * @details  License: GPL v3.
- * @author   ArthurTheDigital (arthurthedigital@gmail.com)
- * @since    $Id: $ */
+ * @file      
+ * @brief     Unicode processing.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #include <ATD/Core/Unicode.hpp>
 
+#include <ATD/Core/Debug.hpp>
 #include <ATD/Core/Printf.hpp>
 
 #include <string.h>
@@ -14,26 +16,26 @@
 
 /* ATD::Unicode auxiliary */
 
-const std::vector<uint8_t> UTF8_HEAD_MASKS = {
+const std::vector<uint8_t> _UTF8_HEAD_MASKS = {
 	0x00 << 7, 
 	0x06 << 5, 
 	0x0e << 4, 
 	0x1e << 3
 };
 
-static size_t Utf8Width(char c)
+static size_t _widthFromUtf8(char utfHead)
 {
-	uint8_t byte = *reinterpret_cast<uint8_t*>(&c);
+	uint8_t utfHeadBits = *reinterpret_cast<uint8_t *>(&utfHead);
 
-	if (byte >> 7 == 0x00) { return 1; }
-	if (byte >> 5 == 0x06) { return 2; }
-	if (byte >> 4 == 0x0e) { return 3; }
-	if (byte >> 3 == 0x1e) { return 4; }
+	if (utfHeadBits >> 7 == 0x00) { return 1; }
+	if (utfHeadBits >> 5 == 0x06) { return 2; }
+	if (utfHeadBits >> 4 == 0x0e) { return 3; }
+	if (utfHeadBits >> 3 == 0x1e) { return 4; }
 
 	return static_cast<size_t>(-1);
 }
 
-static size_t UnicodeWidth(uint32_t u)
+static size_t _widthFromUnicode(uint32_t u)
 {
 	if (u < 0x00000080) { return 1; }
 	if (u < 0x00000800) { return 2; }
@@ -43,43 +45,40 @@ static size_t UnicodeWidth(uint32_t u)
 	return static_cast<size_t>(-1);
 }
 
-// TODO: Ptr -> C++ reference
-
-/* *utfStringPtr is to be a valid pointer, 
- * *lengthLeftPtr is to be > 0. */
-static uint32_t UnicodeFromUtf8(const char **utfStringPtr, 
-		size_t *lengthLeftPtr, 
-		bool *failBitPtr)
+static uint32_t _unicodeFromUtf8(const std::string &utfString, 
+		size_t &utfIndex, 
+		bool &failBit)
 {
-	size_t width = Utf8Width(**utfStringPtr);
-	if (width == static_cast<size_t>(-1) || width > *lengthLeftPtr) {
-		*failBitPtr = true;
+	size_t width = _widthFromUtf8(utfString[utfIndex]);
+	if (width == static_cast<size_t>(-1) || utfIndex + width > utfString.size()) {
+		failBit = true;
+
+		/* IPRINTF("", "DBG: Bad UTF"); // DEBUG */
 
 		/* Bad UTF8 character. Not critical, put zero instead. */
-		*lengthLeftPtr -= 1;
-		*utfStringPtr += 1 * sizeof(char);
+		utfIndex += 1;
 		return 0;
 	} else {
-		/* Save pointer to the character. */
-		const char *str = *utfStringPtr;
+		/* Save the current index. */
+		size_t utfIndex0 = utfIndex;
 
-		/* Update the utf8 string 'iterators'. */
-		*lengthLeftPtr -= width;
-		*utfStringPtr += width * sizeof(char);
+		/* Update the given one. */
+		utfIndex += width;
 
 		/* Do UTF8 -> Unicode conversion. */
-		// TODO: Redo!
 		const uint8_t utfBits0 = 
-			*reinterpret_cast<const uint8_t*>(&str[0]);
+			*reinterpret_cast<const uint8_t *>(&utfString[utfIndex0]);
 
+		/* E.g. 110xxxxx -> 000xxxxx */
 		uint32_t unicode = 
 			static_cast<uint32_t>(
-				utfBits0 & ~UTF8_HEAD_MASKS[width - 1]);
+				utfBits0 & (~_UTF8_HEAD_MASKS[width - 1]));
 
 		for (size_t extIter = 1; extIter < width; extIter++) {
 			const uint8_t utfBitsExt = 
-				*reinterpret_cast<const uint8_t*>(&str[extIter]);
+				*reinterpret_cast<const uint8_t *>(&utfString[utfIndex0 + extIter]);
 
+			/* E.g. 10xxxxxx -> 00xxxxxx */
 			unicode = 
 				(unicode << 6) | 
 				static_cast<uint32_t>(utfBitsExt & ~(0x80));
@@ -90,25 +89,28 @@ static uint32_t UnicodeFromUtf8(const char **utfStringPtr,
 
 /* *uniStringPtr is to be a valid pointer, 
  * *lengthLeftPtr is to be > 0. */
-std::string Utf8FromUnicode(const uint32_t **uniStringPtr, 
-		size_t *lengthLeftPtr, 
-		bool *failBitPtr)
+std::string _utf8FromUnicode(const std::basic_string<uint32_t> &uniString, 
+		size_t &uniIndex, 
+		bool &failBit)
 {
 	/* Save the current unicode value. */
-	uint32_t unicode = **uniStringPtr;
+	uint32_t unicode = uniString[uniIndex];
 
-	/* Update the unicode string 'iterators'. */
-	*lengthLeftPtr -= 1;
-	*uniStringPtr += 1 * sizeof(uint32_t);
+	/* Update the unicode string index. */
+	uniIndex += 1;
 
-	/* Do Unicode -> UTF8 conversion. */
-	size_t width = UnicodeWidth(unicode);
+	/* Calculate width. */
+	size_t width = _widthFromUnicode(unicode);
 
 	if (width == static_cast<size_t>(-1)) {
-		*failBitPtr = true;
+		failBit = true;
+
+		/* IPRINTF("", "DBG: bad unicode!"); // DEBUG */
+
 		return std::string(1, '\0');
 	}
 
+	/* Do Unicode -> UTF8 conversion. */
 	std::string utf(width, '\0');
 	if (width == 1) {
 		*reinterpret_cast<uint8_t*>(&utf[0]) |= static_cast<uint8_t>(unicode);
@@ -131,46 +133,46 @@ std::string Utf8FromUnicode(const uint32_t **uniStringPtr,
 	return utf;
 }
 
-std::basic_string<uint32_t> StringUnicodeFromUtf8(
-		const std::string &utf, 
+std::basic_string<uint32_t> _stringUnicodeFromUtf8(const std::string &utf, 
 		bool &failBit)
 {
 	std::basic_string<uint32_t> unicode;
 
-	const char *utfString = &utf[0];
-	size_t lengthLeft = utf.size();
-
-	while (lengthLeft) {
-		unicode.append(1, UnicodeFromUtf8(&utfString, &lengthLeft, &failBit));
+	size_t utfIndex = 0;
+	while (utfIndex < utf.size()) {
+		unicode.append(1, _unicodeFromUtf8(utf, utfIndex, failBit));
 	}
 
 	return unicode;
 }
 
 
-/* ATD::Unicode constants */
-
-std::string ATD::Unicode::StrFromGlyph(const ATD::Unicode::Glyph &glyph)
-{
-	const uint32_t *uniString = &glyph;
-	size_t lengthLeft = 1;
-	bool failBitDummy = false;
-
-	return Utf8FromUnicode(&uniString, &lengthLeft, &failBitDummy);
-}
+/* ATD::Unicode constants: */
 
 const ATD::Unicode::Glyph ATD::Unicode::NEW_LINE = 
-	ATD::Unicode("\n").Front();
+	ATD::Unicode("\n").front();
 
 const ATD::Unicode::Glyph ATD::Unicode::SPACE = 
-	ATD::Unicode(" ").Front();
+	ATD::Unicode(" ").front();
+
+
+/* ATD::Unicode static functions: */
+
+std::string ATD::Unicode::strFromGlyph(const ATD::Unicode::Glyph &glyph)
+{
+	std::basic_string<uint32_t> uniString(1, glyph);
+	size_t uniIndex = 0;
+	bool failBitDummy = false;
+
+	return _utf8FromUnicode(uniString, uniIndex, failBitDummy);
+}
 
 
 /* ATD::Unicode */
 
 ATD::Unicode::Unicode(const std::string &str)
 	: m_fail(false)
-	, m_glyphs(StringUnicodeFromUtf8(str, m_fail))
+	, m_glyphs(_stringUnicodeFromUtf8(str, m_fail))
 {}
 
 ATD::Unicode::Unicode(const ATD::Unicode &other)
@@ -178,11 +180,11 @@ ATD::Unicode::Unicode(const ATD::Unicode &other)
 	, m_glyphs(other.m_glyphs)
 {}
 
-void ATD::Unicode::CheckFailure() const
+void ATD::Unicode::checkFailure() const
 {
 	if (m_fail) {
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"Errors while creating Unicode from bad UTF-8"));
 	}
 }
@@ -193,13 +195,13 @@ ATD::Unicode::Glyph &ATD::Unicode::operator[](size_t index)
 const ATD::Unicode::Glyph &ATD::Unicode::operator[](size_t index) const
 { return m_glyphs[index]; }
 
-ATD::Unicode::Glyph &ATD::Unicode::Front()
+ATD::Unicode::Glyph &ATD::Unicode::front()
 { return m_glyphs.front(); }
 
-const ATD::Unicode::Glyph &ATD::Unicode::Front() const
+const ATD::Unicode::Glyph &ATD::Unicode::front() const
 { return m_glyphs.front(); }
 
-size_t ATD::Unicode::Size() const
+size_t ATD::Unicode::size() const
 { return m_glyphs.size(); }
 
 bool ATD::Unicode::operator==(const Unicode &other) const
@@ -235,41 +237,39 @@ ATD::Unicode &ATD::Unicode::operator=(const ATD::Unicode &other)
 	return *this;
 }
 
-std::string ATD::Unicode::Str() const
+std::string ATD::Unicode::str() const
 {
 	std::string utf = "";
 
-	const uint32_t *uniString = &m_glyphs[0];
-	size_t lengthLeft = m_glyphs.size();
+	size_t uniIndex = 0;
 	bool failBitDummy = false;
 
-	while (lengthLeft) {
-		utf += Utf8FromUnicode(&uniString, &lengthLeft, &failBitDummy);
+	while (uniIndex < m_glyphs.size()) {
+		utf += _utf8FromUnicode(m_glyphs, uniIndex, failBitDummy);
 	}
 
 	return utf;
 }
 
-std::string ATD::Unicode::Str(size_t index) const
+std::string ATD::Unicode::str(size_t index) const
 {
 	if (index < m_glyphs.size()) {
-		const uint32_t *uniString = &m_glyphs[index];
-		size_t lengthLeft = m_glyphs.size() - index;
+		size_t uniIndex = index;
 		bool failBitDummy = false;
 
-		return Utf8FromUnicode(&uniString, &lengthLeft, &failBitDummy);
+		return _utf8FromUnicode(m_glyphs, uniIndex, failBitDummy);
 	}
 
 	/* TODO: throw */
 	return std::string();
 }
 
-ATD::Unicode ATD::Unicode::Copy(size_t first, size_t length) const
+ATD::Unicode ATD::Unicode::copy(size_t first, size_t length) const
 {
 	return Unicode(m_fail, m_glyphs.substr(first, length));
 }
 
-ATD::Unicode &ATD::Unicode::Erase(size_t first, size_t length)
+ATD::Unicode &ATD::Unicode::erase(size_t first, size_t length)
 {
 	m_glyphs.erase(first, length);
 	return *this;

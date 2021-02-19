@@ -89,7 +89,7 @@ public:
 	 *
 	 * Let rotation be clockwise around axis if it is clockwise to the viewer, 
 	 * looking in the same direction as the axis. */
-	inline Vector3<T> RotatedCw90X(unsigned count = 1) const
+	inline Vector3<T> rotatedCw90X(unsigned count = 1) const
 	{
 		Vector3<T> r(*this);
 		for (unsigned i = 0; i < count % 4; i++) {
@@ -103,7 +103,7 @@ public:
 	 * @brief ...
 	 * @param count - the number of 90deg clockwise rotations around Y axis
 	 * @return vector, rotated count times x 90 degrees clockwise around Y */
-	inline Vector3<T> RotatedCw90Y(unsigned count = 1) const
+	inline Vector3<T> rotatedCw90Y(unsigned count = 1) const
 	{
 		Vector3<T> r(*this);
 		for (unsigned i = 0; i < count % 4; i++) {
@@ -117,7 +117,7 @@ public:
 	 * @brief ...
 	 * @param count - the number of 90deg clockwise rotations around Z axis
 	 * @return vector, rotated count times x 90 degrees clockwise around Z */
-	inline Vector3<T> RotatedCw90Z(unsigned count = 1) const
+	inline Vector3<T> rotatedCw90Z(unsigned count = 1) const
 	{
 		Vector3<T> r(*this);
 		for (unsigned i = 0; i < count % 4; i++) {
@@ -131,14 +131,14 @@ public:
 	 * @brief ...
 	 * @param v - ...
 	 * @return ... */
-	inline T Dot(const Vector3<T> &v) const
+	inline T dot(const Vector3<T> &v) const
 	{ return (x * v.x + y * v.y + z * v.z); }
 
 	/**
 	 * @brief ...
 	 * @param v - ...
 	 * @return ... */
-	inline Vector3<T> Cross(const Vector3<T> &v) const
+	inline Vector3<T> cross(const Vector3<T> &v) const
 	{
 		return Vector3<T>(y * v.z - z * v.y, 
 				z * v.x - x * v.z, 
@@ -227,7 +227,9 @@ public:
 
 /**
  * @brief 3D vector template for real values (aka float, double)
- * @class ... */
+ * @class ...
+ *
+ * T must be either float or double. */
 template<typename T>
 class Vector3Real : public Vector3<T>
 {
@@ -284,7 +286,7 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	inline T LengthSquare() const
+	inline T lengthSquare() const
 	{
 		return (Vector3<T>::x * Vector3<T>::x + 
 				Vector3<T>::y * Vector3<T>::y + 
@@ -294,17 +296,39 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	inline T Length() const
-	{ return Root<T, 2>(LengthSquare()); }
+	inline T length() const
+	{ return ::sqrt(lengthSquare()); }
+
+	/**
+	 * @brief Fast length calculation with no checks.
+	 * @return length if non-0, garbage otherwise. */
+	inline T lengthLp() const
+	{ return static_cast<T>(Lp::sqrt(static_cast<float>(lengthSquare()))); }
 
 	/**
 	 * @brief ...
 	 * @return vector of the same direction, but of 1. length */
-	inline Vector3Real<T> Normalized() const
+	inline Vector3Real<T> normalized() const
 	{
-		T n = Length();
+		T n = length();
 		return Vector3Real<T>(
 				Vector3<T>(Vector3<T>::x, Vector3<T>::y, Vector3<T>::z) / n);
+	}
+
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline Vector3Real<T> normalizedLp() const
+	{
+		T rLen = static_cast<T>(
+				Lp::rSqrt(
+					static_cast<float>(
+						lengthSquare())));
+
+		return Vector3Real<T>(
+				Vector3<T>::x * rLen, 
+				Vector3<T>::y * rLen, 
+				Vector3<T>::z * rLen);
 	}
 
 	/* NOTE:

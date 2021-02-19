@@ -1,6 +1,6 @@
 /**
  * @file      
- * @brief     PxFont (for pixel fonts) class implementation
+ * @brief     PxFont (for pixel fonts) class.
  * @details   ...
  * @author    ArthurTheDigital (arthurthedigital@gmail.com)
  * @copyright GPL v3.
@@ -21,24 +21,45 @@
 namespace ATD {
 
 /**
- * @brief A storage for glyph patterns + texture. */
+ * @brief A storage for glyph patterns + texture.
+ * @class ... */
 class PxFont : public Loadable
 {
 public:
-
+	/**
+	 * @brief ...
+	 * @class ... */
 	class Glyph
 	{
 	public:
+		/**
+		 * @brief ... */
 		Glyph();
 
+		/**
+		 * @brief ...
+		 * @param textureRect - ...
+		 * @param joint       - right joint */
 		Glyph(const RectL &textureRect, 
 				const Vector2L &joint);
 
-		RectL GetTextureRect() const;
+		/**
+		 * @brief ...
+		 * @return ... */
+		inline const RectL &textureRect() const
+		{ return m_textureRect; }
 
-		Vector2L GetJointRight() const;
+		/**
+		 * @brief ...
+		 * @return ... */
+		inline const Vector2L &rightJoint() const
+		{ return m_joint; }
 
-		Vector2L GetJointLeft() const;
+		/**
+		 * @brief ...
+		 * @return ... */
+		inline Vector2L leftJoint() const
+		{ return Vector2L(0, m_joint.y); }
 
 	private:
 		RectL m_textureRect;
@@ -49,21 +70,42 @@ public:
 	typedef std::shared_ptr<const PxFont> CPtr;
 
 
+	/**
+	 * @brief ... */
 	PxFont();
 
-	Texture::CPtr GetTexturePtr() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline Texture::CPtr texturePtr() const
+	{ return static_cast<Texture::CPtr>(m_texturePtr); }
 
-	const Glyph &GetGlyph(const Unicode::Glyph &glyph) const;
+	/**
+	 * @brief ...
+	 * @param glyph - unicode glyph
+	 * @return proper graphical glyph. */
+	const Glyph &getGlyph(const Unicode::Glyph &glyph) const;
 
 private:
-	virtual void OnLoad(const Fs::Path &filename) override;
+	/**
+	 * @brief ...
+	 * @param filename - ... */
+	virtual void onLoad(const Fs::Path &filename) override;
 
-	virtual void OnLoadFinished() override;
+	/**
+	 * @brief ... */
+	virtual void onLoadFinished() override;
 
-	virtual void OnSave(const Fs::Path &filename) const override;
+	/**
+	 * @brief ...
+	 * @param filename - ... */
+	virtual void onSave(const Fs::Path &filename) const override;
 
-	/* Should be called after image has changed. */
-	void UpdateTextureFromImage();
+	/**
+	 * @brief ...
+	 *
+	 * Should be called after image has changed. */
+	void updateTextureFromImage();
 
 
 	Glyph m_dftGlyph;
@@ -73,7 +115,7 @@ private:
 	Image::Ptr m_imagePtr;
 };
 
-// TODO: Create some built-in samples, like I've done with shaders
+/* FIXME: Create some built-in samples, like I've done with shaders. */
 
 } /* namespace ATD */
 

@@ -1,13 +1,12 @@
 /**
- * @file     
- * @brief    Terminal ansi Keyboard.
- * @details  License: GPL v3.
- * @author   ArthurTheDigital (arthurthedigital@gmail.com)
- * @since    $Id: $ */
+ * @file      
+ * @brief     Terminal ansi keyboard.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
-
-#include <ATD/Core/Unicode.hpp>
 
 #include <termios.h>
 
@@ -38,7 +37,6 @@ public:
 	typedef std::shared_ptr<const Keyboard> CPtr;
 
 	static const std::map<Key, std::string> KEY_MAP;
-
 	static const std::set<Key> ALL_KEYS;
 
 	/**
@@ -53,19 +51,19 @@ public:
 	/**
 	 * @brief Set the keys to be expected
 	 * @param keys - ... */
-	void SetFilter(const std::set<Key> &keys);
+	void setFilter(const std::set<Key> &keys);
 
 	/**
 	 * @brief Get one key pressed
 	 * @return ...
 	 *
 	 * Replaces 'm_unparsedInput' with new one */
-	std::unique_ptr<Key> Get() const;
+	std::unique_ptr<Key> get() const;
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	std::string GetUnparsed() const;
+	std::string getUnparsed() const;
 
 private:
 	struct termios m_termOld; /* Old terminal settings */
@@ -77,7 +75,7 @@ private:
 	mutable std::string m_input;
 };
 
-}
+} /* namespace Ansi */
 
 } /* namespace ATD */
 

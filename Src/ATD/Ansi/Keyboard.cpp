@@ -1,9 +1,10 @@
 /**
- * @file     
- * @brief    Terminal ansi keyboard implementation.
- * @details  License: GPL v3.
- * @author   ArthurTheDigital (arthurthedigital@gmail.com)
- * @since    $Id: $ */
+ * @file      
+ * @brief     Terminal ansi keyboard.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #include <ATD/Ansi/Keyboard.hpp>
 
@@ -111,30 +112,50 @@ ATD::Ansi::Keyboard::Keyboard(const std::set<Key> &keys)
 
 	if (::tcgetattr(::fileno(stdin), &m_termOld) == -1) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'tcgetattr(fileno(stdin), ..)' failure: %d %s", errnoVal, ::strerror(errnoVal)));
+		throw std::runtime_error(
+				Aux::printf(
+					"'tcgetattr(fileno(stdin), ..)' failure: %d %s", 
+					errnoVal, ::strerror(errnoVal)
+					));
 	}
 
 	if (::tcgetattr(::fileno(stdin), &termNew) == -1) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'tcgetattr(fileno(stdin), ..)' failure: %d %s", errnoVal, ::strerror(errnoVal)));
+		throw std::runtime_error(
+				Aux::printf(
+					"'tcgetattr(fileno(stdin), ..)' failure: %d %s", 
+					errnoVal, ::strerror(errnoVal)
+					));
 	}
 
 	termNew.c_lflag &= ~ICANON & ~ECHO;
 
 	if (::tcsetattr(::fileno(stdin), TCSANOW, &termNew) == -1) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'tcsetattr(fileno(stdin), ..)' failure: %d %s", errnoVal, ::strerror(errnoVal)));
+		throw std::runtime_error(
+				Aux::printf(
+					"'tcsetattr(fileno(stdin), ..)' failure: %d %s", 
+					errnoVal, ::strerror(errnoVal)
+					));
 	}
 
 	/* Set fd flags */
 	if ((m_flagOld = ::fcntl(::fileno(stdin), F_GETFL)) == -1) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'fcntl(fileno(stdin), F_GETFL, ..)' failure: %d %s", errnoVal, ::strerror(errnoVal)));
+		throw std::runtime_error(
+				Aux::printf(
+					"'fcntl(fileno(stdin), F_GETFL, ..)' failure: %d %s", 
+					errnoVal, ::strerror(errnoVal)
+					));
 	}
 
 	if (::fcntl(::fileno(stdin), F_SETFL, m_flagOld | O_NONBLOCK) == -1) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'fcntl(fileno(stdin), F_SETFL, .. | O_NONBLOCK)' failure: %d %s", errnoVal, ::strerror(errnoVal)));
+		throw std::runtime_error(
+				Aux::printf(
+					"'fcntl(fileno(stdin), F_SETFL, .. | O_NONBLOCK)' failure: %d %s", 
+					errnoVal, ::strerror(errnoVal)
+					));
 	}
 
 	/* Remember the optimized keys */
@@ -149,7 +170,7 @@ ATD::Ansi::Keyboard::~Keyboard()
 	::fcntl(::fileno(stdin), F_SETFL, m_flagOld);
 }
 
-void ATD::Ansi::Keyboard::SetFilter(const std::set<Key> &keys)
+void ATD::Ansi::Keyboard::setFilter(const std::set<Key> &keys)
 {
 	std::map<Key, std::string> n_keys;
 	for (auto &key : keys) {
@@ -159,7 +180,7 @@ void ATD::Ansi::Keyboard::SetFilter(const std::set<Key> &keys)
 	m_keys = n_keys;
 }
 
-std::unique_ptr<ATD::Ansi::Key> ATD::Ansi::Keyboard::Get() const
+std::unique_ptr<ATD::Ansi::Key> ATD::Ansi::Keyboard::get() const
 {
 	/* Note:
 	 * The great assumption here: key string codes do not come separated. */
@@ -173,7 +194,11 @@ std::unique_ptr<ATD::Ansi::Key> ATD::Ansi::Keyboard::Get() const
 				/* FIXME: ::clearerr_unlocked()? */
 				break;
 			} else {
-				throw std::runtime_error(Printf("'fgetc(stdin)' failure: %d %s", errnoVal, ::strerror(errno)));
+				throw std::runtime_error(
+						Aux::printf(
+							"'fgetc(stdin)' failure: %d %s", 
+							errnoVal, ::strerror(errno)
+							));
 			}
 		}
 	}
@@ -193,7 +218,7 @@ std::unique_ptr<ATD::Ansi::Key> ATD::Ansi::Keyboard::Get() const
 	return std::unique_ptr<Key>(nullptr);
 }
 
-std::string ATD::Ansi::Keyboard::GetUnparsed() const
+std::string ATD::Ansi::Keyboard::getUnparsed() const
 {
 	std::string result = m_unparsedInput;
 	m_unparsedInput = "";

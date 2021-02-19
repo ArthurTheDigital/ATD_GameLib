@@ -23,12 +23,14 @@
 namespace ATD {
 
 /**
- * @brief ... */
+ * @brief ...
+ * @class ... */
 class Image : public Loadable
 {
 public:
 	/**
-	 * @brief ... */
+	 * @brief ...
+	 * @class ... */
 	class Drawable
 	{
 	public:
@@ -43,7 +45,7 @@ public:
 		/**
 		 * @brief ...
 		 * @param target - ... */
-		virtual void DrawSelf(Image &target) const = 0;
+		virtual void drawSelf(Image &target) const = 0;
 	};
 
 	typedef std::shared_ptr<Image> Ptr;
@@ -58,63 +60,165 @@ public:
 	static const size_t EXT_GIF;
 
 
+	/**
+	 * @brief ... */
 	Image();
 
+	/**
+	 * @brief ...
+	 * @param size  - ...
+	 * @param pixel - ... */
 	Image(const Vector2S &size, 
 			const Pixel &pixel = Pixel());
 
+	/**
+	 * @brief ...
+	 * @param other - ... */
 	Image(const Image &other);
 
+	/**
+	 * @brief ... */
 	~Image();
 
+	/**
+	 * @brief ...
+	 * @param other - ...
+	 * @return ... */
 	Image &operator=(const Image &other);
 
-	Pixel GetPixel(const Vector2L &position, 
+	/**
+	 * @brief ...
+	 * @param position - ...
+	 * @param repeat   - ...
+	 * @return ... */
+	Pixel getPixel(const Vector2L &position, 
 			bool repeat = false) const;
 
-	const Pixel *GetPixels() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline const Pixel *data() const
+	{ return m_pixels; }
 
-	Pixel *GetPixels();
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline Pixel *data()
+	{ return m_pixels; }
 
-	Vector2S Size() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline const Vector2S &size() const
+	{ return m_size; }
 
+	/**
+	 * @brief ...
+	 * @param other - ...
+	 * @return ... */
 	bool operator==(const Image &other) const;
+
+	/**
+	 * @brief ...
+	 * @param other - ...
+	 * @return ... */
 	bool operator!=(const Image &other) const;
 
-	void Clear(const Pixel &pixel = Pixel());
+	/**
+	 * @brief ...
+	 * @param pixel - ... */
+	void clear(const Pixel &pixel = Pixel());
 
-	void Draw(const Vector2L &position, 
+	/**
+	 * @brief ...
+	 * @param position - ...
+	 * @param pixel    - ... */
+	void draw(const Vector2L &position, 
 			const Pixel &pixel);
 
-	void Draw(const Vector2L &position, 
+	/**
+	 * @brief ...
+	 * @param position - ...
+	 * @param image    - ...
+	 * @param mixer    - ... */
+	void draw(const Vector2L &position, 
 			const Image &image, 
 			MixerFunc mixer = nullptr);
 
-	void Draw(const Vector2L &position, 
+	/**
+	 * @brief ...
+	 * @param position - ...
+	 * @param image    - ...
+	 * @param bounds   - ...
+	 * @param repeat   - whether source image is repeated
+	 * @param mixer    - ... */
+	void draw(const Vector2L &position, 
 			const Image &image, 
 			const RectL &bounds, 
 			bool repeat = false, 
 			MixerFunc mixer = nullptr);
 
-	void Draw(const Drawable &drawable);
+	/**
+	 * @brief ...
+	 * @param drawable - ... */
+	void draw(const Drawable &drawable);
 
 protected:
-	virtual void OnLoad(const Fs::Path &path) override;
+	/**
+	 * @brief ...
+	 * @param path - ... */
+	virtual void onLoad(const Fs::Path &path) override;
 
-	virtual void OnSave(const Fs::Path &path) const override;
+	/**
+	 * @brief ...
+	 * @param path - ... */
+	virtual void onSave(const Fs::Path &path) const override;
 
-	bool IsPng(FILE *file) const;
-	void LoadAsPng(FILE *file);
-	void SaveAsPng(FILE *file) const;
+	/**
+	 * @brief ...
+	 * @param file - ...
+	 * @return ... */
+	bool isPng(FILE *file) const;
 
-	bool IsJpeg(FILE *file) const;
-	void LoadAsJpeg(FILE *file);
-	void SaveAsJpeg(FILE *file) const;
+	/**
+	 * @brief ...
+	 * @param file - ... */
+	void loadAsPng(FILE *file);
 
-	bool IsGif(FILE *file) const;
+	/**
+	 * @brief ...
+	 * @param file - ... */
+	void saveAsPng(FILE *file) const;
+
+	/**
+	 * @brief ...
+	 * @param file - ...
+	 * @return ... */
+	bool isJpeg(FILE *file) const;
+
+	/**
+	 * @brief ...
+	 * @param file - ... */
+	void loadAsJpeg(FILE *file);
+
+	/**
+	 * @brief ...
+	 * @param file - ... */
+	void saveAsJpeg(FILE *file) const;
+
+	/**
+	 * @brief ...
+	 * @param file - ...
+	 * @return ... */
+	bool isGif(FILE *file) const;
 
 private:
-	virtual Pixel MixOpacity(const Pixel &dst, 
+	/**
+	 * @brief ...
+	 * @param dst - ...
+	 * @param src - ...
+	 * @return ... */
+	virtual Pixel mixOpacity(const Pixel &dst, 
 			const Pixel &src) const;
 
 

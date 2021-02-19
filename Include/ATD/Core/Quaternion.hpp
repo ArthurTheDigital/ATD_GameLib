@@ -4,7 +4,7 @@
  * @detail    ...
  * @author    ArthurTheDigital (arthurthedigital@gmail.com)
  * @copyright GPL v3.
- * @since     $Id: $ */ 
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -29,14 +29,14 @@ public:
 	 * Vector3D vectorRotated = Quaternion(r.Inverted() * 
 	 *     Quaternion(vector) * 
 	 *     r).v; */
-	static Quaternion Rotation(double angleFrc, const Vector3D &axis);
+	static Quaternion rotation(double angleFrc, const Vector3D &axis);
 
 	/**
 	 * @brief ...
 	 * @return ...
 	 *
 	 * Default rotation to keep everything simple. */
-	static Quaternion Rotation();
+	static Quaternion rotation();
 
 	/**
 	 * @brief ...
@@ -59,7 +59,7 @@ public:
 	/**
 	 * @brief Get the inverse quaternion.
 	 * @return ... */
-	Quaternion Inverted() const;
+	Quaternion inverted() const;
 
 	/**
 	 * @brief ...
@@ -80,13 +80,13 @@ public:
 	 * @param target - ...
 	 * @throw if quaternion is not a unit
 	 * @return ... */
-	Vector3D ApplyRotation(const Vector3D &target) const;
+	Vector3D applyRotation(const Vector3D &target) const;
 
 	/**
 	 * @brief ...
 	 * @throw if quaternion is not a unit
 	 * @return ... */
-	Matrix4F GetMatrixRotation() const;
+	Matrix4F getRotationMatrix() const;
 
 	/* Constant arithmetics: */
 

@@ -1,7 +1,10 @@
 /**
- * @file
- * @brief Debug macro for OpenGl functions.
- * ... */
+ * @file      
+ * @brief     Debug macro for OpenGl functions.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -29,21 +32,21 @@ const std::map<Gl::Enum, std::string> GL_ERR_MAP = {
 #define GL_CHECK(tag, func) \
 	do { \
 		func; \
-		ATD::Gl::Enum _glErrCode = ATD::gl._GetError(); \
-		if (_glErrCode != ATD::Gl::NO_ERROR) { \
-			std::string _glErrStr = "???"; \
-			auto _glErrIter = ATD::GL_ERR_MAP.find(_glErrCode); \
-			if (_glErrIter != ATD::GL_ERR_MAP.end()) { \
-				_glErrStr = _glErrIter->second; \
+		ATD::Gl::Enum mGlErrCode = ATD::gl.getError(); \
+		if (mGlErrCode != ATD::Gl::NO_ERROR) { \
+			std::string mGlErrStr = "???"; \
+			auto mGlErrIter = ATD::GL_ERR_MAP.find(mGlErrCode); \
+			if (mGlErrIter != ATD::GL_ERR_MAP.end()) { \
+				mGlErrStr = mGlErrIter->second; \
 			} \
 			if (ATD::Debug::Level::ERRO <= ATD::Debug::LEVEL) { \
-				ATD::debug.Printf(__FILE__, \
+				ATD::debug.printf(__FILE__, \
 						__LINE__, \
 						__PRETTY_FUNCTION__, \
 						ATD::Debug::Level::ERRO, \
 						tag, \
 						"OpenGL function '%s' failure: %s", \
-						#func, _glErrStr.c_str()); \
+						#func, mGlErrStr.c_str()); \
 			} \
 		} \
 	} while (false)

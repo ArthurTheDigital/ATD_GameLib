@@ -1,9 +1,10 @@
 /**
-* @file     
-* @brief    Printf functions.
-* @details  License: GPL v3.
-* @author   ArthurTheDigital (arthurthedigital@gmail.com)
-* @since    $Id: $ */
+ * @file      
+ * @brief     Printf functions.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #include <ATD/Core/Printf.hpp>
 
@@ -15,18 +16,18 @@
 #include <stdexcept>
 
 
-std::string ATD::Printf(const char *format, ...)
+std::string ATD::Aux::printf(const char *format, ...)
 {
 	va_list args;
 
 	::va_start(args, format);
-	std::string result = VaPrintf(format, args);
+	std::string result = vaPrintf(format, args);
 	::va_end(args);
 
 	return result;
 }
 
-std::string ATD::VaPrintf(const char *format, va_list args)
+std::string ATD::Aux::vaPrintf(const char *format, va_list args)
 {
 	std::string s;
 
@@ -34,7 +35,10 @@ std::string ATD::VaPrintf(const char *format, va_list args)
 	int printfResult = ::vasprintf(&cString, format, args);
 	if (printfResult == -1) {
 		int errnoVal = errno;
-		throw std::runtime_error(std::string("'::vasprintf()' failure: ") + std::string(::strerror(errnoVal)));
+		throw std::runtime_error(
+				std::string("'::vasprintf()' failure: ") + 
+				std::string(::strerror(errnoVal))
+				);
 	}
 	s = std::string(cString);
 	::free(cString);

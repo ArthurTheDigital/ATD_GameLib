@@ -78,7 +78,7 @@ public:
 	/**
 	 * @brief ...
 	 * @param textureSize - ... */
-	inline GlVertex GetGlVertex(
+	inline GlVertex glVertex(
 			const Vector2S &textureSize = Vector2S()) const
 	{
 		/* Position is given untransformed. */
@@ -87,11 +87,11 @@ public:
 		/* Texture coordinates are given transformed. */
 		Vector2F glTexCoords = Vector2F(
 				(textureSize.x > 0 ? 
-					Clamp<float>(static_cast<float>(texCoords.x) / 
+					clamp<float>(static_cast<float>(texCoords.x) / 
 						static_cast<float>(textureSize.x), 0.f, 1.f) : 
 					0.f), 
 				(textureSize.y > 0 ? 
-					Clamp<float>(static_cast<float>(texCoords.y) / 
+					clamp<float>(static_cast<float>(texCoords.y) / 
 						static_cast<float>(textureSize.y), 0.f, 1.f) : 
 					0.f));
 
@@ -99,7 +99,7 @@ public:
 		Vector3F glNormal = static_cast<Vector3F>(normal);
 
 		/* Color is casted to 4-float vector. */
-		Vector4F glColor = color.GlColor();
+		Vector4F glColor = color.glColor();
 
 		return GlVertex(glPosition, glTexCoords, glNormal, glColor);
 	}

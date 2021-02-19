@@ -3,7 +3,6 @@
 #pragma once
 
 #include <ATD/Core/Debug.hpp>
-#include <ATD/Core/Fs.hpp>
 #include <ATD/Graphics/FrameBuffer.hpp>
 #include <ATD/Graphics/Shader.hpp>
 #include <ATD/Graphics/Texture.hpp>
@@ -15,7 +14,7 @@ class Model : public ATD::FrameBuffer::Drawable
 public:
 	Model(const ATD::Image &texture);
 
-	void DrawSelf(ATD::FrameBuffer &target) const;
+	void drawSelf(ATD::FrameBuffer &target) const;
 
 private:
 	/* ATD::Shader3D::Ptr m_shaderPtr; // DEBUG */
@@ -149,19 +148,19 @@ Model::Model(const ATD::Image &texture)
 	, m_texturePtr(nullptr)
 	, m_verticesPtr(nullptr)
 {
-	/* IPRINTF("", "Texture size: (%lu x %lu)", texture.Size().x, 
-			texture.Size().y); // DEBUG */
+	/* IPRINTF("", "Texture size: (%lu x %lu)", texture.size().x, 
+			texture.size().y); // DEBUG */
 
 	m_texturePtr = ATD::Texture::Ptr(new ATD::Texture(texture));
 
 	/* Setup vertices: */
 	m_verticesPtr = ATD::VertexBuffer3D::Ptr(
-			new ATD::VertexBuffer3D(_VERTICES, texture.Size()));
+			new ATD::VertexBuffer3D(_VERTICES, texture.size()));
 
 	/* Enable triangle culling: */
-	ATD::gl._FrontFace(ATD::Gl::CW);
-	ATD::gl._CullFace(ATD::Gl::BACK);
-	ATD::gl._Enable(ATD::Gl::CULL_FACE);
+	ATD::gl.frontFace(ATD::Gl::CW);
+	ATD::gl.cullFace(ATD::Gl::BACK);
+	ATD::gl.enable(ATD::Gl::CULL_FACE);
 
 	/* IPRINTF("", "sizeof(ATD::Vertex3D::GlVertex) == %lu", 
 			sizeof(ATD::Vertex3D::GlVertex)); // DEBUG */
@@ -173,7 +172,7 @@ Model::Model(const ATD::Image &texture)
 			_SHADER_FRAGMENT_SOURCE.c_str()); // DEBUG */
 
 	/* const ATD::VertexBuffer3D::AttrIndices &attrIndices = 
-			m_shaderPtr->GetAttrIndices();
+			m_shaderPtr->getAttrIndices();
 	IPRINTF("", "AttrIndices:\n"
 			"position %u\ntexCoords %u %s\n"
 			"normal %u %s\ncolor %u %s", 
@@ -189,20 +188,20 @@ Model::Model(const ATD::Image &texture)
 			attrIndices.colorIsRequired ? "+" : "-"); // DEBUG */
 }
 
-void Model::DrawSelf(ATD::FrameBuffer &target) const
+void Model::drawSelf(ATD::FrameBuffer &target) const
 {
 	ATD::Texture::Usage useTexture(*m_texturePtr);
-	target.Draw(*m_verticesPtr, 
+	target.draw(*m_verticesPtr, 
 			ATD::Transform3D()); // TODO: Debug projection! */
 
-/*	m_shaderPtr->SetUniform("unfTransform", ATD::Matrix4F());
-	m_shaderPtr->SetUniform("unfProject", ATD::Matrix4F());
+/*	m_shaderPtr->setUniform("unfTransform", ATD::Matrix4F());
+	m_shaderPtr->setUniform("unfProject", ATD::Matrix4F());
 
 	ATD::FrameBuffer::Usage useFBuffer(target);
 	ATD::Shader::Usage useShader(*m_shaderPtr);
 
-	m_verticesPtr->DrawSelfInternal(
-			m_shaderPtr->GetAttrIndices()); // DEBUG */
+	m_verticesPtr->drawSelfInternal(
+			m_shaderPtr->getAttrIndices()); // DEBUG */
 }
 
 

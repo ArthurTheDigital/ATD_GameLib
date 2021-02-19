@@ -1,9 +1,10 @@
 /**
- * @file     
- * @brief    Terminal ansi graphics.
- * @details  License: GPL v3.
- * @author   ArthurTheDigital (arthurthedigital@gmail.com)
- * @since    $Id: $ */
+ * @file      
+ * @brief     Terminal ansi graphics.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -11,6 +12,7 @@
 #include <ATD/Core/Unicode.hpp>
 
 #include <array>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -26,8 +28,8 @@ namespace Ansi {
 class Glyph
 {
 public:
-	static const unsigned char FOREGROUND_DEFAULT;
-	static const unsigned char BACKGROUND_DEFAULT;
+	static const unsigned char FORECOLOR_DEFAULT;
+	static const unsigned char BACKCOLOR_DEFAULT;
 
 
 	static const Unicode::Glyph UTF8_GLYPH_DEFAULT;
@@ -58,13 +60,13 @@ public:
 
 	/**
 	 * @brief ...
-	 * @param unicode    - unicode character to be drawn
-	 * @param foreground - foreground color number
-	 * @param background - background color number
-	 * @param mode       - font mode */
+	 * @param unicode   - unicode character to be drawn
+	 * @param forecolor - foreground color number
+	 * @param backcolor - background color number
+	 * @param mode      - font mode */
 	Glyph(const Unicode::Glyph &unicode, 
-			unsigned char foreground = FOREGROUND_DEFAULT, 
-			unsigned char background = BACKGROUND_DEFAULT, 
+			unsigned char forecolor = FORECOLOR_DEFAULT, 
+			unsigned char backcolor = BACKCOLOR_DEFAULT, 
 			uint16_t mode = 0x0000);
 
 	/**
@@ -82,60 +84,64 @@ public:
 	/**
 	 * @brief Get the string with control sequences
 	 * @return ... */
-	std::string Str() const;
+	std::string str() const;
 
 	/**
 	 * @brief String with control sequence, based on previous glyph
-	 * @param previ - ...
+	 * @param prev - ...
 	 * @return ... */
-	std::string StrOptimized(const Glyph *prev = nullptr) const;
+	std::string strOptimized(const Glyph *prev = nullptr) const;
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Unicode::Glyph GetUnicode() const;
+	inline Unicode::Glyph unicode() const
+	{ return m_unicode; }
 
 	/**
 	 * @brief ...
 	 * @param unicode - ... */
-	void SetUnicode(const Unicode::Glyph &unicode);
+	void setUnicode(const Unicode::Glyph &unicode);
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	unsigned char Foreground() const;
+	inline unsigned char forecolor() const
+	{ return m_forecolor; }
 
 	/**
 	 * @brief ...
-	 * @param foreground - ... */
-	void Foreground(unsigned char foreground);
-
-	/**
-	 * @brief ...
-	 * @return ... */
-	unsigned char Background() const;
-
-	/**
-	 * @brief ...
-	 * @param background - ... */
-	void Background(unsigned char background);
+	 * @param forecolor - ... */
+	void setForecolor(unsigned char forecolor);
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	uint16_t Mode() const;
+	inline unsigned char backcolor() const
+	{ return m_backcolor; }
+
+	/**
+	 * @brief ...
+	 * @param backcolor - ... */
+	void setBackcolor(unsigned char backcolor);
+
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline uint16_t mode() const
+	{ return m_mode; }
 
 	/**
 	 * @brief ...
 	 * @param mode - ... */
-	void Mode(uint16_t mode);
+	void setMode(uint16_t mode);
 
 
 private:
 	Unicode::Glyph m_unicode;
 
-	unsigned char m_foreground;
-	unsigned char m_background;
+	unsigned char m_forecolor;
+	unsigned char m_backcolor;
 	uint16_t m_mode;
 };
 
@@ -169,12 +175,12 @@ public:
 	 * @brief ...
 	 * @param glyph - ...
 	 * @return ... */
-	bool Check(const Glyph &glyph) const;
+	bool check(const Glyph &glyph) const;
 
 	/**
 	 * @brief ...
 	 * @param glyph - ... */
-	void Apply(Glyph &glyph) const;
+	void apply(Glyph &glyph) const;
 
 private:
 	Glyph m_glyph;
@@ -207,11 +213,11 @@ public:
 		/**
 		 * @brief ...
 		 * @param target - ... */
-		virtual void DrawSelf(Image &target) const = 0;
+		virtual void drawSelf(Image &target) const = 0;
 
 	protected:
-		Glyph *GetGlyphs(Image &image) const;
-		const Glyph *GetGlyphs(const Image &image) const;
+		Glyph *getGlyphs(Image &image) const;
+		const Glyph *getGlyphs(const Image &image) const;
 	};
 
 	/* Since a image can be big, it is better to access via shared 
@@ -240,13 +246,13 @@ public:
 	/**
 	 * @brief ...
 	 * @param chars        - ...
-	 * @param initFg       - initial foreground
-	 * @param initBg       - initial background
+	 * @param initFg       - initial forecolor
+	 * @param initBg       - initial backcolor
 	 * @param initMode     - initial mode
 	 * @param transpGlyphs - lists glyps, that are to be transparent */
 	Image(const std::string &chars, 
-			unsigned char initFg = Glyph::FOREGROUND_DEFAULT, 
-			unsigned char initBg = Glyph::BACKGROUND_DEFAULT, 
+			unsigned char initFg = Glyph::FORECOLOR_DEFAULT, 
+			unsigned char initBg = Glyph::BACKCOLOR_DEFAULT, 
 			uint16_t initMode = 0x0000);
 
 	/**
@@ -262,14 +268,14 @@ public:
 	 *
 	 * If x and y are out of range and repeat == false, 
 	 * Glyph() is returned */
-	Glyph GetGlyph(const Vector2L &position, 
+	Glyph getGlyph(const Vector2L &position, 
 			bool repeat = false) const;
 
 	/**
 	 * @brief Get printable string from the whole image
 	 * @param plain - set true for non-colored text
 	 * @return ... */
-	std::string Str(bool plain = false) const;
+	std::string str(bool plain = false) const;
 
 	/**
 	 * @brief Get printable string from a bounded piece of image
@@ -278,24 +284,27 @@ public:
 	 *                 of it's range
 	 * @param plain  - set true for non-colored text
 	 * @return ... */
-	std::string Str(const RectL &bounds, 
+	std::string str(const RectL &bounds, 
 			bool repeat = false, 
 			bool plain = false) const;
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Vector2S Size() const;
+	inline const Vector2S &size() const
+	{ return m_size; }
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	const Glyph *Data() const;
+	inline const Glyph *data() const
+	{ return m_glyphs; }
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Glyph *DataModifyable();
+	inline Glyph *data()
+	{ return m_glyphs; }
 
 	/**
 	 * @brief ...
@@ -312,25 +321,25 @@ public:
 	/**
 	 * @brief ...
 	 * @param glyph - ... */
-	void Clear(const Glyph &glyph = Glyph());
+	void clear(const Glyph &glyph = Glyph());
 
 	/**
-	 * @brief Sets background to all glyphs */
-	void SetBackground(unsigned char background);
+	 * @brief Sets backcolor to all glyphs */
+	void setBackcolor(unsigned char backcolor);
 
 	/**
-	 * @brief Sets foreground to all glyphs */
-	void SetForeground(unsigned char foreground);
+	 * @brief Sets forecolor to all glyphs */
+	void setForecolor(unsigned char forecolor);
 
 	/**
 	 * @brief Sets mode to all glyphs */
-	void SetMode(uint16_t mode);
+	void setMode(uint16_t mode);
 
 	/**
 	 * @brief Draw glyph
 	 * @param position - ...
 	 * @param glyph    - ... */
-	void Draw(const Vector2L &position, 
+	void draw(const Vector2L &position, 
 			const Glyph &glyph);
 
 	/**
@@ -338,7 +347,7 @@ public:
 	 * @param position - ...
 	 * @param image  - ...
 	 * @param mixer    - ... */
-	void Draw(const Vector2L &position, 
+	void draw(const Vector2L &position, 
 			const Image &image, 
 			MixerFunc mixer = nullptr);
 
@@ -349,7 +358,7 @@ public:
 	 * @param bounds   - ...
 	 * @param repeat   - ...
 	 * @param mixer    - ... */
-	void Draw(const Vector2L &position, 
+	void draw(const Vector2L &position, 
 			const Image &image, 
 			const RectL &bounds, 
 			bool repeat = false, 
@@ -358,13 +367,13 @@ public:
 	/**
 	 * @brief Draw the drawable
 	 * @param drawable - ... */
-	void Draw(const Drawable &drawable);
+	void draw(const Drawable &drawable);
 
 	/**
 	 * @brief Applies 'applyMask' to every glyph, fullfilling 'checkMask'
 	 * @param checkMask - ...
 	 * @param applyMask - ... */
-	void Filter(const GlyphMask &checkMask, 
+	void filter(const GlyphMask &checkMask, 
 			const GlyphMask &applyMask);
 
 	/**
@@ -372,7 +381,7 @@ public:
 	 * @param dst - destination glyph
 	 * @param src - source glyph
 	 * @return ... */
-	virtual Glyph MixOpacity(const Glyph &dst, 
+	virtual Glyph mixOpacity(const Glyph &dst, 
 			const Glyph &src) const;
 
 protected:
@@ -417,37 +426,40 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	RectL View() const;
+	RectL view() const;
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Vector2L Offset() const;
+	inline const Vector2L &offset() const
+	{ return m_offset; }
 
 	/**
 	 * @brief ...
 	 * @param offset - ... */
-	void Offset(const Vector2L &offset);
+	void setOffset(const Vector2L &offset);
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Align AlignX() const;
+	inline const Align &alignX() const
+	{ return m_alignX; }
 
 	/**
 	 * @brief ...
 	 * @param alignX - ... */
-	void AlignX(const Align &alignX);
+	void setAlignX(const Align &alignX);
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Align AlignY() const;
+	inline const Align &alignY() const
+	{ return m_alignY; }
 
 	/**
 	 * @brief ...
 	 * @param alignY - ... */
-	void AlignY(const Align &alignY);
+	void setAlignY(const Align &alignY);
 
 	/**
 	 * @brief ...
@@ -457,10 +469,10 @@ public:
 	 *
 	 * When called too often and a way too complex pattern is drawn, may cause 
 	 * console blinking and random shifting down. */
-	virtual void Display() const;
+	virtual void display() const;
 
 protected:
-	virtual Glyph MixOpacity(const Glyph &dst, 
+	virtual Glyph mixOpacity(const Glyph &dst, 
 			const Glyph &src) const override;
 
 
@@ -473,7 +485,7 @@ protected:
 	mutable size_t m_linesDisplayed;
 };
 
-} /* namespace Con */
+} /* namespace Ansi */
 
 } /* namespace ATD */
 

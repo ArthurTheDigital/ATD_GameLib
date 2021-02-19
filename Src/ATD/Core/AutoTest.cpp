@@ -1,9 +1,10 @@
 /**
-* @file     
-* @brief    AutoTest class for debug.
-* @details  License: GPL v3.
-* @author   ArthurTheDigital (arthurthedigital@gmail.com)
-* @since    $Id: $ */
+ * @file      
+ * @brief     AutoTest class for debug.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3
+ * @since     $Id: $ */
 
 #include <ATD/Core/AutoTest.hpp>
 
@@ -11,18 +12,20 @@
 /* Auxiliary */
 
 /* TODO: Get terminal len as done in Console/Graphics */
-static const size_t TERMINAL_LEN = 80;
-static const size_t RESULT_LEN = 5;
-static const size_t INDENT_LEN = 4;
-static const size_t NAME_LEN = TERMINAL_LEN - RESULT_LEN - INDENT_LEN;
+static const size_t _TERMINAL_LEN = 80;
+static const size_t _RESULT_LEN = 5;
+static const size_t _INDENT_LEN = 4;
+static const size_t _NAME_LEN = _TERMINAL_LEN - _RESULT_LEN - _INDENT_LEN;
 
-static const size_t MULDOT_LEN = 3;
-static const size_t SHORTENED_NAME_LEN = NAME_LEN - MULDOT_LEN;
+static const size_t _MULTIDOT_LEN = 3;
+static const size_t _SHORTENED_NAME_LEN = _NAME_LEN - _MULTIDOT_LEN;
 
-static std::string ShortenName(const std::string &name)
+static std::string _shortenName(const std::string &name)
 {
-	if (name.size() > NAME_LEN) {
-		std::string shortened = std::string(MULDOT_LEN, '.') + name.substr(name.size() - SHORTENED_NAME_LEN);
+	if (name.size() > _NAME_LEN) {
+		std::string shortened = std::string(_MULTIDOT_LEN, '.') + 
+			name.substr(name.size() - _SHORTENED_NAME_LEN);
+
 		return shortened;
 	} else {
 		return name;
@@ -36,28 +39,28 @@ ATD::AutoTest::AutoTest(const std::string &name,
 		const std::string &control, 
 		bool failureExpected)
 	: Debug::Observer()
-	, m_name(ShortenName(name))
+	, m_name(_shortenName(name))
 	, m_control(control)
 	, m_test()
 	, m_failureExpected(failureExpected)
 	, m_finished(false)
 {
 	if (m_control.size()) {
-		Attach(&debug, Debug::Level::DBGA, Tag::Expression("AUTOTEST"));
+		attach(&debug, Debug::Level::DBGA, Tag::Expression("AUTOTEST"));
 	}
 	::fprintf(stdout, "\x1b[33m%s%s\x1b[0m", 
 			m_name.c_str(), 
-			std::string(TERMINAL_LEN - m_name.size(), ' ').c_str()
+			std::string(_TERMINAL_LEN - m_name.size(), ' ').c_str()
 			);
 	IPRINTF("AUTOTEST_IMPL", "Autotest \"%s\" started", m_name.c_str());
 }
 
 ATD::AutoTest::~AutoTest()
 {
-	Finish();
+	finish();
 }
 
-void ATD::AutoTest::OnNotify(const Debug::Line &line)
+void ATD::AutoTest::onNotify(const Debug::Line &line)
 {
 	/* If there is no control string -> no comparison -> no need to stash 
 	 * data inside test string */
@@ -66,14 +69,14 @@ void ATD::AutoTest::OnNotify(const Debug::Line &line)
 	}
 }
 
-void ATD::AutoTest::Finish(bool pass)
+void ATD::AutoTest::finish(bool pass)
 {
 	if (!m_finished) {
 		/* Goes first, so no exception can hit it */
 		m_finished = true;
 
-		/* The check, whether was Attached is already included in "Detach()" */
-		Detach();
+		/* The check, whether was attached is already included in "detach()" */
+		detach();
 
 		/* Check the test/control strings match */
 		if (pass && m_control.size()) {
@@ -81,7 +84,7 @@ void ATD::AutoTest::Finish(bool pass)
 		}
 
 		/* Print colourful result */
-		std::string indent(INDENT_LEN, ' ');
+		std::string indent(_INDENT_LEN, ' ');
 		std::string verdict = 
 			m_failureExpected ? 
 			pass ? "XPASS" : "XFAIL" : 
@@ -99,7 +102,8 @@ void ATD::AutoTest::Finish(bool pass)
 		m_control.clear();
 		m_test.clear();
 
-		IPRINTF("AUTOTEST_IMPL", "Autotest \"%s\" finished: %s", m_name.c_str(), verdict.c_str());
+		IPRINTF("AUTOTEST_IMPL", "Autotest \"%s\" finished: %s", 
+				m_name.c_str(), verdict.c_str());
 	}
 }
 

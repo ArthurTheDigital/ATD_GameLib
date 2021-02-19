@@ -3,7 +3,6 @@
 #pragma once
 
 #include <ATD/Core/Debug.hpp>
-#include <ATD/Core/Fs.hpp>
 #include <ATD/Core/Transform3D.hpp>
 #include <ATD/Graphics/FrameBuffer.hpp>
 #include <ATD/Graphics/Shader.hpp>
@@ -16,11 +15,11 @@ class Model : public ATD::FrameBuffer::Drawable
 public:
 	Model(const ATD::Image &texture);
 
-	void Rotate(const ATD::Vector2D &rotationXYFrc, 
+	void rotate(const ATD::Vector2D &rotationXYFrc, 
 			const ATD::Vector3D &axisX, 
 			const ATD::Vector3D &axisY);
 
-	void DrawSelf(ATD::FrameBuffer &target) const;
+	void drawSelf(ATD::FrameBuffer &target) const;
 
 private:
 	/* ATD::Shader3D::Ptr m_shaderPtr; // DEBUG */
@@ -256,19 +255,19 @@ Model::Model(const ATD::Image &texture)
 	, m_verticesPtr(nullptr)
 	, m_transform()
 {
-	/* IPRINTF("", "Texture size: (%lu x %lu)", texture.Size().x, 
-			texture.Size().y); // DEBUG */
+	/* IPRINTF("", "Texture size: (%lu x %lu)", texture.size().x, 
+			texture.size().y); // DEBUG */
 
 	m_texturePtr = ATD::Texture::Ptr(new ATD::Texture(texture));
 
 	/* Setup vertices: */
 	m_verticesPtr = ATD::VertexBuffer3D::Ptr(
-			new ATD::VertexBuffer3D(_VERTICES, texture.Size()));
+			new ATD::VertexBuffer3D(_VERTICES, texture.size()));
 
 	/* Enable triangle culling: */
-	ATD::gl._FrontFace(ATD::Gl::CW);
-	ATD::gl._CullFace(ATD::Gl::BACK);
-	ATD::gl._Enable(ATD::Gl::CULL_FACE);
+	ATD::gl.frontFace(ATD::Gl::CW);
+	ATD::gl.cullFace(ATD::Gl::BACK);
+	ATD::gl.enable(ATD::Gl::CULL_FACE);
 
 	/* IPRINTF("", "sizeof(ATD::Vertex3D::GlVertex) == %lu", 
 			sizeof(ATD::Vertex3D::GlVertex)); // DEBUG */
@@ -280,7 +279,7 @@ Model::Model(const ATD::Image &texture)
 			_SHADER_FRAGMENT_SOURCE.c_str()); // DEBUG */
 
 	/* const ATD::VertexBuffer3D::AttrIndices &attrIndices = 
-			m_shaderPtr->GetAttrIndices();
+			m_shaderPtr->getAttrIndices();
 	IPRINTF("", "AttrIndices:\n"
 			"position %u\ntexCoords %u %s\n"
 			"normal %u %s\ncolor %u %s", 
@@ -296,36 +295,36 @@ Model::Model(const ATD::Image &texture)
 			attrIndices.colorIsRequired ? "+" : "-"); // DEBUG */
 }
 
-void Model::Rotate(const ATD::Vector2D &rotationXYFrc, 
+void Model::rotate(const ATD::Vector2D &rotationXYFrc, 
 		const ATD::Vector3D &axisX, 
 		const ATD::Vector3D &axisY)
 {
-	ATD::Quaternion rotationCur = m_transform.Rotation();
-	ATD::Vector3D axisXCur = rotationCur.Inverted().ApplyRotation(axisX);
-	ATD::Vector3D axisYCur = rotationCur.Inverted().ApplyRotation(axisY);
+	ATD::Quaternion rotationCur = m_transform.rotation();
+	ATD::Vector3D axisXCur = rotationCur.inverted().applyRotation(axisX);
+	ATD::Vector3D axisYCur = rotationCur.inverted().applyRotation(axisY);
 
-	ATD::Quaternion rotateX = ATD::Quaternion::Rotation(rotationXYFrc.x, 
+	ATD::Quaternion rotateX = ATD::Quaternion::rotation(rotationXYFrc.x, 
 			axisXCur);
-	ATD::Quaternion rotateY = ATD::Quaternion::Rotation(rotationXYFrc.y, 
+	ATD::Quaternion rotateY = ATD::Quaternion::rotation(rotationXYFrc.y, 
 			axisYCur);
 
-	m_transform.SetRotation(rotateX * rotateY * rotationCur);
+	m_transform.setRotation(rotateX * rotateY * rotationCur);
 }
 
-void Model::DrawSelf(ATD::FrameBuffer &target) const
+void Model::drawSelf(ATD::FrameBuffer &target) const
 {
 	ATD::Texture::Usage useTexture(*m_texturePtr);
-	target.Draw(*m_verticesPtr, 
+	target.draw(*m_verticesPtr, 
 			m_transform);
 
-/*	m_shaderPtr->SetUniform("unfTransform", ATD::Matrix4F());
-	m_shaderPtr->SetUniform("unfProject", ATD::Matrix4F());
+/*	m_shaderPtr->setUniform("unfTransform", ATD::Matrix4F());
+	m_shaderPtr->setUniform("unfProject", ATD::Matrix4F());
 
 	ATD::FrameBuffer::Usage useFBuffer(target);
 	ATD::Shader::Usage useShader(*m_shaderPtr);
 
-	m_verticesPtr->DrawSelfInternal(
-			m_shaderPtr->GetAttrIndices()); // DEBUG */
+	m_verticesPtr->drawSelfInternal(
+			m_shaderPtr->getAttrIndices()); // DEBUG */
 }
 
 

@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file      
  * @brief     Window class implementation.
  * @details   ...
  * @author    ArthurTheDigital (arthurthedigital@gmail.com)
@@ -26,12 +26,12 @@ ATD::Window::Observer::Observer()
 {}
 
 ATD::Window::Observer::~Observer()
-{ Detach(); }
+{ detach(); }
 
-void ATD::Window::Observer::Attach(ATD::Window *window, 
+void ATD::Window::Observer::attach(ATD::Window *window, 
 		uint32_t eventTypeMask)
 {
-	Detach();
+	detach();
 	if (window) {
 		std::lock_guard<std::recursive_mutex> lock(
 				window->m_observerPtrsLock);
@@ -42,7 +42,7 @@ void ATD::Window::Observer::Attach(ATD::Window *window,
 	}
 }
 
-void ATD::Window::Observer::Detach()
+void ATD::Window::Observer::detach()
 {
 	if (m_window) {
 		std::lock_guard<std::recursive_mutex> lock(
@@ -71,8 +71,8 @@ ATD::Window::Window(const ATD::Vector2S &size,
 	, m_events()
 {
 	/* To avoid artifacts being shown. */
-	Clear();
-	Display();
+	clear();
+	display();
 
 	/* Window is not shown until Expose event is not processed! */
 }
@@ -89,10 +89,10 @@ ATD::Window::~Window()
 			observerPtrs.insert(obsPair.first);
 		}
 	}
-	for (auto &observerPtr : observerPtrs) { observerPtr->Detach(); }
+	for (auto &observerPtr : observerPtrs) { observerPtr->detach(); }
 }
 
-void ATD::Window::Poll(bool keepEvents)
+void ATD::Window::poll(bool keepEvents)
 {
 	/* Prepare all Observers. */
 	{
@@ -100,7 +100,7 @@ void ATD::Window::Poll(bool keepEvents)
 						m_observerPtrsLock);
 
 		for (auto &obsPair : m_observerPtrs) {
-			obsPair.first->OnPollStart();
+			obsPair.first->onPollStart();
 		}
 	}
 
@@ -123,7 +123,7 @@ void ATD::Window::Poll(bool keepEvents)
 
 	{
 		std::list<Event> newEvents;
-		m_internal->ProcessX11Events(xEvts, newEvents, *m_x11);
+		m_internal->processX11Events(xEvts, newEvents, *m_x11);
 
 		/* Notify all Observers. */
 		for (auto &evt : newEvents) {
@@ -141,7 +141,7 @@ void ATD::Window::Poll(bool keepEvents)
 			}
 
 			for (auto &observerPtr : shallBeNotified) {
-				observerPtr->OnNotify(evt);
+				observerPtr->onNotify(evt);
 			}
 		}
 
@@ -150,9 +150,9 @@ void ATD::Window::Poll(bool keepEvents)
 	}
 }
 
-bool ATD::Window::PollEvent(ATD::Window::Event &evt)
+bool ATD::Window::pollEvent(ATD::Window::Event &evt)
 {
-	if (m_events.empty()) { Poll(true); }
+	if (m_events.empty()) { poll(true); }
 	if (!m_events.empty()) {
 		evt = m_events.front();
 		m_events.pop_front();
@@ -162,43 +162,65 @@ bool ATD::Window::PollEvent(ATD::Window::Event &evt)
 	}
 }
 
-ATD::Vector2U ATD::Window::Size() const
-{ return m_internal->frameBufferPtr->Size(); }
-
-bool ATD::Window::HasFocus() const
-{ return m_internal->hasFocus; }
-
-bool ATD::Window::IsClosed() const
-{ return m_internal->isClosed; }
-
-void ATD::Window::SetShader2D(ATD::Shader2D::Ptr shader2DPtr)
-{ m_internal->frameBufferPtr->SetShader2D(shader2DPtr); }
-
-void ATD::Window::SetShader3D(ATD::Shader3D::Ptr shader3DPtr)
-{ m_internal->frameBufferPtr->SetShader3D(shader3DPtr); }
-
-void ATD::Window::SetProjection2D(const ATD::Projection2D &projection2D)
-{ m_internal->frameBufferPtr->SetProjection2D(projection2D); }
-
-void ATD::Window::SetProjection3D(const ATD::Projection3D &projection3D)
-{ m_internal->frameBufferPtr->SetProjection3D(projection3D); }
-
-void ATD::Window::Clear()
-{ m_internal->frameBufferPtr->Clear(); }
-
-void ATD::Window::Draw(const ATD::FrameBuffer::Drawable &drawable)
-{ m_internal->frameBufferPtr->Draw(drawable); }
-
-void ATD::Window::Draw(const ATD::VertexBuffer2D &vertices2D, 
-		const ATD::Transform2D &transform)
-{ m_internal->frameBufferPtr->Draw(vertices2D, transform); }
-
-ATD::Texture::CPtr ATD::Window::GetColorTexture() const
-{ return m_internal->frameBufferPtr->GetColorTexture(); }
-
-void ATD::Window::Display()
+ATD::Vector2U ATD::Window::size() const
 {
-	m_internal->Display(*m_x11);
+	return m_internal->frameBufferPtr->size();
+}
+
+bool ATD::Window::hasFocus() const
+{
+	return m_internal->hasFocus;
+}
+
+bool ATD::Window::isClosed() const
+{
+	return m_internal->isClosed;
+}
+
+void ATD::Window::setShader2D(ATD::Shader2D::Ptr shader2DPtr)
+{
+	m_internal->frameBufferPtr->setShader2D(shader2DPtr);
+}
+
+void ATD::Window::setShader3D(ATD::Shader3D::Ptr shader3DPtr)
+{
+	m_internal->frameBufferPtr->setShader3D(shader3DPtr);
+}
+
+void ATD::Window::setProjection2D(const ATD::Projection2D &projection2D)
+{
+	m_internal->frameBufferPtr->setProjection2D(projection2D);
+}
+
+void ATD::Window::setProjection3D(const ATD::Projection3D &projection3D)
+{
+	m_internal->frameBufferPtr->setProjection3D(projection3D);
+}
+
+void ATD::Window::clear()
+{
+	m_internal->frameBufferPtr->clear();
+}
+
+void ATD::Window::draw(const ATD::FrameBuffer::Drawable &drawable)
+{
+	m_internal->frameBufferPtr->draw(drawable);
+}
+
+void ATD::Window::draw(const ATD::VertexBuffer2D &vertices2D, 
+		const ATD::Transform2D &transform)
+{
+	m_internal->frameBufferPtr->draw(vertices2D, transform);
+}
+
+ATD::Texture::CPtr ATD::Window::getColorTexture() const
+{
+	return m_internal->frameBufferPtr->getColorTexture();
+}
+
+void ATD::Window::display()
+{
+	m_internal->display(*m_x11);
 }
 
 

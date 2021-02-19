@@ -115,23 +115,23 @@ public:
 
 	Lighting();
 
-	void SetCameraPosition(const ATD::Vector3D &position);
+	void setCameraPosition(const ATD::Vector3D &position);
 
-	void OnOffDirLights();
-	void OnOffPointLights();
-	void OnOffSpotLights();
+	void onOffDirLights(); /* FIXME: onOff -> toggle */
+	void onOffPointLights();
+	void onOffSpotLights();
 
-	ATD::Shader3D::Ptr GetShader();
+	ATD::Shader3D::Ptr getShader();
 
 
 private:
-	void SetUnfDirLight(int index);
-	void SetUnfPointLight(int index);
-	void SetUnfSpotLight(int index);
+	void setUnfDirLight(int index);
+	void setUnfPointLight(int index);
+	void setUnfSpotLight(int index);
 
-	void SetUnfDirLightsEnabled(bool enabled);
-	void SetUnfPointLightsEnabled(bool enabled);
-	void SetUnfSpotLightsEnabled(bool enabled);
+	void setUnfDirLightsEnabled(bool enabled);
+	void setUnfPointLightsEnabled(bool enabled);
+	void setUnfSpotLightsEnabled(bool enabled);
 
 
 	ATD::Shader3D::Ptr m_shaderPtr;
@@ -212,205 +212,205 @@ Lighting::Lighting()
 	, m_pointLightsEnabled(false)
 	, m_spotLightsEnabled(false)
 {
-	m_shaderPtr->SetUniform("unfCameraPos", 
+	m_shaderPtr->setUniform("unfCameraPos", 
 			static_cast<ATD::Vector3F>(ATD::Vector3D(0., 0., 0.)));
 
 	/* Set light uniforms in shader. */
-	m_shaderPtr->SetUniform("unfSpecularPower", SPECULAR_POWER);
+	m_shaderPtr->setUniform("unfSpecularPower", SPECULAR_POWER);
 
 	if (m_dirLights.size() > DirLight::MAX_COUNT) {
 		m_dirLights.resize(DirLight::MAX_COUNT);
 	}
 	for (int dlIndex = 0; dlIndex < static_cast<int>(m_dirLights.size()); 
 			dlIndex++) {
-		SetUnfDirLight(dlIndex);
+		setUnfDirLight(dlIndex);
 	}
-	SetUnfDirLightsEnabled(m_dirLightsEnabled);
+	setUnfDirLightsEnabled(m_dirLightsEnabled);
 
 	if (m_pointLights.size() > PointLight::MAX_COUNT) {
 		m_pointLights.resize(PointLight::MAX_COUNT);
 	}
 	for (int plIndex = 0; plIndex < static_cast<int>(m_pointLights.size()); 
 			plIndex++) {
-		SetUnfPointLight(plIndex);
+		setUnfPointLight(plIndex);
 	}
-	SetUnfPointLightsEnabled(m_pointLightsEnabled);
+	setUnfPointLightsEnabled(m_pointLightsEnabled);
 
 	if (m_spotLights.size() > SpotLight::MAX_COUNT) {
 		m_spotLights.resize(SpotLight::MAX_COUNT);
 	}
 	for (int slIndex = 0; slIndex < static_cast<int>(m_spotLights.size()); 
 			slIndex++) {
-		SetUnfSpotLight(slIndex);
+		setUnfSpotLight(slIndex);
 	}
-	SetUnfSpotLightsEnabled(m_spotLightsEnabled);
+	setUnfSpotLightsEnabled(m_spotLightsEnabled);
 }
 
-void Lighting::SetCameraPosition(const ATD::Vector3D &position)
+void Lighting::setCameraPosition(const ATD::Vector3D &position)
 {
-	m_shaderPtr->SetUniform("unfCameraPos", 
+	m_shaderPtr->setUniform("unfCameraPos", 
 			static_cast<ATD::Vector3F>(position));
 }
 
-void Lighting::OnOffDirLights()
+void Lighting::onOffDirLights()
 {
 	m_dirLightsEnabled = !m_dirLightsEnabled;
-	SetUnfDirLightsEnabled(m_dirLightsEnabled);
+	setUnfDirLightsEnabled(m_dirLightsEnabled);
 }
 
-void Lighting::OnOffPointLights()
+void Lighting::onOffPointLights()
 {
 	m_pointLightsEnabled = !m_pointLightsEnabled;
-	SetUnfPointLightsEnabled(m_pointLightsEnabled);
+	setUnfPointLightsEnabled(m_pointLightsEnabled);
 }
 
-void Lighting::OnOffSpotLights()
+void Lighting::onOffSpotLights()
 {
 	m_spotLightsEnabled = !m_spotLightsEnabled;
-	SetUnfSpotLightsEnabled(m_spotLightsEnabled);
+	setUnfSpotLightsEnabled(m_spotLightsEnabled);
 }
 
-ATD::Shader3D::Ptr Lighting::GetShader()
+ATD::Shader3D::Ptr Lighting::getShader()
 { return m_shaderPtr; }
 
 /* === */
 
-void Lighting::SetUnfDirLight(int index)
+void Lighting::setUnfDirLight(int index)
 {
-	const std::string structName = ATD::Printf("unfDirLights[%d].", index);
+	const std::string structName = ATD::Aux::printf("unfDirLights[%d].", index);
 	DirLight &dl = m_dirLights[index];
 
 	if (!dl.lt.colorVld) {
-		m_shaderPtr->SetUniform(structName + "lt.color", 
-				dl.lt.color.GlColor3());
+		m_shaderPtr->setUniform(structName + "lt.color", 
+				dl.lt.color.glColor3());
 		dl.lt.colorVld = true;
 	}
 
 	if (!dl.lt.ambientVld) {
-		m_shaderPtr->SetUniform(structName + "lt.ambient", dl.lt.ambient);
+		m_shaderPtr->setUniform(structName + "lt.ambient", dl.lt.ambient);
 		dl.lt.ambientVld = true;
 	}
 
 	if (!dl.lt.diffuseVld) {
-		m_shaderPtr->SetUniform(structName + "lt.diffuse", dl.lt.diffuse);
+		m_shaderPtr->setUniform(structName + "lt.diffuse", dl.lt.diffuse);
 		dl.lt.diffuseVld = true;
 	}
 
 	if (!dl.lt.specularVld) {
-		m_shaderPtr->SetUniform(structName + "lt.specular", dl.lt.specular);
+		m_shaderPtr->setUniform(structName + "lt.specular", dl.lt.specular);
 		dl.lt.specularVld = true;
 	}
 
 	if (!dl.directionVld) {
-		m_shaderPtr->SetUniform(structName + "direction", dl.direction);
+		m_shaderPtr->setUniform(structName + "direction", dl.direction);
 		dl.directionVld = true;
 	}
 }
 
-void Lighting::SetUnfPointLight(int index)
+void Lighting::setUnfPointLight(int index)
 {
-	const std::string structName = ATD::Printf("unfPointLights[%d].", index);
+	const std::string structName = ATD::Aux::printf("unfPointLights[%d].", index);
 	PointLight &pl = m_pointLights[index];
 
 	if (!pl.lt.colorVld) {
-		m_shaderPtr->SetUniform(structName + "lt.color", pl.lt.color.GlColor3());
+		m_shaderPtr->setUniform(structName + "lt.color", pl.lt.color.glColor3());
 		pl.lt.colorVld = true;
 	}
 
 	if (!pl.lt.ambientVld) {
-		m_shaderPtr->SetUniform(structName + "lt.ambient", pl.lt.ambient);
+		m_shaderPtr->setUniform(structName + "lt.ambient", pl.lt.ambient);
 		pl.lt.ambientVld = true;
 	}
 
 	if (!pl.lt.diffuseVld) {
-		m_shaderPtr->SetUniform(structName + "lt.diffuse", pl.lt.diffuse);
+		m_shaderPtr->setUniform(structName + "lt.diffuse", pl.lt.diffuse);
 		pl.lt.diffuseVld = true;
 	}
 
 	if (!pl.lt.specularVld) {
-		m_shaderPtr->SetUniform(structName + "lt.specular", pl.lt.specular);
+		m_shaderPtr->setUniform(structName + "lt.specular", pl.lt.specular);
 		pl.lt.specularVld = true;
 	}
 
 	if (!pl.positionVld) {
-		m_shaderPtr->SetUniform(structName + "position", pl.position);
+		m_shaderPtr->setUniform(structName + "position", pl.position);
 		pl.positionVld = true;
 	}
 
 	if (!pl.attenuationVld) {
-		m_shaderPtr->SetUniform(structName + "attenuation", pl.attenuation);
+		m_shaderPtr->setUniform(structName + "attenuation", pl.attenuation);
 		pl.attenuationVld = true;
 	}
 }
 
-void Lighting::SetUnfSpotLight(int index)
+void Lighting::setUnfSpotLight(int index)
 {
-	const std::string structName = ATD::Printf("unfSpotLights[%d].", index);
+	const std::string structName = ATD::Aux::printf("unfSpotLights[%d].", index);
 	SpotLight &sl = m_spotLights[index];
 
 	if (!sl.plt.lt.colorVld) {
-		m_shaderPtr->SetUniform(structName + "plt.lt.color", 
-				sl.plt.lt.color.GlColor3());
+		m_shaderPtr->setUniform(structName + "plt.lt.color", 
+				sl.plt.lt.color.glColor3());
 		sl.plt.lt.colorVld = true;
 	}
 
 	if (!sl.plt.lt.ambientVld) {
-		m_shaderPtr->SetUniform(structName + "plt.lt.ambient", 
+		m_shaderPtr->setUniform(structName + "plt.lt.ambient", 
 				sl.plt.lt.ambient);
 		sl.plt.lt.ambientVld = true;
 	}
 
 	if (!sl.plt.lt.diffuseVld) {
-		m_shaderPtr->SetUniform(structName + "plt.lt.diffuse", 
+		m_shaderPtr->setUniform(structName + "plt.lt.diffuse", 
 				sl.plt.lt.diffuse);
 		sl.plt.lt.diffuseVld = true;
 	}
 
 	if (!sl.plt.lt.specularVld) {
-		m_shaderPtr->SetUniform(structName + "plt.lt.specular", 
+		m_shaderPtr->setUniform(structName + "plt.lt.specular", 
 				sl.plt.lt.specular);
 		sl.plt.lt.specularVld = true;
 	}
 
 	if (!sl.plt.positionVld) {
-		m_shaderPtr->SetUniform(structName + "plt.position", 
+		m_shaderPtr->setUniform(structName + "plt.position", 
 				sl.plt.position);
 		sl.plt.positionVld = true;
 	}
 
 	if (!sl.plt.attenuationVld) {
-		m_shaderPtr->SetUniform(structName + "plt.attenuation", 
+		m_shaderPtr->setUniform(structName + "plt.attenuation", 
 				sl.plt.attenuation);
 		sl.plt.attenuationVld = true;
 	}
 
 	if (!sl.directionVld) {
-		m_shaderPtr->SetUniform(structName + "direction", sl.direction);
+		m_shaderPtr->setUniform(structName + "direction", sl.direction);
 		sl.directionVld = true;
 	}
 
 	if (!sl.cutoffVld) {
-		m_shaderPtr->SetUniform(structName + "cutoff", sl.cutoff);
+		m_shaderPtr->setUniform(structName + "cutoff", sl.cutoff);
 		sl.cutoffVld = true;
 	}
 }
 
 
-void Lighting::SetUnfDirLightsEnabled(bool enabled)
+void Lighting::setUnfDirLightsEnabled(bool enabled)
 {
-	m_shaderPtr->SetUniform("unfDirLightsNum", 
+	m_shaderPtr->setUniform("unfDirLightsNum", 
 			enabled ? static_cast<int>(m_dirLights.size()) : 0);
 }
 
-void Lighting::SetUnfPointLightsEnabled(bool enabled)
+void Lighting::setUnfPointLightsEnabled(bool enabled)
 {
-	m_shaderPtr->SetUniform("unfPointLightsNum", 
+	m_shaderPtr->setUniform("unfPointLightsNum", 
 			enabled ? static_cast<int>(m_pointLights.size()) : 0);
 }
 
-void Lighting::SetUnfSpotLightsEnabled(bool enabled)
+void Lighting::setUnfSpotLightsEnabled(bool enabled)
 {
-	m_shaderPtr->SetUniform("unfSpotLightsNum", 
+	m_shaderPtr->setUniform("unfSpotLightsNum", 
 			enabled ? static_cast<int>(m_spotLights.size()) : 0);
 }
 

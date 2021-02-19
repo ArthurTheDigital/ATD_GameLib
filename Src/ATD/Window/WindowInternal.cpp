@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file      
  * @brief     Internal window data implementation.
  * @details   ...
  * @author    ArthurTheDigital (arthurthedigital@gmail.com)
@@ -21,7 +21,7 @@
 /* ATD::Window::WindowInternal auxiliary: 
  * Control maps for ProcessX11Events: */
 
-static const std::map<unsigned, ATD::Mouse::ButtonId> MOUSE_BUTTON_MAP = {
+static const std::map<unsigned, ATD::Mouse::ButtonId> _MOUSE_BUTTON_MAP = {
 	{Button1, ATD::Mouse::LEFT}, 
 	{Button2, ATD::Mouse::WHEEL}, 
 	{Button3, ATD::Mouse::RIGHT}, 
@@ -29,14 +29,14 @@ static const std::map<unsigned, ATD::Mouse::ButtonId> MOUSE_BUTTON_MAP = {
 	{9, ATD::Mouse::EXTRA2}, 
 };
 
-static const std::map<unsigned, ATD::Vector2I> MOUSE_SCROLL_MAP = {
+static const std::map<unsigned, ATD::Vector2I> _MOUSE_SCROLL_MAP = {
 	{Button4, ATD::Vector2I(0, 1)}, 
 	{Button5, ATD::Vector2I(0, -1)}, 
 	{6, ATD::Vector2I(1, 0)}, 
 	{7, ATD::Vector2I(-1, 0)}
 };
 
-static const std::map<unsigned, ATD::Key::Code> KEY_MAP = {
+static const std::map<unsigned, ATD::Key::Code> _KEY_MAP = {
 	/* English letters: */
 	{XK_a, ATD::Key::A}, 
 	{XK_b, ATD::Key::B}, 
@@ -138,10 +138,15 @@ static const std::map<unsigned, ATD::Key::Code> KEY_MAP = {
 
 /* ATD::Window::WindowInternal::FbResize: */
 
+/**
+ * @brief ...
+ * @class ... */
 class ATD::Window::WindowInternal::FbResize
 {
 public:
-	/* Weird name, because 'Status' is taken by X11 define. */
+	/** 
+	 * @brief ...
+	 * Weird name, because 'Status' is taken by X11 define. */
 	enum FbrsStatus {
 		NONE = 0, 
 		PENDING, 
@@ -149,12 +154,17 @@ public:
 	};
 
 
+	/**
+	 * @brief ... */
 	inline FbResize()
 		: m_status(NONE)
 		, m_sizeNew()
 	{}
 
-	inline void Update(const Vector2S &n_sizeNew)
+	/**
+	 * @brief ...
+	 * @param n_sizeNew - ... */
+	inline void update(const Vector2S &n_sizeNew)
 	{
 		if (m_status == NONE) {
 			m_status = PENDING;
@@ -162,10 +172,18 @@ public:
 		}
 	}
 
-	inline bool ApplyIfPending(ATD::FrameBuffer::Ptr &frameBufferPtr, 
+	/**
+	 * @brief ...
+	 * @param frameBufferPtr - ...
+	 * @param alignX         - ...
+	 * @param alignY         - ...
+	 * @param verticesPtr    - ...
+	 * @return ... */
+	inline bool applyIfPending(ATD::FrameBuffer::Ptr &frameBufferPtr, 
 			const ATD::Align &alignX, 
 			const ATD::Align &alignY, 
-			ATD::VertexBuffer2D::Ptr &verticesPtr) {
+			ATD::VertexBuffer2D::Ptr &verticesPtr)
+	{
 		if (m_status == PENDING) {
 			/* Replace FrameBuffer. */
 			FrameBuffer::Ptr frameBufferPtrNew(
@@ -180,8 +198,8 @@ public:
 			/* Replace vertices. */
 			VertexBuffer2D::Ptr verticesPtrNew(
 					new VertexBuffer2D(
-						RectL(frameBufferPtr->Size()), 
-						frameBufferPtr->Size()));
+						RectL(frameBufferPtr->size()), 
+						frameBufferPtr->size()));
 
 			verticesPtr = verticesPtrNew;
 
@@ -191,7 +209,11 @@ public:
 		return false;
 	}
 
-	inline bool ReportIfComplete(std::list<Window::Event> &eventsResult)
+	/**
+	 * @brief ...
+	 * @param eventsResult - ...
+	 * @return - ... */
+	inline bool reportIfComplete(std::list<Window::Event> &eventsResult)
 	{
 		if (m_status == COMPLETE) {
 			Window::Event event(Window::Event::RESIZE);
@@ -227,8 +249,8 @@ ATD::Window::WindowInternal::WindowInternal(const ATD::Vector2S &size,
 	, frameBufferPtr(new FrameBuffer(size))
 	, verticesPtr(
 			new VertexBuffer2D(
-				RectL(frameBufferPtr->Size()), 
-				frameBufferPtr->Size()))
+				RectL(frameBufferPtr->size()), 
+				frameBufferPtr->size()))
 
 	, shader(ATD::Shader2D::PLAIN_VERTEX_SOURCE, 
 			ATD::Shader2D::PLAIN_FRAGMENT_SOURCE)
@@ -236,11 +258,11 @@ ATD::Window::WindowInternal::WindowInternal(const ATD::Vector2S &size,
 	, transform()
 	, fbResizePtr(new FbResize())
 {
-	transform.SetScale(Vector2D(pixelSize, pixelSize));
+	transform.setScale(Vector2D(pixelSize, pixelSize));
 
 	/* Important! */
-	shader.SetUniform("unfProject", Projection2D().GetMatrix());
-	shader.SetUniform("unfTransform", transform.GetMatrix());
+	shader.setUniform("unfProject", Projection2D().matrix());
+	shader.setUniform("unfTransform", transform.matrix());
 
 	/* IPRINTF("", "Window shader initialized"); // DEBUG */
 
@@ -252,7 +274,7 @@ ATD::Window::WindowInternal::~WindowInternal()
 	delete fbResizePtr;
 }
 
-void ATD::Window::WindowInternal::ProcessX11Events(
+void ATD::Window::WindowInternal::processX11Events(
 		std::list<X11::XEvent> &eventsX11, 
 		std::list<ATD::Window::Event> &eventsResult, 
 		ATD::Window::WindowX11 &winX11)
@@ -273,8 +295,8 @@ void ATD::Window::WindowInternal::ProcessX11Events(
 					xKeySym = X11::XLookupKeysym(&xEvtIter->xkey, xksIter);
 				}
 				if (xKeySym != NoSymbol) {
-					auto kmIter = KEY_MAP.find(xKeySym);
-					if (kmIter != KEY_MAP.end()) {
+					auto kmIter = _KEY_MAP.find(xKeySym);
+					if (kmIter != _KEY_MAP.end()) {
 						keyChangeMap[kmIter->second].push_back(xEvtIter);
 					}
 				}
@@ -316,17 +338,17 @@ void ATD::Window::WindowInternal::ProcessX11Events(
 					if (sizeNew != winX11.size) {
 						/* Actual resize. */
 						Vector2S fbSizeNew = sizeNew / pixelSize;
-						if (fbSizeNew != frameBufferPtr->Size()) {
+						if (fbSizeNew != frameBufferPtr->size()) {
 							/* Resize event hit pixelized frameBufferPtr. 
 							 * Game should be notified. */
 
-							fbResizePtr->Update(fbSizeNew);
+							fbResizePtr->update(fbSizeNew);
 						}
 
 						winX11.size = sizeNew;
 						/* TODO: Redesign, according to alignX and alignY
 						 *
-						 * transform.SetOffset(
+						 * transform.setOffset(
 								ATD::Vector2D(
 									winX11.size.x % pixelSize / 2, 
 									winX11.size.y % pixelSize / 2)); */
@@ -382,7 +404,7 @@ void ATD::Window::WindowInternal::ProcessX11Events(
 			case MotionNotify: /* MOUSE_MOVE */
 				{
 					ATD::Vector2I mousePosition = static_cast<Vector2I>(
-							transform.ApplyReverse(
+							transform.applyReverse(
 								Vector2D(
 									xEvt.xbutton.x, 
 									xEvt.xbutton.y)));
@@ -400,17 +422,17 @@ void ATD::Window::WindowInternal::ProcessX11Events(
 				{
 					unsigned button = xEvt.xbutton.button;
 					ATD::Vector2I mousePosition = static_cast<Vector2I>(
-							transform.ApplyReverse(
+							transform.applyReverse(
 								Vector2D(
 									xEvt.xbutton.x, 
 									xEvt.xbutton.y)));
 
-					auto bmIter = MOUSE_BUTTON_MAP.find(button);
-					if (bmIter != MOUSE_BUTTON_MAP.end()) {
+					auto bmIter = _MOUSE_BUTTON_MAP.find(button);
+					if (bmIter != _MOUSE_BUTTON_MAP.end()) {
 						ATD::Mouse::Event event(
 								ATD::Window::Event::MOUSE_PRESS, 
 								mousePosition);
-						event.Button() = bmIter->second;
+						event.button() = bmIter->second;
 
 						eventsResult.push_back(
 								static_cast<ATD::Window::Event>(event));
@@ -422,29 +444,29 @@ void ATD::Window::WindowInternal::ProcessX11Events(
 				{
 					unsigned button = xEvt.xbutton.button;
 					ATD::Vector2I mousePosition = static_cast<Vector2I>(
-							transform.ApplyReverse(
+							transform.applyReverse(
 								Vector2D(
 									xEvt.xbutton.x, 
 									xEvt.xbutton.y)));
 
-					auto bmIter = MOUSE_BUTTON_MAP.find(button);
-					if (bmIter != MOUSE_BUTTON_MAP.end()) {
+					auto bmIter = _MOUSE_BUTTON_MAP.find(button);
+					if (bmIter != _MOUSE_BUTTON_MAP.end()) {
 						ATD::Mouse::Event event(
 								ATD::Window::Event::MOUSE_RELEASE, 
 								mousePosition);
-						event.Button() = bmIter->second;
+						event.button() = bmIter->second;
 
 						eventsResult.push_back(
 								static_cast<ATD::Window::Event>(event));
 					}
 
-					auto smIter = MOUSE_SCROLL_MAP.find(button);
-					if (smIter != MOUSE_SCROLL_MAP.end()) {
+					auto smIter = _MOUSE_SCROLL_MAP.find(button);
+					if (smIter != _MOUSE_SCROLL_MAP.end()) {
 						ATD::Mouse::Event event(
 								ATD::Window::Event::MOUSE_SCROLL, 
 								ATD::Vector2I(xEvt.xbutton.x, 
 									xEvt.xbutton.y));
-						event.Scroll() = smIter->second;
+						event.scroll() = smIter->second;
 
 						eventsResult.push_back(
 								static_cast<ATD::Window::Event>(event));
@@ -460,8 +482,8 @@ void ATD::Window::WindowInternal::ProcessX11Events(
 						xKeySym = X11::XLookupKeysym(&xEvt.xkey, xksIter);
 					}
 					if (xKeySym != NoSymbol) {
-						auto kmIter = KEY_MAP.find(xKeySym);
-						if (kmIter != KEY_MAP.end()) {
+						auto kmIter = _KEY_MAP.find(xKeySym);
+						if (kmIter != _KEY_MAP.end()) {
 							ATD::Keyboard::Event event(
 									ATD::Window::Event::KEY_PRESS, 
 									kmIter->second);
@@ -483,8 +505,8 @@ void ATD::Window::WindowInternal::ProcessX11Events(
 						xKeySym = X11::XLookupKeysym(&xEvt.xkey, xksIter);
 					}
 					if (xKeySym != NoSymbol) {
-						auto kmIter = KEY_MAP.find(xKeySym);
-						if (kmIter != KEY_MAP.end()) {
+						auto kmIter = _KEY_MAP.find(xKeySym);
+						if (kmIter != _KEY_MAP.end()) {
 							ATD::Keyboard::Event event(
 									ATD::Window::Event::KEY_RELEASE, 
 									kmIter->second);
@@ -505,23 +527,23 @@ void ATD::Window::WindowInternal::ProcessX11Events(
 	}
 
 	/* Apply & report resize events. */
-	fbResizePtr->ApplyIfPending(frameBufferPtr, alignX, alignY, verticesPtr);
-	fbResizePtr->ReportIfComplete(eventsResult);
+	fbResizePtr->applyIfPending(frameBufferPtr, alignX, alignY, verticesPtr);
+	fbResizePtr->reportIfComplete(eventsResult);
 }
 
-ATD::Matrix3F ATD::Window::WindowInternal::Coords2DTransformMatrix(
+ATD::Matrix3F ATD::Window::WindowInternal::coords2DTransformMatrix(
 		const ATD::Window::WindowX11 &winX11) const
 {
 	Transform2D transformCoords;
 
-	transformCoords.SetScale(
+	transformCoords.setScale(
 			ATD::Vector2D(
 				2.f / static_cast<float>(winX11.size.x), 
 				2.f / static_cast<float>(winX11.size.y)));
 
-	transformCoords.SetOffset(ATD::Vector2D(-1., -1.));
+	transformCoords.setOffset(ATD::Vector2D(-1., -1.));
 
-	Matrix3F matrix = transformCoords.GetMatrix();
+	Matrix3F matrix = transformCoords.matrix();
 	matrix[1][0] *= -1.f;
 	matrix[1][1] *= -1.f;
 	matrix[1][2] *= -1.f;
@@ -529,25 +551,25 @@ ATD::Matrix3F ATD::Window::WindowInternal::Coords2DTransformMatrix(
 	return matrix;
 }
 
-void ATD::Window::WindowInternal::Display(ATD::Window::WindowX11 &winX11)
+void ATD::Window::WindowInternal::display(ATD::Window::WindowX11 &winX11)
 {
-	gl._Clear(Gl::COLOR_BUFFER_BIT | Gl::DEPTH_BUFFER_BIT);
+	gl.clear(Gl::COLOR_BUFFER_BIT | Gl::DEPTH_BUFFER_BIT);
 
 	{
 		/* IPRINTF("", "FB size: %lu %lu", 
-				frameBufferPtr->Size().x, 
-				frameBufferPtr->Size().y); // DEBUG */
+				frameBufferPtr->size().x, 
+				frameBufferPtr->size().y); // DEBUG */
 
-		shader.SetUniform("unfTransform", 
-				Coords2DTransformMatrix(winX11) * 
-				transform.GetMatrix());
+		shader.setUniform("unfTransform", 
+				coords2DTransformMatrix(winX11) * 
+				transform.matrix());
 
 		Shader::Usage useShader(shader);
-		Texture::Usage useTexture(*frameBufferPtr->GetColorTexture());
+		Texture::Usage useTexture(*frameBufferPtr->getColorTexture());
 
-		gl._Viewport(0, 0, winX11.size.x, winX11.size.y);
+		gl.viewport(0, 0, winX11.size.x, winX11.size.y);
 
-		verticesPtr->DrawSelfInternal(shader.GetAttrIndices());
+		verticesPtr->drawSelfInternal(shader.getAttrIndices());
 	}
 
 	X11::glXSwapBuffers(winX11.displayPtr, winX11.window);

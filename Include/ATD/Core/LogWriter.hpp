@@ -1,9 +1,10 @@
 /**
-* @file     
-* @brief    LogWriter class for debug.
-* @details  License: GPL v3.
-* @author   ArthurTheDigital (arthurthedigital@gmail.com)
-* @since    $Id: $ */
+ * @file      
+ * @brief     LogWriter class for debug.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -52,7 +53,7 @@ public:
 	/**
 	 * @brief ...
 	 * @param line - structured debug line */
-	virtual void OnNotify(const Debug::Line &line) override;
+	virtual void onNotify(const Debug::Line &line) override;
 
 private:
 	/**
@@ -67,7 +68,7 @@ private:
 	/**
 	 * @brief ...
 	 * @param data - ... */
-	void WriteImpl(const std::string &data);
+	void writeImpl(const std::string &data);
 
 
 	Fs::Ptr m_fs;

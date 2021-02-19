@@ -123,7 +123,7 @@ public:
 	 * @brief ...
 	 * @param v - ...
 	 * @return ... */
-	inline T Dot(const Vector4<T> &v) const
+	inline T dot(const Vector4<T> &v) const
 	{ return (x * v.x + y * v.y + z * v.z + w * v.w); }
 
 	/* Constant arithmetics: */
@@ -209,7 +209,9 @@ public:
 
 /**
  * @brief 4D vector template for real values (aka float, double)
- * @class ... */
+ * @class ...
+ *
+ * T must be either float or double. */
 template<typename T>
 class Vector4Real : public Vector4<T>
 {
@@ -295,7 +297,7 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	inline T LengthSquare() const
+	inline T lengthSquare() const
 	{
 		return (Vector4<T>::x * Vector4<T>::x + 
 				Vector4<T>::y * Vector4<T>::y + 
@@ -306,18 +308,41 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	inline T Length() const
-	{ return Root<T, 2>(LengthSquare()); }
+	inline T length() const
+	{ return ::sqrt(lengthSquare()); }
+
+	/**
+	 * @brief Fast length calculation with no checks.
+	 * @return length if non-0, garbage otherwise. */
+	inline T lengthLp() const
+	{ return static_cast<T>(Lp::sqrt(static_cast<float>(lengthSquare()))); }
 
 	/**
 	 * @brief ...
 	 * @return vector of the same direction, but of 1. length */
-	inline Vector3Real<T> Normalized() const
+	inline Vector4Real<T> normalized() const
 	{
-		T n = Length();
+		T n = length();
 		return Vector4Real<T>(
 				Vector4<T>(Vector4<T>::x, Vector4<T>::y, 
 					Vector4<T>::z, Vector4<T>::w) / n);
+	}
+
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline Vector4Real<T> normalizedLp() const
+	{
+		T rLen = static_cast<T>(
+				Lp::rSqrt(
+					static_cast<float>(
+						lengthSquare())));
+
+		return Vector4Real<T>(
+				Vector4<T>::x * rLen, 
+				Vector4<T>::y * rLen, 
+				Vector4<T>::z * rLen, 
+				Vector4<T>::w * rLen);
 	}
 };
 

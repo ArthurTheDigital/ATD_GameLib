@@ -21,14 +21,14 @@ int main()
 	Editor editor;
 
 	/* Canary line */
-	::fprintf(stdout, "%s\n", std::string(screen.Size().x, '=').c_str());
+	::fprintf(stdout, "%s\n", std::string(screen.size().x, '=').c_str());
 
 	while (1) {
-		screen.Clear();
+		screen.clear();
 
-		editor.Update(keyboard);
-		screen.Draw(editor);
-		screen.Display();
+		editor.update(keyboard);
+		screen.draw(editor);
+		screen.display();
 
 		struct timespec sleepTime = {.tv_sec = 0, .tv_nsec = 80000000};
 		// struct timespec sleepTime = {.tv_sec = 1, .tv_nsec = 0};

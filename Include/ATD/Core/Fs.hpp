@@ -1,9 +1,10 @@
 /**
-* @file     
-* @brief    Fs functions implementation.
-* @details  License: GPL v3.
-* @author   ArthurTheDigital (arthurthedigital@gmail.com)
-* @since    $Id: $ */
+ * @file      
+ * @brief     Fs functions implementation.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -52,22 +53,22 @@ public:
 		/**
 		 * @brief ...
 		 * @return ... */
-		bool IsDir() const;
+		bool isDir() const;
 
 		/**
 		 * @brief ...
 		 * @return ... */
-		bool IsReg() const;
+		bool isReg() const;
 
 		/**
 		 * @brief ...
 		 * @return ... */
-		bool IsLnk() const;
+		bool isLnk() const;
 
 		/**
 		 * @brief ...
 		 * @return ... */
-		size_t Size() const;
+		size_t size() const;
 
 	private:
 		mode_t m_mode;
@@ -112,45 +113,45 @@ public:
 		/**
 		* @brief Get common path
 		* @return ... */
-		std::string Common() const;
+		std::string common() const;
 
 		/**
 		* @brief Get native path
 		* @return ... */
-		std::string Native() const;
+		std::string native() const;
 
 		/**
 		 * @brief Whether the path is absolute
 		 * @return ... */
-		bool IsAbsolute() const;
+		bool isAbsolute() const;
 
 		/**
 		* @brief ...
 		* @param subPath - ...
 		* @return ... */
-		Path Joined(const Path &subPath) const;
+		Path joined(const Path &subPath) const;
 
 		/**
 		 * @brief Calculates path to the same object, but relative to the 
 		 *        source directory.
 		 * @param source - source directory path
 		 * @return ... */
-		Path Relative(const Path &source = Path(CURR_DIR)) const;
+		Path relative(const Path &source = Path(CURR_DIR)) const;
 
 		/**
 		 * @brief ...
 		 * @return ... */
-		Path Absolute() const;
+		Path absolute() const;
 
 		/**
 		* @brief ...
 		* @return ... */
-		Path ParentDir() const;
+		Path parentDir() const;
 
 		/**
 		 * @brief ...
 		 * @return a filename of the object, without parent dirs */
-		std::string Filename() const;
+		std::string filename() const;
 
 		/**
 		 * @brief Selects a suitable (case-insensitive match) extension from 
@@ -158,23 +159,23 @@ public:
 		 * @param extensions - list of lower-case(!) extensions to choose from
 		 * @return index of the extension in the list, that matches, if no 
 		 *         one does, returns size_t(-1) */
-		size_t ExtensionFromList(const std::vector<std::string> &extensions) const;
+		size_t extensionFromList(const std::vector<std::string> &extensions) const;
 
 		/**
 		* @brief ...
 		* @return ... */
-		bool Exists() const;
+		bool exists() const;
 
 		/**
 		 * @brief Assumes current path as symlink and unwinds it
 		 * @return - path pointed by symlink */
-		Path Linked(bool recursively = false) const;
+		Path linked(bool recursively = false) const;
 
 		/**
 		 * @brief Recursively creates dir with a path
 		 *
 		 * If there already is a dir with such path, it is still a success. */
-		void Mkdir() const;
+		void mkDir() const;
 
 		/**
 		 * @brief Reads the contents of directory
@@ -182,16 +183,16 @@ public:
 		 *                         symlinks and directories, otherwise 
 		 *                         displays everything statable
 		 * @return ... */
-		std::vector<Path> Readdir(bool showEverything = false) const;
+		std::vector<Path> readDir(bool showEverything = false) const;
 
 		/**
 		 * @brief Copies path recursively (like "cp -R")
 		 * @param destination - destination path */
-		void Copy(const Path &destination) const;
+		void copy(const Path &destination) const;
 
 		/**
 		 * @brief Unlinks the path recursively */
-		void Unlink() const;
+		void unlink() const;
 
 		/**
 		 * @brief Move file/dir if present to the new path recursively
@@ -199,7 +200,7 @@ public:
 		 *
 		 * If moving between devices takes place, device or socket files 
 		 * are getting lost! */
-		void Move(const Path &destination) const;
+		void move(const Path &destination) const;
 
 	private:
 		/**
@@ -219,7 +220,7 @@ public:
 		 * @param destination - ...
 		 *
 		 * Relies on destination to be already unoccupied */
-		void CopyImpl(const Path &destination) const;
+		void copyImpl(const Path &destination) const;
 
 
 		/* Idea:
@@ -255,7 +256,7 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	Path BinDir() const;
+	Path binDir() const;
 
 	/* Idea:
 	 * Since resources are not hard-coded into game, the game just remembers

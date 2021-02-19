@@ -75,6 +75,11 @@ public:
 	 * whole FrameBuffer */
 	VertexBuffer2D();
 
+	/**
+	 * @brief ...
+	 * @param textureBounds - ...
+	 * @param textureSize   - ...
+	 * @param color         - ... */
 	VertexBuffer2D(const RectL &textureBounds, 
 			const Vector2S &textureSize, 
 			const Pixel &color = ATD::Pixel(0xFF, 0xFF, 0xFF));
@@ -104,14 +109,20 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	Gl::Uint GetGlId() const;
-
-	size_t Size() const;
+	inline Gl::Uint glId() const
+	{ return m_bufferId; }
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Primitive GetPrimitive() const;
+	inline size_t size() const
+	{ return m_size; }
+
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline const Primitive &primitive() const
+	{ return m_primitive; }
 
 	/**
 	 * @brief Draw vertices using current OpenGL texture and shader.
@@ -119,7 +130,7 @@ public:
 	 *
 	 * Texture and shader must be set via proper ::Usage subclass before 
 	 * calling this function. */
-	void DrawSelfInternal(const AttrIndices &attrIndices) const;
+	void drawSelfInternal(const AttrIndices &attrIndices) const;
 
 private:
 	Gl::Uint m_bufferId;

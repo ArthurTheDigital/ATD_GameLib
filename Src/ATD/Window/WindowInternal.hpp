@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file      
  * @brief     Internal window data implementation.
  * @details   ...
  * @author    ArthurTheDigital (arthurthedigital@gmail.com)
@@ -17,23 +17,46 @@
 
 /* ATD::Window::WindowInternal: */
 
+/**
+ * @brief ...
+ * @class ... */
 class ATD::Window::WindowInternal
 {
 public:
+	/**
+	 * @brief ... */
 	class FbResize;
 
+	/**
+	 * @brief ...
+	 * @param size        - ...
+	 * @param n_pixelSize - ... */
 	WindowInternal(const ATD::Vector2S &size, 
 			size_t n_pixelSize);
 
+	/**
+	 * @brief ... */
 	~WindowInternal();
 
-	void ProcessX11Events(std::list<X11::XEvent> &eventsX11, 
+	/**
+	 * @brief ...
+	 * @param eventsX11    - ...
+	 * @param eventsResult - ...
+	 * @param winX11       - ... */
+	void processX11Events(std::list<X11::XEvent> &eventsX11, 
 			std::list<Window::Event> &eventsResult, 
 			WindowX11 &winX11);
 
-	void Display(WindowX11 &winX11);
+	/**
+	 * @brief ...
+	 * @param winX11 - ... */
+	void display(WindowX11 &winX11);
 
-	Matrix3F Coords2DTransformMatrix(const WindowX11 &winX11) const;
+	/**
+	 * @brief ...
+	 * @param winX11 - ...
+	 * @return ... */
+	Matrix3F coords2DTransformMatrix(const WindowX11 &winX11) const;
 
 
 	bool hasFocus;

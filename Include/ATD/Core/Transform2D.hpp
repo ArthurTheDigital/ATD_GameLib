@@ -39,32 +39,43 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	Vector2D Scale() const;
+	inline const Vector2D &scale() const
+	{ return m_scale; }
 
 	/**
 	 * @brief ...
 	 * @param scaleSrc - ... */
-	void SetScale(const Vector2D &scale);
+	void setScale(const Vector2D &scale);
 
 	/**
 	 * @brief ...
 	 * @return angle of the transform as fraction of circle */
-	double AngleFrc() const;
+	inline double angleFrc() const
+	{ return m_angleFrc; }
 
 	/**
 	 * @brief ...
 	 * @param angleFrc - ... */
-	void SetAngleFrc(double angleFrc);
+	void setAngleFrc(double angleFrc);
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Vector2D Offset() const;
+	inline const Vector2D &offset() const
+	{ return m_offset; }
 
 	/**
 	 * @brief ...
 	 * @param offset */
-	void SetOffset(const Vector2D &offset);
+	void setOffset(const Vector2D &offset);
+
+	/**
+	 * @brief Update internally cached matrix if needed. */
+	void flushMatrix() const;
+
+	/**
+	 * @brief Update internally cached reverse matrix if needed. */
+	void flushReverseMatrix() const;
 
 	/* === */
 
@@ -72,13 +83,13 @@ public:
 	 * @brief ...
 	 * @param target - ...
 	 * @return ... */
-	Vector2D Apply(const Vector2D &target) const;
+	Vector2D apply(const Vector2D &target) const;
 
 	/**
 	 * @brief ...
 	 * @param target - ...
 	 * @return ... */
-	Vector2D ApplyReverse(const Vector2D &target) const;
+	Vector2D applyReverse(const Vector2D &target) const;
 
 	/**
 	 * @brief Get 3x3 matrix, suitable to transform coords inside GLSL shader.
@@ -86,46 +97,50 @@ public:
 	 *
 	 * Matrix dimention should be vector dimention + 1 to apply offset via 
 	 * multiplication. Vector to be multiplied should be (x, y, 1.f). */
-	Matrix3F GetMatrix() const;
+	inline const Matrix3F &matrix() const
+	{ flushMatrix(); return m_matrix; }
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Matrix3F GetMatrixReverse() const;
+	inline const Matrix3F &reverseMatrix() const
+	{ flushReverseMatrix(); return m_reverseMatrix; }
 
 protected:
 	/**
 	 * @brief ...
 	 * @return ... */
-	Matrix3F GetMatrixScale() const;
+	Matrix3F getScaleMatrix() const;
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Matrix3F GetMatrixScaleReverse() const;
+	Matrix3F getReverseScaleMatrix() const;
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Matrix3F GetMatrixRotation() const;
+	Matrix3F getRotationMatrix() const;
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Matrix3F GetMatrixRotationReverse() const;
+	Matrix3F getReverseRotationMatrix() const;
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Matrix3F GetMatrixOffset() const;
+	Matrix3F getOffsetMatrix() const;
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Matrix3F GetMatrixOffsetReverse() const;
+	Matrix3F getReverseOffsetMatrix() const;
 
 protected:
-	virtual void InvalidateCache() const;
+	/**
+	 * @brief Invalidate both cached matrices. */
+	virtual void invalidateCache() const;
 
 private:
 	Vector2D m_scale;
@@ -135,6 +150,10 @@ private:
 	/* GL matrix is cached. */
 	mutable Matrix3F m_matrix;
 	mutable bool m_matrixVld;
+
+	/* Reverse GL matrix is cached either. */
+	mutable Matrix3F m_reverseMatrix;
+	mutable bool m_reverseMatrixVld;
 };
 
 /**
@@ -148,22 +167,26 @@ public:
 	Projection2D(const Transform2D &transform = Transform2D());
 
 	/**
-	 * @brief ...
-	 * @return ... */
-	Matrix3F GetMatrix() const;
+	 * @brief ... */
+	inline void flushMatrix() const
+	{ Transform2D::flushReverseMatrix(); }
+
+	/**
+	 * @brief ... */
+	inline void flushReverseMatrix() const
+	{ Transform2D::flushMatrix(); }
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Matrix3F GetMatrixReverse() const;
+	inline const Matrix3F &matrix() const
+	{ return Transform2D::reverseMatrix(); }
 
-protected:
-	virtual void InvalidateCache() const;
-
-private:
-	/* GL projection (reverse) matrix is cached. */
-	mutable Matrix3F m_matrixProjection;
-	mutable bool m_matrixProjectionVld;
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline const Matrix3F &reverseMatrix() const
+	{ return Transform2D::matrix(); }
 };
 
 } /* namespace ATD */

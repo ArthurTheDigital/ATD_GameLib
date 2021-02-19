@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file      
  * @brief     X11 window data implementation.
  * @details   ...
  * @author    ArthurTheDigital (arthurthedigital@gmail.com)
@@ -15,11 +15,11 @@
 
 /* ATD::Window::WindowX11 auxiliary: X11 init: */
 
-static std::atomic<bool> isX11Init(false);
+static std::atomic<bool> _isX11Init(false);
 
-static void X11Init()
+static void _x11Init()
 {
-	if (!isX11Init.load()) {
+	if (!_isX11Init.load()) {
 		/* Perform init */
 
 		/* Ignore all IO X-errors */
@@ -31,39 +31,39 @@ static void X11Init()
 				}
 				);
 
-		isX11Init.store(true);
+		_isX11Init.store(true);
 	}
 }
 
 
 /* ATD::Window::WindowX11 auxiliary: Shared X11 display access: */
 
-static X11::Display *sharedDisplayPtr = nullptr;
-static unsigned long sharedDisplayRc = 0; /* Rc - reference counter. */
-static std::recursive_mutex sharedDisplayMtx; /* Mutex. */
+static X11::Display *_sharedDisplayPtr = nullptr;
+static unsigned long _sharedDisplayRc = 0; /* Rc - reference counter. */
+static std::recursive_mutex _sharedDisplayMtx; /* Mutex. */
 
-static X11::Display *OpenSharedDisplay()
+static X11::Display *_openSharedDisplay()
 {
-	std::lock_guard<std::recursive_mutex> lock(sharedDisplayMtx);
-	if (!sharedDisplayRc) {
-		sharedDisplayPtr = X11::XOpenDisplay(nullptr);
-		if (!sharedDisplayPtr) {
+	std::lock_guard<std::recursive_mutex> lock(_sharedDisplayMtx);
+	if (!_sharedDisplayRc) {
+		_sharedDisplayPtr = X11::XOpenDisplay(nullptr);
+		if (!_sharedDisplayPtr) {
 			throw std::runtime_error("Failed to open X11 shared display!");
 		}
 	}
-	sharedDisplayRc++;
-	return sharedDisplayPtr;
+	_sharedDisplayRc++;
+	return _sharedDisplayPtr;
 }
 
-static void CloseSharedDisplay()
+static void _closeSharedDisplay()
 {
-	std::lock_guard<std::recursive_mutex> lock(sharedDisplayMtx);
-	if (sharedDisplayRc) {
-		sharedDisplayRc--;
+	std::lock_guard<std::recursive_mutex> lock(_sharedDisplayMtx);
+	if (_sharedDisplayRc) {
+		_sharedDisplayRc--;
 	}
-	if (!sharedDisplayRc && sharedDisplayPtr) {
-		X11::XCloseDisplay(sharedDisplayPtr);
-		sharedDisplayPtr = nullptr;
+	if (!_sharedDisplayRc && _sharedDisplayPtr) {
+		X11::XCloseDisplay(_sharedDisplayPtr);
+		_sharedDisplayPtr = nullptr;
 	}
 }
 
@@ -77,12 +77,12 @@ ATD::Window::WindowX11::WindowX11(const ATD::Vector2S &n_size,
 	, title(n_title)
 {
 	/* Make sure, X11 is initialized. */
-	X11Init();
+	_x11Init();
 
 	/* Obtain the root window (with 'precursors'). */
-	displayPtr = OpenSharedDisplay();
+	displayPtr = _openSharedDisplay();
 	screenId = X11::XDefaultScreen(displayPtr);
-	X11::Window windowRoot = X11::_RootWindow(displayPtr, screenId);
+	X11::Window windowRoot = X11::_rootWindow(displayPtr, screenId);
 
 	/* Get proper XVisualInfo from glAttributes. */
 	ATD::Gl::Int glAttributes[] = {
@@ -132,8 +132,8 @@ ATD::Window::WindowX11::WindowX11(const ATD::Vector2S &n_size,
 			visualInfoPtr, nullptr, GL_TRUE);
 	X11::glXMakeCurrent(displayPtr, window, glRenderCtx);
 
-	ATD::gl._Viewport(0, 0, size.x, size.y);
-	ATD::gl._Enable(ATD::Gl::TEXTURE_2D);
+	ATD::gl.viewport(0, 0, size.x, size.y);
+	ATD::gl.enable(ATD::Gl::TEXTURE_2D);
 
 	/* Window title. */
 	X11::XStoreName(displayPtr, window, title.c_str());
@@ -149,7 +149,7 @@ ATD::Window::WindowX11::~WindowX11()
 
 	X11::XDestroyWindow(displayPtr, window);
 
-	CloseSharedDisplay();
+	_closeSharedDisplay();
 }
 
 

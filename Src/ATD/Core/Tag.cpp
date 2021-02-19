@@ -1,9 +1,10 @@
 /**
- * @file     
- * @brief    Tag system.
- * @details  License: GPL v3.$
- * @author   ArthurTheDigital (arthurthedigital@gmail.com)
- * @since    $Id: $ */
+ * @file      
+ * @brief     Tag system.
+ * @detail    ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #include <ATD/Core/Tag.hpp>
 
@@ -94,24 +95,24 @@ ATD::Tag::Expression::Expression(const std::string &expression)
 	: Expression(expression.c_str())
 {}
 
-bool ATD::Tag::Expression::Check(const ATD::Tag &tag) const
+bool ATD::Tag::Expression::check(const ATD::Tag &tag) const
 {
 	switch (m_oper) {
 		case Operator::ANY:
 			{
-				return (m_args[0].Check(tag) || m_args[1].Check(tag));
+				return (m_args[0].check(tag) || m_args[1].check(tag));
 			}
 			break;
 
 		case Operator::ALL:
 			{
-				return (m_args[0].Check(tag) && m_args[1].Check(tag));
+				return (m_args[0].check(tag) && m_args[1].check(tag));
 			}
 			break;
 
 		case Operator::EXC:
 			{
-				return !(m_args[0].Check(tag));
+				return !(m_args[0].check(tag));
 			}
 			break;
 

@@ -61,28 +61,28 @@ public:
 
 	Editor();
 
-	void Update(ATD::Ansi::Keyboard &kb);
+	void update(ATD::Ansi::Keyboard &kb);
 
-	virtual void DrawSelf(ATD::Ansi::Image &target) const override;
+	virtual void drawSelf(ATD::Ansi::Image &target) const override;
 
-	inline ATD::Ansi::Glyph GetBrush() const
+	inline ATD::Ansi::Glyph getBrush() const
 	{ return ATD::Ansi::Glyph(BRUSH_GLYPHS[m_brushGlyphNo], m_brushFg); }
 
-	void Save(const std::string &filename);
+	void save(const std::string &filename);
 
 private:
-	void UpdOnMain(const ATD::Ansi::Key &key);
-	void UpdOnChooseGlyph(const ATD::Ansi::Key &key);
-	void UpdOnChooseColor(const ATD::Ansi::Key &key, unsigned char &color);
+	void updOnMain(const ATD::Ansi::Key &key);
+	void updOnChooseGlyph(const ATD::Ansi::Key &key);
+	void updOnChooseColor(const ATD::Ansi::Key &key, unsigned char &color);
 
-	void UpdOnSaveAs(const ATD::Ansi::Key &key);
-	void UpdOnSaveAs(const std::string &input);
+	void updOnSaveAsKey(const ATD::Ansi::Key &key);
+	void updOnSaveAsStr(const std::string &input);
 
-	void UpdOnSaved(const ATD::Ansi::Key &key);
+	void updOnSaved(const ATD::Ansi::Key &key);
 
-	void UpdBlink();
+	void updBlink();
 
-	void DrawFrame(ATD::Ansi::Image &target, 
+	void drawFrame(ATD::Ansi::Image &target, 
 			const ATD::Vector2L &position, 
 			const ATD::Vector2S &size, 
 			const ATD::Unicode &frameGlyphs) const;

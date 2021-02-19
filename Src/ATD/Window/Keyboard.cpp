@@ -1,4 +1,10 @@
-
+/**
+ * @file      
+ * @brief     Keyboard implementation.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #include <ATD/Window/Keyboard.hpp>
 
@@ -151,13 +157,13 @@ ATD::Keyboard::Keyboard(Window *window)
 					static_cast<Key::Collective>(keyCollective), KeyState()));
 	}
 
-	Attach(window, 
+	attach(window, 
 			static_cast<uint32_t>(Window::Event::KEY_PRESS) | 
 			static_cast<uint32_t>(Window::Event::KEY_RELEASE) | 
 			static_cast<uint32_t>(Window::Event::FOCUS_OUT));
 }
 
-void ATD::Keyboard::Remap(const Key::Code &pressed, const Key::Code &read)
+void ATD::Keyboard::remap(const Key::Code &pressed, const Key::Code &read)
 {
 	if (pressed != Key::INVALID && read != Key::INVALID) {
 		if (pressed != read) {
@@ -171,60 +177,53 @@ void ATD::Keyboard::Remap(const Key::Code &pressed, const Key::Code &read)
 	}
 }
 
-const ATD::KeyState &ATD::Keyboard::operator[](
-		const ATD::Key::Code &code) const
-{ return m_keyStates.at(code); }
-
-bool ATD::Keyboard::IsPressed(const ATD::Key::Code &code) const
-{ return m_keyStates.at(code).IsPressed(); }
-
-bool ATD::Keyboard::IsPressed(const ATD::Key::Collective &code) const
+bool ATD::Keyboard::isPressed(const ATD::Key::Collective &code) const
 {
 	switch (code) {
 		case Key::SHIFT:
-			return (m_keyStates.at(Key::L_SHIFT).IsPressed() || 
-					m_keyStates.at(Key::R_SHIFT).IsPressed());
+			return (m_keyStates.at(Key::L_SHIFT).isPressed() || 
+					m_keyStates.at(Key::R_SHIFT).isPressed());
 
 		case Key::CTRL:
-			return (m_keyStates.at(Key::L_CTRL).IsPressed() || 
-					m_keyStates.at(Key::R_CTRL).IsPressed());
+			return (m_keyStates.at(Key::L_CTRL).isPressed() || 
+					m_keyStates.at(Key::R_CTRL).isPressed());
 
 		case Key::ALT:
-			return (m_keyStates.at(Key::L_ALT).IsPressed() || 
-					m_keyStates.at(Key::R_ALT).IsPressed());
+			return (m_keyStates.at(Key::L_ALT).isPressed() || 
+					m_keyStates.at(Key::R_ALT).isPressed());
 
 		case Key::SUPER:
-			return (m_keyStates.at(Key::L_SUPER).IsPressed() || 
-					m_keyStates.at(Key::R_SUPER).IsPressed());
+			return (m_keyStates.at(Key::L_SUPER).isPressed() || 
+					m_keyStates.at(Key::R_SUPER).isPressed());
 		default:
 			{}
 	}
 	return false;
 }
 
-void ATD::Keyboard::OnPollStart()
+void ATD::Keyboard::onPollStart()
 {
 	/* Update key states. */
 	for (auto &statePair : m_keyStates) {
-		statePair.second.UpdatePrev();
+		statePair.second.updatePrev();
 	}
 }
 
-void ATD::Keyboard::OnNotify(const ATD::Window::Event &event)
+void ATD::Keyboard::onNotify(const ATD::Window::Event &event)
 {
 	/* Update key states. */
 	const Event *eventPtr = static_cast<const Event *>(&event);
 	if (eventPtr->type == Window::Event::FOCUS_OUT) {
 		/* Release all the keys, being pressed. */
 		for (auto &statePair : m_keyStates) {
-			statePair.second.UpdateCurr(false);
+			statePair.second.updateCurr(false);
 		}
 	} else {
-		auto remapIter = m_remap.find(eventPtr->KeyCode());
+		auto remapIter = m_remap.find(eventPtr->keyCode());
 		Key::Code code = (remapIter != m_remap.end()) ? remapIter->second : 
-			eventPtr->KeyCode();
+			eventPtr->keyCode();
 
-		m_keyStates.at(code).UpdateCurr(
+		m_keyStates.at(code).updateCurr(
 				(eventPtr->type == Window::Event::KEY_PRESS));
 
 		/*

@@ -42,15 +42,15 @@ public:
 	 * @brief ...
 	 * @param n_x - ...
 	 * @param n_y - ...
-	 * @param n_w - ...
-	 * @param n_h - ... */
+	 * @param n_w - rectangle's width, must be >= 0
+	 * @param n_h - rectangle's height, must be >= 0 */
 	inline Rectangle(const T &n_x, const T &n_y, const T &n_w, const T &n_h)
 		: x(n_x), y(n_y), w(n_w), h(n_h)
 	{}
 
 	/**
 	 * @brief ...
-	 * @param size - ... */
+	 * @param size - rectangle's size, both components, shall be >= 0 */
 	inline Rectangle(const Vector2<T> &size)
 		: Rectangle<T>(Vector2<T>(), size)
 	{}
@@ -58,7 +58,7 @@ public:
 	/**
 	 * @brief ...
 	 * @param pos - ...
-	 * @param size - ... */
+	 * @param size - rectangle's size, both components, shall be >= 0 */
 	inline Rectangle(const Vector2<T> &pos, const Vector2<T> &size)
 		: x(pos.x), y(pos.y), w(size.x), h(size.y)
 	{}
@@ -77,7 +77,7 @@ public:
 		: Rectangle((vertexes.size() ? vertexes.front() : Vector2<T>()), Vector2<T>())
 	{
 		for (size_t iV = 1; iV < vertexes.size(); iV++) {
-			Rectangle<T> ir = Including(vertexes[iV]);
+			Rectangle<T> ir = including(vertexes[iV]);
 
 			x = ir.x;
 			y = ir.y;
@@ -90,14 +90,14 @@ public:
 	 * @brief ...
 	 * @return position of top left corner (may not be same as 
 	 *         Vector2<T>(x, y)) */
-	inline Vector2<T> Pos() const
-	{ return Vector2<T>(Min<T>(x, x + w), Min<T>(y, y + h)); }
+	inline Vector2<T> pos() const
+	{ return Vector2<T>(x, y); }
 
 	/**
 	 * @brief ...
 	 * @return absolute size width/height of rectangle */
-	inline Vector2<T> Size() const
-	{ return Vector2<T>(Abs<T>(w), Abs<T>(h)); }
+	inline Vector2<T> size() const
+	{ return Vector2<T>(w, h); }
 
 	/**
 	 * @brief ...
@@ -110,30 +110,30 @@ public:
 	 * |   1        2      
 	 * V(Y)                
 	 *                     */
-	inline std::vector<Vector2<T>> Vertices() const
+	inline std::vector<Vector2<T>> vertices() const
 	{
-		std::vector<Vector2<T>> vertexes;
-		vertexes.push_back(Vector2<T>(x, y));
-		vertexes.push_back(Vector2<T>(x, y + h));
-		vertexes.push_back(Vector2<T>(x + w, y + h));
-		vertexes.push_back(Vector2<T>(x + w, y));
-		return vertexes;
+		std::vector<Vector2<T>> _vertices;
+		_vertices.push_back(Vector2<T>(x, y));
+		_vertices.push_back(Vector2<T>(x, y + h));
+		_vertices.push_back(Vector2<T>(x + w, y + h));
+		_vertices.push_back(Vector2<T>(x + w, y));
+		return _vertices;
 	}
 
 	/**
 	 * @brief ...
 	 * @param outer - ...
 	 * @return ... */
-	inline Rectangle<T> Clamped(const Rectangle<T> &outer) const
+	inline Rectangle<T> clamped(const Rectangle<T> &outer) const
 	{
-		Vector2<T> oPos = outer.Pos();
-		Vector2<T> oSize = outer.Size();
+		Vector2<T> oPos = outer.pos();
+		Vector2<T> oSize = outer.size();
 
-		T cX = Clamp<T>(x, oPos.x, oPos.x + oSize.x);
-		T cX1 = Clamp<T>(x + w, oPos.x, oPos.x + oSize.x);
+		T cX = clamp<T>(x, oPos.x, oPos.x + oSize.x);
+		T cX1 = clamp<T>(x + w, oPos.x, oPos.x + oSize.x);
 
-		T cY = Clamp<T>(y, oPos.y, oPos.y + oSize.y);
-		T cY1 = Clamp<T>(y + h, oPos.y, oPos.y + oSize.y);
+		T cY = clamp<T>(y, oPos.y, oPos.y + oSize.y);
+		T cY1 = clamp<T>(y + h, oPos.y, oPos.y + oSize.y);
 
 		return Rectangle<T>(cX, cY, cX1 - cX, cY1 - cY);
 	}
@@ -144,12 +144,12 @@ public:
 	 * @param alignX - ...
 	 * @param alignY - ...
 	 * @return ... */
-	inline Rectangle<T> AlignClamped(const Rectangle<T> &outer, 
+	inline Rectangle<T> alignClamped(const Rectangle<T> &outer, 
 			const Align &alignX, 
 			const Align &alignY) const
 	{
-		T nW = Min<T>(w, outer.w);
-		T nH = Min<T>(h, outer.h);
+		T nW = min<T>(w, outer.w);
+		T nH = min<T>(h, outer.h);
 
 		T nX = outer.x + (
 				(alignX == Align::LOWER) ? 0 : 
@@ -170,22 +170,22 @@ public:
 	 * @brief ...
 	 * @param point - ...
 	 * @return true if point is inside the rectangle */
-	inline bool Contains(const Vector2<T> &point) const
-	{ return ((Min<T>(x, x + w) <= point.x) && (point.x < Max<T>(x, x + w)) && 
-			((Min<T>(y, y + h) <= point.y) && (point.y < Max<T>(y, y + h)))); }
+	inline bool contains(const Vector2<T> &point) const
+	{ return ((x <= point.x) && (point.x < x + w) && 
+			((y <= point.y) && (point.y < y + h))); }
 
 	/**
 	 * @brief ...
 	 * @param point - point to be included
 	 * @return stretched rectangle, including both previous rectangle and the 
 	 *         point */
-	inline Rectangle<T> Including(const Vector2<T> &point) const
+	inline Rectangle<T> including(const Vector2<T> &point) const
 	{
-		T iX = w < 0 ? Max<T>(x, point.x) : Min<T>(x, point.x);
-		T iX1 = w < 0 ? Min<T>(x + w, point.x) : Max<T>(x + w, point.x);
+		T iX = w < 0 ? max<T>(x, point.x) : min<T>(x, point.x);
+		T iX1 = w < 0 ? min<T>(x + w, point.x) : max<T>(x + w, point.x);
 
-		T iY = h < 0 ? Max<T>(y, point.y) : Min<T>(y, point.y);
-		T iY1 = h < 0 ? Min<T>(y + h, point.y) : Max<T>(y + h, point.y);
+		T iY = h < 0 ? max<T>(y, point.y) : min<T>(y, point.y);
+		T iY1 = h < 0 ? min<T>(y + h, point.y) : max<T>(y + h, point.y);
 
 		return Rectangle<T>(iX, iY, iX1 - iX, iY1 - iY);
 	}
@@ -195,9 +195,13 @@ public:
 	 * @return ... */
 	template<typename F>
 	inline operator Rectangle<F>() const
-	{ return Rectangle<F>(static_cast<F>(x), static_cast<F>(y), static_cast<F>(w), static_cast<F>(h)); }
+	{
+		return Rectangle<F>(static_cast<F>(x), static_cast<F>(y), 
+				static_cast<F>(w), static_cast<F>(h));
+	}
 
 
+	/* FIXME: Shall I try union? Setters/getters? */
 	T x;
 	T y;
 	T w;

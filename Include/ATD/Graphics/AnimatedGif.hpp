@@ -1,3 +1,10 @@
+/**
+ * @file      
+ * @brief     Animated gif handling.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -12,7 +19,8 @@
 namespace ATD {
 
 /**
- * @brief ... */
+ * @brief ...
+ * @class ... */
 class AnimatedGif : public Loadable
 {
 public:
@@ -20,7 +28,8 @@ public:
 	typedef std::shared_ptr<const AnimatedGif> CPtr;
 
 	/**
-	 * @brief ... */
+	 * @brief ...
+	 * @class ... */
 	class Player
 	{
 	public:
@@ -32,32 +41,35 @@ public:
 		/**
 		 * @brief ...
 		 * @return ... */
-		AnimatedGif::CPtr GetGif() const;
+		inline AnimatedGif::CPtr gifPtr() const
+		{ return m_gifPtr; }
 
 		/**
 		 * @brief ... */
-		void Reset();
+		void reset();
 
 		/**
 		 * @brief ...
 		 * @param elapsedMs - time, elapsed since last update, can be 
 		 *                    negative to play backwards */
-		void Update(long elapsedMs);
+		void update(long elapsedMs);
 
 		/**
-		 * @brief ...
+		 * @brief Get current frame.
 		 * @return ... */
-		Image::CPtr GetCurrentFrame() const;
+		inline Image::CPtr currFrame() const
+		{ return m_gifPtr->framePtr(m_curFrameIndex); }
 
 		/**
 		 * @brief ...
 		 * @return time of play since last gif loop start */
-		size_t GetPlayedMs() const;
+		inline size_t playedMs() const
+		{ return m_playedMs; }
 
 		/**
 		 * @brief Jumps to playedMs time point of the gif loop
 		 * @param playedMs - ... */
-		void SetPlayedMs(size_t playedMs);
+		void setPlayedMs(size_t playedMs);
 
 	private:
 		AnimatedGif::CPtr m_gifPtr;
@@ -65,6 +77,15 @@ public:
 		size_t m_curFrameIndex;
 		size_t m_curFramePlayedMs;
 		size_t m_playedMs;
+	};
+
+	/**
+	 * @brief ...
+	 * @class ... */
+	struct Frame
+	{
+		Image::Ptr imgPtr;
+		size_t delayMs;
 	};
 
 	static const size_t DFT_DELAY_MS;
@@ -116,36 +137,44 @@ public:
 	/**
 	 * @brief ...
 	 * @return size of gif image */
-	Vector2S Size() const;
+	inline const Vector2S &size() const
+	{ return m_size; }
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	size_t FramesCount() const;
-
-	/**
-	 * @brief ...
-	 * @param frameIndex - ...
-	 * @return ... */
-	Image::CPtr GetFrame(size_t frameIndex) const;
+	inline size_t framesCount() const
+	{ return m_frames.size(); }
 
 	/**
 	 * @brief ...
 	 * @param frameIndex - ...
 	 * @return ... */
-	Image::Ptr GetFrame(size_t frameIndex);
+	inline Image::CPtr framePtr(size_t frameIndex) const
+	{
+		checkFrameIndex(frameIndex);
+		return static_cast<Image::CPtr>(m_frames[frameIndex].imgPtr);
+	}
 
 	/**
 	 * @brief ...
 	 * @param frameIndex - ...
 	 * @return ... */
-	size_t GetFrameDelayMs(size_t frameIndex) const;
+	inline Image::Ptr framePtr(size_t frameIndex)
+	{ checkFrameIndex(frameIndex); return m_frames[frameIndex].imgPtr; }
+
+	/**
+	 * @brief ...
+	 * @param frameIndex - ...
+	 * @return ... */
+	inline size_t frameDelayMs(size_t frameIndex) const
+	{ checkFrameIndex(frameIndex); return m_frames[frameIndex].delayMs; }
 
 	/**
 	 * @brief ...
 	 * @param frameIndex - ...
 	 * @param delayMs     - frame delay (milliseconds) */
-	void SetFrameDelayMs(size_t frameIndex, size_t delayMs);
+	void setFrameDelayMs(size_t frameIndex, size_t delayMs);
 
 	/* FIXME: Do I need methods for editing gif? Like inserting/erasing 
 	 * frames? */
@@ -153,27 +182,27 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	size_t DurationMs() const;
+	size_t durationMs() const;
 
 protected:
 	/**
 	 * @brief ...
 	 * @param filename - ... */
-	virtual void OnLoad(const Fs::Path &filename) override;
+	virtual void onLoad(const Fs::Path &filename) override;
 
 	/**
 	 * @brief ...
 	 * @param filename - ... */
-	virtual void OnSave(const Fs::Path &filename) const override;
+	virtual void onSave(const Fs::Path &filename) const override;
 
 private:
-	struct Frame
-	{
-		Image::Ptr imgPtr; // TODO: replace Pixel *pixels -> Image::Ptr imgPtr
-		size_t delayMs;
-	};
+	/**
+	 * @brief ...
+	 * @param frameIndex - ...
+	 * @throws ... */
+	void checkFrameIndex(size_t frameIndex) const;
 
-
+private:
 	Vector2S m_size;
 	std::vector<Frame> m_frames;
 

@@ -1,9 +1,10 @@
 /**
-* @file     
-* @brief    LogWriter class for debug.
-* @details  License: GPL v3.
-* @author   ArthurTheDigital (arthurthedigital@gmail.com)
-* @since    $Id: $ */
+ * @file      
+ * @brief     LogWriter class for debug.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3
+ * @since     $Id: $ */
 
 #include <ATD/Core/LogWriter.hpp>
 
@@ -18,20 +19,21 @@
  * "SomeFile.docx" + "LABEL" = "SomeFileLABEL.docx"
  * "SomeFileNoExt" + "LABEL" = "SomeFileNoExtLABEL"
  * ".SomeFileHidden" + "LABEL" = ".SomeFileHiddenLABEL" */
-static std::string LabelFilename(const std::string &filename, 
+static std::string _labelFilename(const std::string &filename, 
 		const std::string &label)
 {
 	size_t extensionDelimiter = filename.rfind(".", 1);
 	std::string name = filename.substr(0, extensionDelimiter);
-	std::string extension = (extensionDelimiter > filename.size()) ? std::string() : filename.substr(extensionDelimiter);
+	std::string extension = (extensionDelimiter > filename.size()) ? 
+		std::string() : filename.substr(extensionDelimiter);
 
 	return name + label + extension;
 }
 
-static ATD::Fs::Path LabelPath(const ATD::Fs::Path &path, 
+static ATD::Fs::Path _labelPath(const ATD::Fs::Path &path, 
 		const std::string &label)
 {
-	return path.ParentDir().Joined(ATD::Fs::Path(LabelFilename(path.Filename(), label)));
+	return path.parentDir().joined(ATD::Fs::Path(_labelFilename(path.filename(), label)));
 }
 
 
@@ -119,21 +121,21 @@ public:
 	/**
 	 * @brief ...
 	 * @param line - a line to write - without '\n' */
-	void Write(const std::string &line);
+	void write(const std::string &line);
 
 	/**
 	 * @brief Get size of the file
 	 * @return ... */
-	size_t Size();
+	size_t size();
 
 	/**
 	 * @brief Read the entire content of the file into a single string
 	 * @return ... */
-	std::string ReadWhole();
+	std::string readWhole();
 
 	/**
 	 * @brief ... */
-	void Close();
+	void close();
 
 private:
 	FILE *m_file;
@@ -151,14 +153,18 @@ ATD::LogWriter::File::File(const Fs::Path &path,
 	: m_file(nullptr)
 {
 	/* If fails, throws exception itself */
-	path.ParentDir().Mkdir();
+	path.parentDir().mkDir();
 
 	if (truncate) {
-		FILE *dummyFile = ::fopen(path.Native().c_str(), "wb");
+		FILE *dummyFile = ::fopen(path.native().c_str(), "wb");
 		if (dummyFile) {
 			::fclose(dummyFile);
 		} else {
-			throw std::runtime_error(std::string("failed to truncate file \"") + path.Native() + std::string("\""));
+			throw std::runtime_error(
+					std::string("failed to truncate file \"") + 
+					path.native() + 
+					std::string("\"")
+					);
 		}
 	}
 
@@ -173,7 +179,7 @@ ATD::LogWriter::File::File(const Fs::Path &path,
 	 * position. Write position is not affected and is always at the end of 
 	 * the file.
 	 * */
-	m_file = ::fopen(path.Native().c_str(), "a+b");
+	m_file = ::fopen(path.native().c_str(), "a+b");
 }
 
 ATD::LogWriter::File::File(ATD::LogWriter::File &&other)
@@ -184,7 +190,7 @@ ATD::LogWriter::File::File(ATD::LogWriter::File &&other)
 
 ATD::LogWriter::File::~File()
 {
-	Close();
+	close();
 }
 
 ATD::LogWriter::File& ATD::LogWriter::File::operator =(ATD::LogWriter::File &&other)
@@ -199,7 +205,7 @@ ATD::LogWriter::File& ATD::LogWriter::File::operator =(ATD::LogWriter::File &&ot
 	return *this;
 }
 
-void ATD::LogWriter::File::Write(const std::string &line)
+void ATD::LogWriter::File::write(const std::string &line)
 {
 	if (m_file) {
 		size_t wrResult = ::fwrite(line.c_str(), 1, line.size(), m_file);
@@ -209,7 +215,7 @@ void ATD::LogWriter::File::Write(const std::string &line)
 	}
 }
 
-size_t ATD::LogWriter::File::Size()
+size_t ATD::LogWriter::File::size()
 {
 	size_t size = 0;
 	if (m_file) {
@@ -224,9 +230,9 @@ size_t ATD::LogWriter::File::Size()
 	return size;
 }
 
-std::string ATD::LogWriter::File::ReadWhole()
+std::string ATD::LogWriter::File::readWhole()
 {
-	size_t fileSize = Size();
+	size_t fileSize = size();
 	std::string fileString(fileSize + 1, '\0');
 	if (m_file) {
 		::fseek(m_file, 0, SEEK_SET);
@@ -239,7 +245,7 @@ std::string ATD::LogWriter::File::ReadWhole()
 	return fileString;
 }
 
-void ATD::LogWriter::File::Close()
+void ATD::LogWriter::File::close()
 {
 	if (m_file) {
 		::fclose(m_file);
@@ -255,18 +261,21 @@ ATD::LogWriter::LogWriter(const Fs::Ptr &fs,
 	: Debug::Observer()
 	, m_fs(fs)
 	, m_filePath(filePath)
-	, m_filePathOLD(LabelPath(filePath, "OLD"))
-	, m_filePathNEW(LabelPath(filePath, "NEW"))
+	, m_filePathOLD(_labelPath(filePath, "OLD"))
+	, m_filePathNEW(_labelPath(filePath, "NEW"))
 	, m_fileLimit(fileLimit)
 {
 	/* Write a "session delimiter" for a better .log file readability */
-	WriteImpl(LINE_BREAKER + std::string("====.==.== ==:==:== New log session") + LINE_BREAKER);
+	writeImpl(LINE_BREAKER + 
+			std::string("====.==.== ==:==:== New log session") + 
+			LINE_BREAKER
+			);
 
-	/* Log Writer shall receive everything from debug */
-	Attach(&debug);
+	/* LogWriter shall receive everything from debug */
+	attach(&debug);
 }
 
-void ATD::LogWriter::OnNotify(const Debug::Line &line)
+void ATD::LogWriter::onNotify(const Debug::Line &line)
 {
 	try {
 		/* Print line to a single string */
@@ -302,32 +311,33 @@ void ATD::LogWriter::OnNotify(const Debug::Line &line)
 			line.line << 
 			LINE_BREAKER;
 
-		WriteImpl(oss.str());
+		writeImpl(oss.str());
 	} catch (const std::exception &e_err) {
-		/* If any error happened, LogWriter shall Detach()!
+		/* If any error happened, LogWriter shall detach()!
 		 *
 		 * Because, otherwise, an error during debug output will invoke 
 		 * extra debug output, and trying to process that, LogWriter will 
 		 * definetely face the SAME error.
 		 * Endless loop. */
-		Detach();
+		detach();
 		::fprintf(stderr, "CRITICAL ERROR: \"LogWriter\" failure: %s\n", e_err.what());
 	} catch (...) {
-		Detach();
+		detach();
 		::fprintf(stderr, "CRITICAL ERROR: \"LogWriter\" failure: ???\n");
 	}
 }
 
-void ATD::LogWriter::WriteImpl(const std::string &data)
+void ATD::LogWriter::writeImpl(const std::string &data)
 {
-	File f(m_fs->BinDir().Joined(m_filePath));
-	if (f.Size() + data.size() >= m_fileLimit) {
-		std::string oldLogContent = f.ReadWhole();
-		f.Close();
+	File f(m_fs->binDir().joined(m_filePath));
+	if (f.size() + data.size() >= m_fileLimit) {
+		std::string oldLogContent = f.readWhole();
+		f.close();
 
 		/* Calculate disposable volume */
 		size_t maxDisposable = m_fileLimit * DISPOSABLE_FRACTION; /* Limit */
-		size_t disposableBorder = (maxDisposable > MAX_LINE_LENGTH) ? maxDisposable - MAX_LINE_LENGTH : 0; /* Initial guess */
+		size_t disposableBorder = (maxDisposable > MAX_LINE_LENGTH) ? 
+			maxDisposable - MAX_LINE_LENGTH : 0; /* Initial guess */
 		{
 			size_t curr, prev = disposableBorder;
 			while ((curr = oldLogContent.find(LINE_BREAKER, prev)) != std::string::npos) {
@@ -338,28 +348,29 @@ void ATD::LogWriter::WriteImpl(const std::string &data)
 		}
 
 		/* Truncate the new .log file and fill it partially */
-		f = static_cast<File &&>(File(m_fs->BinDir().Joined(m_filePathOLD), true));
-		f.Write(". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n"); /* To show, that .log is cropped */
-		f.Write(oldLogContent.substr(disposableBorder));
-		f.Close();
+		f = static_cast<File &&>(File(m_fs->binDir().joined(m_filePathOLD), true));
+		f.write(". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "
+				". . . . . . . . . . . . . . .\n"); /* To show, that .log is cropped */
+		f.write(oldLogContent.substr(disposableBorder));
+		f.close();
 
 		/* Rename the files */
 		{
 			Fs::Path buffer;
 
 			buffer = m_filePathOLD;
-			buffer.Move(m_filePathNEW);
+			buffer.move(m_filePathNEW);
 
 			buffer = m_filePath;
-			buffer.Move(m_filePathOLD);
+			buffer.move(m_filePathOLD);
 
 			buffer = m_filePathNEW;
-			buffer.Move(m_filePath);
+			buffer.move(m_filePath);
 		}
 
-		f = static_cast<File &&>(File(m_fs->BinDir().Joined(m_filePath)));
+		f = static_cast<File &&>(File(m_fs->binDir().joined(m_filePath)));
 	}
-	f.Write(data);
+	f.write(data);
 }
 
 

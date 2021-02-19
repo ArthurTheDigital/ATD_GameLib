@@ -27,12 +27,12 @@ namespace ImageImpl {
  * @param value    - cell value to be drawn
  * @return ... */
 template<typename T>
-void DrawCell(const Vector2S &dstSize, 
+void drawCell(const Vector2S &dstSize, 
 		T *dstData, 
 		const Vector2L &position, 
 		const T &value)
 {
-	if (RectL(dstSize).Contains(position)) {
+	if (RectL(dstSize).contains(position)) {
 		dstData[position.y * dstSize.x + position.x] = value;
 	}
 }
@@ -46,14 +46,14 @@ void DrawCell(const Vector2S &dstSize,
  * @param srcData  - data, belonging to texture to be drawn
  * @param mixer    - custom cell mixer */
 template<typename T>
-void DrawImage(const Vector2S &dstSize, 
+void drawImage(const Vector2S &dstSize, 
 		T *dstData, 
 		const Vector2L &position, 
 		const Vector2S &srcSize, 
 		const T *srcData, 
 		std::function<T(const T &, const T&)> mixer)
 {
-	RectL dstBounds(RectL(position, srcSize).Clamped(RectL(dstSize)));
+	RectL dstBounds(RectL(position, srcSize).clamped(RectL(dstSize)));
 	long srcX = (position.x > 0) ? 0 : -position.x;
 	long srcY = (position.y > 0) ? 0 : -position.y;
 
@@ -80,7 +80,7 @@ void DrawImage(const Vector2S &dstSize,
  * @param repeat   - whether source texture shall repeat within the bounds
  * @param mixer    - custom cell mixer */
 template<typename T>
-void DrawBounded(const Vector2S &dstSize, 
+void drawBounded(const Vector2S &dstSize, 
 		T *dstData, 
 		const Vector2L &position, 
 		const Vector2S &srcSize, 
@@ -89,9 +89,9 @@ void DrawBounded(const Vector2S &dstSize,
 		bool repeat, 
 		std::function<T(const T &, const T&)> mixer)
 {
-	RectL dstBounds(RectL(position, bounds.Size()).Clamped(RectL(dstSize)));
-	long srcX = ((position.x > 0) ? 0 : -position.x) + bounds.Pos().x;
-	long srcY = ((position.y > 0) ? 0 : -position.y) + bounds.Pos().y;
+	RectL dstBounds(RectL(position, bounds.size()).clamped(RectL(dstSize)));
+	long srcX = ((position.x > 0) ? 0 : -position.x) + bounds.pos().x;
+	long srcY = ((position.y > 0) ? 0 : -position.y) + bounds.pos().y;
 
 	if (repeat) {
 		if (srcSize.x * srcSize.y) {
@@ -116,7 +116,7 @@ void DrawBounded(const Vector2S &dstSize,
 		}
 	} else {
 		RectL srcBounds(
-				RectL(Vector2L(srcX, srcY), dstBounds.Size()).Clamped(
+				RectL(Vector2L(srcX, srcY), dstBounds.size()).clamped(
 					RectL(srcSize)));
 
 		for (long iX = 0; iX < srcBounds.w; iX++) {
@@ -146,7 +146,7 @@ void DrawBounded(const Vector2S &dstSize,
  * @param mixer     - custom cell mixer
  * @param cellRatio - cell width / cell height */
 template<typename T>
-void DrawTransformed(const Vector2S &dstSize, 
+void drawTransformed(const Vector2S &dstSize, 
 		T *dstData, 
 		const Vector2D &position, 
 		const Transform2D &transform, 
@@ -159,33 +159,33 @@ void DrawTransformed(const Vector2S &dstSize,
 		double cellRatio = 1.)
 {
 	Transform2D transformMain(transform); /* Bounds to canvas. */
-	transformMain.SetOffset(position - (Vector2D(bounds.Pos()) + center));
+	transformMain.setOffset(position - (Vector2D(bounds.pos()) + center));
 
 	Transform2D transformCell(Vector2D(cellRatio, 1.));
 
-	std::vector<Vector2L> srcVertices = bounds.Vertices();
+	std::vector<Vector2L> srcVertices = bounds.vertices();
 	std::vector<Vector2L> dstVertices;
 	for (auto &v : srcVertices) {
 		dstVertices.push_back(static_cast<Vector2L>(
-					transformCell.ApplyReverse(
-						transformMain.Apply(
-							transformCell.Apply(static_cast<Vector2D>(v))))));
+					transformCell.applyReverse(
+						transformMain.apply(
+							transformCell.apply(static_cast<Vector2D>(v))))));
 	}
-	RectL dstBounds(RectL(dstVertices).Clamped(RectL(dstSize)));
+	RectL dstBounds(RectL(dstVertices).clamped(RectL(dstSize)));
 
 	if (repeat) {
 		if (srcSize.x * srcSize.y) {
 			for (long iX = 0; iX < dstBounds.w; iX++) {
 				for (long iY = 0; iY < dstBounds.h; iY++) {
-					Vector2L dst = dstBounds.Pos() + Vector2L(iX, iY);
+					Vector2L dst = dstBounds.pos() + Vector2L(iX, iY);
 					Vector2L src = 
 						static_cast<Vector2L>(
-								transformCell.Apply(
-									transformMain.ApplyReverse(
-										transformCell.ApplyReverse(
+								transformCell.apply(
+									transformMain.applyReverse(
+										transformCell.applyReverse(
 											static_cast<Vector2D>(dst)))));
 
-					if (bounds.Contains(src)) {
+					if (bounds.contains(src)) {
 						src.x %= srcSize.x;
 						src.x += src.x < 0 ? srcSize.x : 0;
 
@@ -203,19 +203,19 @@ void DrawTransformed(const Vector2S &dstSize,
 			}
 		}
 	} else {
-		RectL srcBounds(bounds.Clamped(RectL(srcSize)));
+		RectL srcBounds(bounds.clamped(RectL(srcSize)));
 
 		for (long iX = 0; iX < dstBounds.w; iX++) {
 			for (long iY = 0; iY < dstBounds.h; iY++) {
-				Vector2L dst = dstBounds.Pos() + Vector2L(iX, iY);
+				Vector2L dst = dstBounds.pos() + Vector2L(iX, iY);
 				Vector2L src = 
 					static_cast<Vector2L>(
-							transformCell.Apply(
-								transformMain.ApplyReverse(
-									transformCell.ApplyReverse(
+							transformCell.apply(
+								transformMain.applyReverse(
+									transformCell.applyReverse(
 										static_cast<Vector2D>(dst)))));
 
-				if (srcBounds.Contains(src)) {
+				if (srcBounds.contains(src)) {
 					size_t iSrc = static_cast<size_t>(
 							src.y * srcSize.x + src.x);
 					size_t iDst = static_cast<size_t>(
@@ -228,7 +228,7 @@ void DrawTransformed(const Vector2S &dstSize,
 	}
 }
 
-/* FIXME: Add DrawTriangle(). */
+/* FIXME: Add drawTriangle(). */
 
 } /* namespace ImageImpl */
 

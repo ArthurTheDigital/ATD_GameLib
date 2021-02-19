@@ -1,10 +1,10 @@
 ROOTDIR := ../..
 BUILDDIR := $(ROOTDIR)/Build
-NAME := Texture
+NAME := LpMath
+
+DEFINES += DEBUG_LEVEL=10
 
 LIBS += atd-core
-LIBS += atd-graphics
-LIBS += atd-window
 
 include $(BUILDDIR)/COMMON/Test.mak
 

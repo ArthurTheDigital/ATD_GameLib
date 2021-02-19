@@ -1,9 +1,10 @@
 /**
-* @file     
-* @brief    Printf functions.
-* @details  License: GPL v3.
-* @author   ArthurTheDigital (arthurthedigital@gmail.com)
-* @since    $Id: $ */
+ * @file      
+ * @brief     Printf functions.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -14,18 +15,22 @@
 
 namespace ATD {
 
+namespace Aux {
+
 /**
  * @brief ...
  * @param format - C-style format
  * @return ... */
-std::string Printf(const char *format, ...);
+std::string printf(const char *format, ...);
 
 /**
  * @brief ...
  * @param format - C-style format
  * @param args   - ...
  * @return ... */
-std::string VaPrintf(const char *format, va_list args);
+std::string vaPrintf(const char *format, va_list args);
+
+} /* namespace Aux */
 
 } /* namespace ATD */
 

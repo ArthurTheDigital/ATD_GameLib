@@ -1,9 +1,10 @@
 /**
-* @file     
-* @brief    AutoTest class for debug.
-* @details  License: GPL v3.
-* @author   ArthurTheDigital (arthurthedigital@gmail.com)
-* @since    $Id: $ */
+ * @file      
+ * @brief     AutoTest class for debug.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -38,7 +39,7 @@ public:
 	/**
 	 * @brief ...
 	 * @param line - ... */
-	virtual void OnNotify(const Debug::Line &line) override;
+	virtual void onNotify(const Debug::Line &line) override;
 
 	/**
 	 * @brief Force test to finish and print output.
@@ -46,7 +47,7 @@ public:
 	 *
 	 * Even if pass == true, but the test has a control string set, 
 	 * the success/failure still depend on matching control string. */
-	void Finish(bool pass = true);
+	void finish(bool pass = true);
 
 private:
 	std::string m_name;

@@ -1,4 +1,12 @@
+/**
+ * @file      
+ * @brief     Ansi blinking glyph.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
+#pragma once
 
 #include <ATD/Ansi/Graphics.hpp>
 
@@ -7,23 +15,47 @@ namespace ATD {
 
 namespace Ansi {
 
+/**
+ * @brief Some terminals do not animate blinking text, so this id a rough work around.
+ * @class ... */
 class Blinker : public Image::Drawable
 {
 public:
-	Blinker(size_t ticks, 
-			const Vector2L &position = Vector2L());
+	/**
+	 * @brief ...
+	 * @param ticks    - ...
+	 * @param position - ... */
+	Blinker(size_t ticks, const Vector2L &position = Vector2L());
 
+	/**
+	 * @brief ...
+	 * @param other - ... */
 	Blinker(const Blinker &other);
 
+	/**
+	 * @brief ...
+	 * @param other - ...
+	 * @return ... */
 	Blinker &operator=(const Blinker &other);
 
-	void SetPosition(const Vector2L &position);
+	/**
+	 * @brief ...
+	 * @param position - ... */
+	void setPosition(const Vector2L &position);
 
-	void Reset() const;
+	/**
+	 * @brief ... */
+	void reset() const;
 
-	void Update(size_t ticksDelta = 1) const;
+	/**
+	 * @brief ...
+	 * @param ticksDelta - ... */
+	void update(size_t ticksDelta = 1) const;
 
-	void DrawSelf(Image &target) const;
+	/**
+	 * @brief ...
+	 * @param target - ... */
+	void drawSelf(Image &target) const;
 
 private:
 	size_t m_ticks;
@@ -32,6 +64,8 @@ private:
 	mutable size_t m_ticksCount;
 };
 
-}
+} /* namespace Ansi */
 
-}
+} /* namespace ATD */
+
+

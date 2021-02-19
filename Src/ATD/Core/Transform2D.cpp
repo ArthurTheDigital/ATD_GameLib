@@ -18,8 +18,16 @@
 
 /* ATD::Transform2D auxiliary: */
 
-const double EPS = 0.000001;
-const double CIRCLE = 2. * M_PI;
+const double _CIRCLE = 2. * M_PI;
+
+static void _checkScale(const ATD::Vector2D &scale)
+{
+	const double eps = 0.000001;
+	if (scale.x <= 0. + eps || scale.y <= 0. + eps) {
+		throw std::runtime_error(ATD::Aux::printf("Invalid scale (%lf, %lf)", 
+					scale.x, scale.y));
+	}
+}
 
 
 /* ATD::Transform2D: */
@@ -32,11 +40,10 @@ ATD::Transform2D::Transform2D(const ATD::Vector2D &scale,
 	, m_offset(offset)
 	, m_matrix()
 	, m_matrixVld(false)
+	, m_reverseMatrix()
+	, m_reverseMatrixVld(false)
 {
-	if (scale.x <= 0. + EPS || scale.y <= 0. + EPS) {
-		throw std::runtime_error(Printf("Invalid scale (%lf, %lf)", 
-					scale.x, scale.y));
-	}
+	_checkScale(scale);
 }
 
 ATD::Transform2D::Transform2D(const ATD::Transform2D &other)
@@ -45,64 +52,59 @@ ATD::Transform2D::Transform2D(const ATD::Transform2D &other)
 
 /* Setters/getters */
 
-ATD::Vector2D ATD::Transform2D::Scale() const
-{ return m_scale; }
-
-void ATD::Transform2D::SetScale(const ATD::Vector2D &scale)
+void ATD::Transform2D::setScale(const ATD::Vector2D &scale)
 {
-	if (scale.x <= 0. + EPS || scale.y <= 0. + EPS) {
-		throw std::runtime_error(Printf("Invalid scale (%lf, %lf)", 
-					scale.x, scale.y));
-	}
+	_checkScale(scale);
 	m_scale = scale;
-	InvalidateCache();
+	invalidateCache();
 }
 
-double ATD::Transform2D::AngleFrc() const
-{ return m_angleFrc; }
+void ATD::Transform2D::setAngleFrc(double angleFrc)
+{
+	m_angleFrc = angleFrc;
+	invalidateCache();
+}
 
-void ATD::Transform2D::SetAngleFrc(double angleFrc)
-{ m_angleFrc = angleFrc; InvalidateCache(); }
+void ATD::Transform2D::setOffset(const ATD::Vector2D &offset)
+{
+	m_offset = offset;
+	invalidateCache();
+}
 
-ATD::Vector2D ATD::Transform2D::Offset() const
-{ return m_offset; }
+void ATD::Transform2D::flushMatrix() const
+{
+	if (!m_matrixVld) {
+		m_matrix = getOffsetMatrix() * getRotationMatrix() * getScaleMatrix();
+		m_matrixVld = true;
+	}
+}
 
-void ATD::Transform2D::SetOffset(const ATD::Vector2D &offset)
-{ m_offset = offset; InvalidateCache(); }
+void ATD::Transform2D::flushReverseMatrix() const
+{
+	if (!m_reverseMatrixVld) {
+		m_reverseMatrix = getReverseScaleMatrix() * getReverseRotationMatrix() * 
+			getReverseOffsetMatrix();
+		m_reverseMatrixVld = true;
+	}
+}
 
 /* === */
 
-ATD::Vector2D ATD::Transform2D::Apply(const ATD::Vector2D &target) const
+ATD::Vector2D ATD::Transform2D::apply(const ATD::Vector2D &target) const
 {
-	ATD::Vector3F result3F = GetMatrixRotation() * 
-		(GetMatrixScale() * ATD::Vector3F(target, 1.));
+	ATD::Vector3F result3F = getRotationMatrix() * 
+		(getScaleMatrix() * ATD::Vector3F(target, 1.));
 	return ATD::Vector2D(result3F.x, result3F.y) + m_offset;
 }
 
-ATD::Vector2D ATD::Transform2D::ApplyReverse(const ATD::Vector2D &target) const
+ATD::Vector2D ATD::Transform2D::applyReverse(const ATD::Vector2D &target) const
 {
-	ATD::Vector3F result3F = GetMatrixScaleReverse() * 
-		(GetMatrixRotationReverse() * ATD::Vector3F(target - m_offset, 1.));
+	ATD::Vector3F result3F = getReverseScaleMatrix() * 
+		(getReverseRotationMatrix() * ATD::Vector3F(target - m_offset, 1.));
 	return ATD::Vector2D(result3F.x, result3F.y);
 }
 
-ATD::Matrix3F ATD::Transform2D::GetMatrix() const
-{
-	if (!m_matrixVld) {
-		m_matrix = 
-			GetMatrixOffset() * GetMatrixRotation() * GetMatrixScale();
-		m_matrixVld = true;
-	}
-	return m_matrix;
-}
-
-ATD::Matrix3F ATD::Transform2D::GetMatrixReverse() const
-{
-	return (GetMatrixScaleReverse() * GetMatrixRotationReverse() * 
-			GetMatrixOffsetReverse());
-}
-
-ATD::Matrix3F ATD::Transform2D::GetMatrixScale() const
+ATD::Matrix3F ATD::Transform2D::getScaleMatrix() const
 {
 	ATD::Matrix3F scale;
 	scale[0][0] = static_cast<float>(m_scale.x);
@@ -110,7 +112,7 @@ ATD::Matrix3F ATD::Transform2D::GetMatrixScale() const
 	return scale;
 }
 
-ATD::Matrix3F ATD::Transform2D::GetMatrixScaleReverse() const
+ATD::Matrix3F ATD::Transform2D::getReverseScaleMatrix() const
 {
 	ATD::Matrix3F scale;
 	scale[0][0] = static_cast<float>(1. / m_scale.x);
@@ -118,27 +120,27 @@ ATD::Matrix3F ATD::Transform2D::GetMatrixScaleReverse() const
 	return scale;
 }
 
-ATD::Matrix3F ATD::Transform2D::GetMatrixRotation() const
+ATD::Matrix3F ATD::Transform2D::getRotationMatrix() const
 {
 	ATD::Matrix3F rotation;
-	rotation[0][0] = static_cast<float>(::cos(m_angleFrc * CIRCLE));
-	rotation[0][1] = static_cast<float>(-::sin(m_angleFrc * CIRCLE));
-	rotation[1][0] = static_cast<float>(::sin(m_angleFrc * CIRCLE));
-	rotation[1][1] = static_cast<float>(::cos(m_angleFrc * CIRCLE));
+	rotation[0][0] = static_cast<float>(::cos(m_angleFrc * _CIRCLE));
+	rotation[0][1] = static_cast<float>(-::sin(m_angleFrc * _CIRCLE));
+	rotation[1][0] = static_cast<float>(::sin(m_angleFrc * _CIRCLE));
+	rotation[1][1] = static_cast<float>(::cos(m_angleFrc * _CIRCLE));
 	return rotation;
 }
 
-ATD::Matrix3F ATD::Transform2D::GetMatrixRotationReverse() const
+ATD::Matrix3F ATD::Transform2D::getReverseRotationMatrix() const
 {
 	ATD::Matrix3F rotation;
-	rotation[0][0] = static_cast<float>(::cos(m_angleFrc * CIRCLE * (-1.)));
-	rotation[0][1] = static_cast<float>(-::sin(m_angleFrc * CIRCLE * (-1.)));
-	rotation[1][0] = static_cast<float>(::sin(m_angleFrc * CIRCLE * (-1.)));
-	rotation[1][1] = static_cast<float>(::cos(m_angleFrc * CIRCLE * (-1.)));
+	rotation[0][0] = static_cast<float>(::cos(m_angleFrc * _CIRCLE * (-1.)));
+	rotation[0][1] = static_cast<float>(-::sin(m_angleFrc * _CIRCLE * (-1.)));
+	rotation[1][0] = static_cast<float>(::sin(m_angleFrc * _CIRCLE * (-1.)));
+	rotation[1][1] = static_cast<float>(::cos(m_angleFrc * _CIRCLE * (-1.)));
 	return rotation;
 }
 
-ATD::Matrix3F ATD::Transform2D::GetMatrixOffset() const
+ATD::Matrix3F ATD::Transform2D::getOffsetMatrix() const
 {
 	ATD::Matrix3F offset;
 	offset[0][2] = static_cast<float>(m_offset.x);
@@ -146,7 +148,7 @@ ATD::Matrix3F ATD::Transform2D::GetMatrixOffset() const
 	return offset;
 }
 
-ATD::Matrix3F ATD::Transform2D::GetMatrixOffsetReverse() const
+ATD::Matrix3F ATD::Transform2D::getReverseOffsetMatrix() const
 {
 	ATD::Matrix3F offset;
 	offset[0][2] = static_cast<float>(m_offset.x * (-1.));
@@ -154,31 +156,17 @@ ATD::Matrix3F ATD::Transform2D::GetMatrixOffsetReverse() const
 	return offset;
 }
 
-void ATD::Transform2D::InvalidateCache() const
-{ m_matrixVld = false; }
+void ATD::Transform2D::invalidateCache() const
+{
+	m_matrixVld = false;
+	m_reverseMatrixVld = false;
+}
 
 
 /* ATD::Projection2D: */
 
 ATD::Projection2D::Projection2D(const ATD::Transform2D &transform)
 	: Transform2D(transform)
-	, m_matrixProjection()
-	, m_matrixProjectionVld(false)
 {}
-
-ATD::Matrix3F ATD::Projection2D::GetMatrix() const
-{
-	if (!m_matrixProjectionVld) {
-		m_matrixProjection = Transform2D::GetMatrixReverse();
-		m_matrixProjectionVld = true;
-	}
-	return m_matrixProjection;
-}
-
-ATD::Matrix3F ATD::Projection2D::GetMatrixReverse() const
-{ return Transform2D::GetMatrix(); }
-
-void ATD::Projection2D::InvalidateCache() const
-{ Transform2D::InvalidateCache(); m_matrixProjectionVld = false; }
 
 

@@ -71,11 +71,11 @@ public:
 				unsigned char mainColor, 
 				unsigned char burnColor);
 
-		bool Finished() const { return (m_state == State::FINAL); }
+		bool finished() const { return (m_state == State::FINAL); }
 
-		void Update();
+		void update();
 
-		virtual void DrawSelf(ATD::Ansi::Image &target) const override;
+		virtual void drawSelf(ATD::Ansi::Image &target) const override;
 
 	private:
 		ATD::Vector2D m_p;
@@ -114,13 +114,13 @@ public:
 			unsigned char mainColor, 
 			unsigned char burnColor);
 
-	size_t ParticlesNum() const { return m_particles.size(); }
+	size_t particlesNum() const { return m_particles.size(); }
 
-	bool Finished() const { return (m_state == State::FINAL && !m_particles.size()); }
+	bool finished() const { return (m_state == State::FINAL && !m_particles.size()); }
 
-	void Update();
+	void update();
 
-	virtual void DrawSelf(ATD::Ansi::Image &target) const override;
+	virtual void drawSelf(ATD::Ansi::Image &target) const override;
 
 private:
 	ATD::Vector2L m_pos;

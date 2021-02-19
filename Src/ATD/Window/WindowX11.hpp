@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file      
  * @brief     X11 window data implementation.
  * @details   ...
  * @author    ArthurTheDigital (arthurthedigital@gmail.com)
@@ -20,7 +20,7 @@ namespace X11 {
 #include <X11/Xlib.h>
 
 /* Namespaced static function instead of macro */
-static Window _RootWindow(Display *displayPtr, int screenId)
+static Window _rootWindow(Display *displayPtr, int screenId)
 { return RootWindow(displayPtr, screenId); }
 
 } /* namespace X11 */
@@ -28,12 +28,21 @@ static Window _RootWindow(Display *displayPtr, int screenId)
 
 /* ATD::Window::WindowX11: */
 
+/**
+ * @brief ...
+ * @class ... */
 class ATD::Window::WindowX11
 {
 public:
+	/**
+	 * @brief ...
+	 * @param n_size  - ...
+	 * @param n_title - ... */
 	WindowX11(const Vector2S &n_size, 
 			const std::string &n_title);
 
+	/**
+	 * @brief ... */
 	~WindowX11();
 
 

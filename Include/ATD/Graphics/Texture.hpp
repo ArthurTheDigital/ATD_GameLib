@@ -64,7 +64,7 @@ public:
 		Usage(const Texture &texture, const Unit &unit = TEX_0);
 
 		/**
-		 * @param ... */
+		 * @brief ... */
 		~Usage();
 
 	private:
@@ -104,22 +104,25 @@ public:
 	/**
 	 * @brief ...
 	 * @return OpenGL id of texture */
-	Gl::Uint GetGlId() const;
+	inline Gl::Uint glId() const
+	{ return m_texture; }
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Type GetType() const;
+	inline const Type &type() const
+	{ return m_type; }
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Vector2S Size() const;
+	inline const Vector2S &size() const
+	{ return m_size; }
 
 	/**
 	 * @brief Copy the texture to image.
 	 * @return ... */
-	Image::Ptr GetImage() const;
+	Image::Ptr getImage() const;
 
 private:
 	Gl::Uint m_texture;

@@ -1,3 +1,10 @@
+/**
+ * @file      
+ * @brief     ErrWriter class for debug.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -19,7 +26,7 @@ public:
 
 	ErrWriter();
 
-	virtual void OnNotify(const Debug::Line &line) override;
+	virtual void onNotify(const Debug::Line &line) override;
 };
 
 } /* namespace ATD */

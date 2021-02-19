@@ -1,6 +1,6 @@
 /**
  * @file      
- * @brief     PxFont (for pixel fonts) class implementation
+ * @brief     PxFont (for pixel fonts) class.
  * @details   ...
  * @author    ArthurTheDigital (arthurthedigital@gmail.com)
  * @copyright GPL v3.
@@ -29,15 +29,6 @@ ATD::PxFont::Glyph::Glyph(const ATD::RectL &textureRect,
 	, m_joint(joint)
 {}
 
-ATD::RectL ATD::PxFont::Glyph::GetTextureRect() const
-{ return m_textureRect; }
-
-ATD::Vector2L ATD::PxFont::Glyph::GetJointRight() const
-{ return m_joint; }
-
-ATD::Vector2L ATD::PxFont::Glyph::GetJointLeft() const
-{ return Vector2L(0, m_joint.y); }
-
 
 /* ATD::PxFont: */
 
@@ -48,21 +39,16 @@ ATD::PxFont::PxFont()
 	, m_texturePtr(nullptr)
 	, m_imagePtr(new Image(Vector2S(1, 1)))
 {
-	Loadable::AddDependency(static_cast<Loadable *>(m_imagePtr.get()));
+	Loadable::addDependency(static_cast<Loadable *>(m_imagePtr.get()));
 
-	UpdateTextureFromImage();
+	updateTextureFromImage();
 
 	/* Now the font texture is a black square 1x1, which does not make sence, 
 	 * but leaves the PxFont in consistent state, so there will not happen 
 	 * segmentation fault. */
 }
 
-ATD::Texture::CPtr ATD::PxFont::GetTexturePtr() const
-{
-	return static_cast<Texture::CPtr>(m_texturePtr);
-}
-
-const ATD::PxFont::Glyph &ATD::PxFont::GetGlyph(
+const ATD::PxFont::Glyph &ATD::PxFont::getGlyph(
 		const ATD::Unicode::Glyph &glyph) const
 {
 	auto gIter = m_glyphs.find(glyph);
@@ -73,15 +59,15 @@ const ATD::PxFont::Glyph &ATD::PxFont::GetGlyph(
 	}
 }
 
-void ATD::PxFont::OnLoad(const ATD::Fs::Path &filename)
+void ATD::PxFont::onLoad(const ATD::Fs::Path &filename)
 {
 	/* Open .json file, containing PxFont data. */
-	std::ifstream file(filename.Native());
+	std::ifstream file(filename.native());
 	if (!file.is_open()) {
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"Failed to open %s for reading as PxFont", 
-					filename.Native().c_str()));
+					filename.native().c_str()));
 	}
 
 	/* Obtain the size of the file. */
@@ -110,9 +96,9 @@ void ATD::PxFont::OnLoad(const ATD::Fs::Path &filename)
 	Fs::Path imageFilenameRelative(jTexture.get<std::string>());
 
 	Fs::Path imageFilename = 
-		filename.ParentDir().Joined(imageFilenameRelative);
+		filename.parentDir().joined(imageFilenameRelative);
 
-	Loadable::SetDependencyPath(static_cast<Loadable *>(m_imagePtr.get()), 
+	Loadable::setDependencyPath(static_cast<Loadable *>(m_imagePtr.get()), 
 			imageFilename);
 
 	/* Get default glyph. */
@@ -132,12 +118,12 @@ void ATD::PxFont::OnLoad(const ATD::Fs::Path &filename)
 	for (size_t gIndex = 0; gIndex < jGlyphs.size(); gIndex++) {
 		/* Get Glyph key. */
 		const std::string keyUtf = jGlyphs[gIndex]["key"].get<std::string>();
-		const Unicode::Glyph key = Unicode(keyUtf).Front();
+		const Unicode::Glyph key = Unicode(keyUtf).front();
 
 		/* Get Glyph value */
 		auto jValue = jGlyphs[gIndex]["value"];
 		{
-			RectL textureRect = m_dftGlyph.GetTextureRect();
+			RectL textureRect = m_dftGlyph.textureRect();
 			{
 				textureRect.x = jValue["x"].get<long>();
 				textureRect.y = jValue["y"].get<long>();
@@ -153,7 +139,7 @@ void ATD::PxFont::OnLoad(const ATD::Fs::Path &filename)
 				}
 			}
 
-			Vector2L joint = m_dftGlyph.GetJointRight();
+			Vector2L joint = m_dftGlyph.rightJoint();
 			{
 				auto jvJXIter = jValue.find("jX");
 				auto jvJYIter = jValue.find("jY");
@@ -172,12 +158,12 @@ void ATD::PxFont::OnLoad(const ATD::Fs::Path &filename)
 	}
 }
 
-void ATD::PxFont::OnLoadFinished()
+void ATD::PxFont::onLoadFinished()
 {
-	UpdateTextureFromImage();
+	updateTextureFromImage();
 }
 
-void ATD::PxFont::OnSave(const ATD::Fs::Path &filename) const
+void ATD::PxFont::onSave(const ATD::Fs::Path &filename) const
 {
 	nlohmann::json jData;
 
@@ -187,24 +173,24 @@ void ATD::PxFont::OnSave(const ATD::Fs::Path &filename) const
 
 	/* Set image filename. */
 	{
-		Fs::Path fileParentDir = filename.ParentDir();
+		Fs::Path fileParentDir = filename.parentDir();
 
 		Fs::Path imageFilename = 
-			Loadable::GetDependencyPath(
+			Loadable::getDependencyPath(
 					static_cast<Loadable *>(
-						m_imagePtr.get())).Relative(fileParentDir);
-		jData["texture"] = imageFilename.Common();
+						m_imagePtr.get())).relative(fileParentDir);
+		jData["texture"] = imageFilename.common();
 	}
 
 	/* Set default glyph. */
 	jData["default"] = {
-		{"x", m_dftGlyph.GetTextureRect().x}, 
-		{"y", m_dftGlyph.GetTextureRect().y}, 
-		{"w", m_dftGlyph.GetTextureRect().w}, 
-		{"h", m_dftGlyph.GetTextureRect().h}, 
+		{"x", m_dftGlyph.textureRect().x}, 
+		{"y", m_dftGlyph.textureRect().y}, 
+		{"w", m_dftGlyph.textureRect().w}, 
+		{"h", m_dftGlyph.textureRect().h}, 
 	
-		{"jX", m_dftGlyph.GetJointRight().x}, 
-		{"jY", m_dftGlyph.GetJointRight().y}
+		{"jX", m_dftGlyph.rightJoint().x}, 
+		{"jY", m_dftGlyph.rightJoint().y}
 	};
 
 	/* Set glyphs. */
@@ -212,29 +198,29 @@ void ATD::PxFont::OnSave(const ATD::Fs::Path &filename) const
 	for (auto glyphPair : m_glyphs) {
 		nlohmann::json jGlyph;
 
-		std::string glyphKey = Unicode::StrFromGlyph(glyphPair.first);
+		std::string glyphKey = Unicode::strFromGlyph(glyphPair.first);
 
 		nlohmann::json jGlyphValue;
 		{
-			jGlyphValue["x"] = glyphPair.second.GetTextureRect().x;
-			jGlyphValue["y"] = glyphPair.second.GetTextureRect().y;
+			jGlyphValue["x"] = glyphPair.second.textureRect().x;
+			jGlyphValue["y"] = glyphPair.second.textureRect().y;
 
 			if (Vector2L(
-						glyphPair.second.GetTextureRect().w, 
-						glyphPair.second.GetTextureRect().h) != 
+						glyphPair.second.textureRect().w, 
+						glyphPair.second.textureRect().h) != 
 					Vector2L(
-						m_dftGlyph.GetTextureRect().w, 
-						m_dftGlyph.GetTextureRect().h)) {
+						m_dftGlyph.textureRect().w, 
+						m_dftGlyph.textureRect().h)) {
 
-				jGlyphValue["w"] = glyphPair.second.GetTextureRect().w;
-				jGlyphValue["h"] = glyphPair.second.GetTextureRect().h;
+				jGlyphValue["w"] = glyphPair.second.textureRect().w;
+				jGlyphValue["h"] = glyphPair.second.textureRect().h;
 			}
 
-			if (glyphPair.second.GetJointRight() != 
-					m_dftGlyph.GetJointRight()) {
+			if (glyphPair.second.rightJoint() != 
+					m_dftGlyph.rightJoint()) {
 
-				jGlyphValue["jX"] = glyphPair.second.GetJointRight().x;
-				jGlyphValue["jY"] = glyphPair.second.GetJointRight().y;
+				jGlyphValue["jX"] = glyphPair.second.rightJoint().x;
+				jGlyphValue["jY"] = glyphPair.second.rightJoint().y;
 			}
 		}
 
@@ -247,19 +233,19 @@ void ATD::PxFont::OnSave(const ATD::Fs::Path &filename) const
 	std::string jDataBuf = jData.dump();
 
 	/* Rewrite the json file, containing PxFont data. */
-	std::ofstream file(filename.Native());
+	std::ofstream file(filename.native());
 	if (!file.is_open()) {
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"Failed to open %s for writing as PxFont", 
-					filename.Native().c_str()));
+					filename.native().c_str()));
 	}
 
 	file.write(&jDataBuf[0], jDataBuf.size());
 	file.close();
 }
 
-void ATD::PxFont::UpdateTextureFromImage()
+void ATD::PxFont::updateTextureFromImage()
 {
 	if (m_imagePtr) {
 		m_texturePtr = Texture::Ptr(new Texture(*m_imagePtr));

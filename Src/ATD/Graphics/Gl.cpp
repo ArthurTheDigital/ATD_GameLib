@@ -23,7 +23,7 @@
 
 typedef void (*GlFunc)();
 
-static GlFunc LoadFunction(const char *procName, 
+static GlFunc _loadFunction(const char *procName, 
 		std::vector<std::string> &failures)
 {
 	void (*result)() = 
@@ -49,9 +49,9 @@ const ATD::Gl::Enum ATD::Gl::UNSIGNED_SHORT = GL_UNSIGNED_SHORT;
 const ATD::Gl::Enum ATD::Gl::INT = GL_INT;
 const ATD::Gl::Enum ATD::Gl::UNSIGNED_INT = GL_UNSIGNED_INT;
 const ATD::Gl::Enum ATD::Gl::FLOAT = GL_FLOAT;
-const ATD::Gl::Enum ATD::Gl::_2_BYTES = GL_2_BYTES;
-const ATD::Gl::Enum ATD::Gl::_3_BYTES = GL_3_BYTES;
-const ATD::Gl::Enum ATD::Gl::_4_BYTES = GL_4_BYTES;
+const ATD::Gl::Enum ATD::Gl::M_2_BYTES = GL_2_BYTES;
+const ATD::Gl::Enum ATD::Gl::M_3_BYTES = GL_3_BYTES;
+const ATD::Gl::Enum ATD::Gl::M_4_BYTES = GL_4_BYTES;
 const ATD::Gl::Enum ATD::Gl::DOUBLE = GL_DOUBLE;
 
 /* Primitives: */
@@ -265,11 +265,11 @@ const ATD::Gl::Enum ATD::Gl::RENDER = GL_RENDER;
 const ATD::Gl::Enum ATD::Gl::SELECT = GL_SELECT;
 
 /* Feedback */
-const ATD::Gl::Enum ATD::Gl::_2D = GL_2D;
-const ATD::Gl::Enum ATD::Gl::_3D = GL_3D;
-const ATD::Gl::Enum ATD::Gl::_3D_COLOR = GL_3D_COLOR;
-const ATD::Gl::Enum ATD::Gl::_3D_COLOR_TEXTURE = GL_3D_COLOR_TEXTURE;
-const ATD::Gl::Enum ATD::Gl::_4D_COLOR_TEXTURE = GL_4D_COLOR_TEXTURE;
+const ATD::Gl::Enum ATD::Gl::M_2D = GL_2D;
+const ATD::Gl::Enum ATD::Gl::M_3D = GL_3D;
+const ATD::Gl::Enum ATD::Gl::M_3D_COLOR = GL_3D_COLOR;
+const ATD::Gl::Enum ATD::Gl::M_3D_COLOR_TEXTURE = GL_3D_COLOR_TEXTURE;
+const ATD::Gl::Enum ATD::Gl::M_4D_COLOR_TEXTURE = GL_4D_COLOR_TEXTURE;
 const ATD::Gl::Enum ATD::Gl::POINT_TOKEN = GL_POINT_TOKEN;
 const ATD::Gl::Enum ATD::Gl::LINE_TOKEN = GL_LINE_TOKEN;
 const ATD::Gl::Enum ATD::Gl::LINE_RESET_TOKEN = GL_LINE_RESET_TOKEN;
@@ -464,7 +464,7 @@ const ATD::Gl::Enum ATD::Gl::MAP2_GRID_DOMAIN = GL_MAP2_GRID_DOMAIN;
 const ATD::Gl::Enum ATD::Gl::MAP2_GRID_SEGMENTS = GL_MAP2_GRID_SEGMENTS;
 const ATD::Gl::Enum ATD::Gl::COEFF = GL_COEFF;
 const ATD::Gl::Enum ATD::Gl::ORDER = GL_ORDER;
-const ATD::Gl::Enum ATD::Gl::_DOMAIN = GL_DOMAIN;
+const ATD::Gl::Enum ATD::Gl::M_DOMAIN = GL_DOMAIN;
 
 /* Hints */
 const ATD::Gl::Enum ATD::Gl::PERSPECTIVE_CORRECTION_HINT = 
@@ -1487,172 +1487,172 @@ ATD::Gl::Gl()
 {
 	std::vector<std::string> failures;
 
-	_GetError = reinterpret_cast<GetErrorFunc *>(LoadFunction(
+	getError = reinterpret_cast<GetErrorFunc *>(_loadFunction(
 				"glGetError", failures));
 
-	_Viewport = reinterpret_cast<ViewportFunc *>(LoadFunction(
+	viewport = reinterpret_cast<ViewportFunc *>(_loadFunction(
 				"glViewport", failures));
-	_Clear = reinterpret_cast<ClearFunc *>(LoadFunction(
+	clear = reinterpret_cast<ClearFunc *>(_loadFunction(
 				"glClear", failures));
-	_GetBooleanv = reinterpret_cast<GetBooleanvFunc *>(LoadFunction(
+	getBooleanv = reinterpret_cast<GetBooleanvFunc *>(_loadFunction(
 				"glGetBooleanv", failures));
-	_GetFloatv = reinterpret_cast<GetFloatvFunc *>(LoadFunction(
+	getFloatv = reinterpret_cast<GetFloatvFunc *>(_loadFunction(
 				"glGetFloatv", failures));
-	_GetIntegerv = reinterpret_cast<GetIntegervFunc *>(LoadFunction(
+	getIntegerv = reinterpret_cast<GetIntegervFunc *>(_loadFunction(
 				"glGetIntegerv", failures));
 
-	_GenBuffers = reinterpret_cast<GenBuffersFunc *>(LoadFunction(
+	genBuffers = reinterpret_cast<GenBuffersFunc *>(_loadFunction(
 				"glGenBuffers", failures));
-	_DeleteBuffers = reinterpret_cast<DeleteBuffersFunc *>(LoadFunction(
+	deleteBuffers = reinterpret_cast<DeleteBuffersFunc *>(_loadFunction(
 				"glDeleteBuffers", failures));
-	_BindBuffer = reinterpret_cast<BindBufferFunc *>(LoadFunction(
+	bindBuffer = reinterpret_cast<BindBufferFunc *>(_loadFunction(
 				"glBindBuffer", failures));
-	_BufferData = reinterpret_cast<BufferDataFunc *>(LoadFunction(
+	bufferData = reinterpret_cast<BufferDataFunc *>(_loadFunction(
 				"glBufferData", failures));
-	_MapBuffer = reinterpret_cast<MapBufferFunc *>(LoadFunction(
+	mapBuffer = reinterpret_cast<MapBufferFunc *>(_loadFunction(
 				"glMapBuffer", failures));
-	_UnmapBuffer = reinterpret_cast<UnmapBufferFunc *>(LoadFunction(
+	unmapBuffer = reinterpret_cast<UnmapBufferFunc *>(_loadFunction(
 				"glUnmapBuffer", failures));
-	_VertexAttribPointer = 
-		reinterpret_cast<VertexAttribPointerFunc *>(LoadFunction(
+	vertexAttribPointer = 
+		reinterpret_cast<VertexAttribPointerFunc *>(_loadFunction(
 					"glVertexAttribPointer", failures));
-	_EnableVertexAttribArray = 
-		reinterpret_cast<EnableVertexAttribArrayFunc *>(LoadFunction(
+	enableVertexAttribArray = 
+		reinterpret_cast<EnableVertexAttribArrayFunc *>(_loadFunction(
 					"glEnableVertexAttribArray", failures));
-	_DisableVertexAttribArray = 
-		reinterpret_cast<DisableVertexAttribArrayFunc *>(LoadFunction(
+	disableVertexAttribArray = 
+		reinterpret_cast<DisableVertexAttribArrayFunc *>(_loadFunction(
 					"glDisableVertexAttribArray", failures));
-	_DrawArrays = reinterpret_cast<DrawArraysFunc *>(LoadFunction(
+	drawArrays = reinterpret_cast<DrawArraysFunc *>(_loadFunction(
 				"glDrawArrays", failures));
-	_DrawElements = reinterpret_cast<DrawElementsFunc *>(LoadFunction(
+	drawElements = reinterpret_cast<DrawElementsFunc *>(_loadFunction(
 				"glDrawElements", failures));
 
-	_CreateShader = reinterpret_cast<CreateShaderFunc *>(LoadFunction(
+	createShader = reinterpret_cast<CreateShaderFunc *>(_loadFunction(
 				"glCreateShader", failures));
-	_DeleteShader = reinterpret_cast<DeleteShaderFunc *>(LoadFunction(
+	deleteShader = reinterpret_cast<DeleteShaderFunc *>(_loadFunction(
 				"glDeleteShader", failures));
-	_ShaderSource = reinterpret_cast<ShaderSourceFunc *>(LoadFunction(
+	shaderSource = reinterpret_cast<ShaderSourceFunc *>(_loadFunction(
 				"glShaderSource", failures));
-	_CompileShader = reinterpret_cast<CompileShaderFunc *>(LoadFunction(
+	compileShader = reinterpret_cast<CompileShaderFunc *>(_loadFunction(
 				"glCompileShader", failures));
-	_AttachShader = reinterpret_cast<AttachShaderFunc *>(LoadFunction(
+	attachShader = reinterpret_cast<AttachShaderFunc *>(_loadFunction(
 				"glAttachShader", failures));
-	_GetShaderiv = reinterpret_cast<GetShaderivFunc *>(LoadFunction(
+	getShaderiv = reinterpret_cast<GetShaderivFunc *>(_loadFunction(
 				"glGetShaderiv", failures));
-	_GetShaderInfoLog = 
-		reinterpret_cast<GetShaderInfoLogFunc *>(LoadFunction(
+	getShaderInfoLog = 
+		reinterpret_cast<GetShaderInfoLogFunc *>(_loadFunction(
 					"glGetShaderInfoLog", failures));
 
-	_CreateProgram = reinterpret_cast<CreateProgramFunc *>(LoadFunction(
+	createProgram = reinterpret_cast<CreateProgramFunc *>(_loadFunction(
 				"glCreateProgram", failures));
-	_DeleteProgram = reinterpret_cast<DeleteProgramFunc *>(LoadFunction(
+	deleteProgram = reinterpret_cast<DeleteProgramFunc *>(_loadFunction(
 				"glDeleteProgram", failures));
-	_LinkProgram = reinterpret_cast<LinkProgramFunc *>(LoadFunction(
+	linkProgram = reinterpret_cast<LinkProgramFunc *>(_loadFunction(
 				"glLinkProgram", failures));
-	_ValidateProgram = reinterpret_cast<ValidateProgramFunc *>(LoadFunction(
+	validateProgram = reinterpret_cast<ValidateProgramFunc *>(_loadFunction(
 				"glValidateProgram", failures));
-	_UseProgram = reinterpret_cast<UseProgramFunc *>(LoadFunction(
+	useProgram = reinterpret_cast<UseProgramFunc *>(_loadFunction(
 				"glUseProgram", failures));
-	_GetProgramiv = reinterpret_cast<GetProgramivFunc *>(LoadFunction(
+	getProgramiv = reinterpret_cast<GetProgramivFunc *>(_loadFunction(
 				"glGetProgramiv", failures));
-	_GetProgramInfoLog = 
-		reinterpret_cast<GetProgramInfoLogFunc *>(LoadFunction(
+	getProgramInfoLog = 
+		reinterpret_cast<GetProgramInfoLogFunc *>(_loadFunction(
 					"glGetProgramInfoLog", failures));
 
-	_GetUniformLocation = 
-		reinterpret_cast<GetUniformLocationFunc *>(LoadFunction(
+	getUniformLocation = 
+		reinterpret_cast<GetUniformLocationFunc *>(_loadFunction(
 					"glGetUniformLocation", failures));
-	_GetActiveUniform = 
-		reinterpret_cast<GetActiveUniformFunc *>(LoadFunction(
+	getActiveUniform = 
+		reinterpret_cast<GetActiveUniformFunc *>(_loadFunction(
 					"glGetActiveUniform", failures));
-	_GetActiveAttrib = 
-		reinterpret_cast<GetActiveAttribFunc *>(LoadFunction(
+	getActiveAttrib = 
+		reinterpret_cast<GetActiveAttribFunc *>(_loadFunction(
 					"glGetActiveAttrib", failures));
-	_Uniform1f = reinterpret_cast<Uniform1fFunc *>(LoadFunction(
+	uniform1f = reinterpret_cast<Uniform1fFunc *>(_loadFunction(
 				"glUniform1f", failures));
-	_Uniform2f = reinterpret_cast<Uniform2fFunc *>(LoadFunction(
+	uniform2f = reinterpret_cast<Uniform2fFunc *>(_loadFunction(
 				"glUniform2f", failures));
-	_Uniform3f = reinterpret_cast<Uniform3fFunc *>(LoadFunction(
+	uniform3f = reinterpret_cast<Uniform3fFunc *>(_loadFunction(
 				"glUniform3f", failures));
-	_Uniform4f = reinterpret_cast<Uniform4fFunc *>(LoadFunction(
+	uniform4f = reinterpret_cast<Uniform4fFunc *>(_loadFunction(
 				"glUniform4f", failures));
-	_Uniform1i = reinterpret_cast<Uniform1iFunc *>(LoadFunction(
+	uniform1i = reinterpret_cast<Uniform1iFunc *>(_loadFunction(
 				"glUniform1i", failures));
-	_Uniform2i = reinterpret_cast<Uniform2iFunc *>(LoadFunction(
+	uniform2i = reinterpret_cast<Uniform2iFunc *>(_loadFunction(
 				"glUniform2i", failures));
-	_Uniform3i = reinterpret_cast<Uniform3iFunc *>(LoadFunction(
+	uniform3i = reinterpret_cast<Uniform3iFunc *>(_loadFunction(
 				"glUniform3i", failures));
-	_Uniform4i = reinterpret_cast<Uniform4iFunc *>(LoadFunction(
+	uniform4i = reinterpret_cast<Uniform4iFunc *>(_loadFunction(
 				"glUniform4i", failures));
-	_Uniform1fv = reinterpret_cast<Uniform1fvFunc *>(LoadFunction(
+	uniform1fv = reinterpret_cast<Uniform1fvFunc *>(_loadFunction(
 				"glUniform1fv", failures));
-	_Uniform2fv = reinterpret_cast<Uniform2fvFunc *>(LoadFunction(
+	uniform2fv = reinterpret_cast<Uniform2fvFunc *>(_loadFunction(
 				"glUniform2fv", failures));
-	_Uniform3fv = reinterpret_cast<Uniform3fvFunc *>(LoadFunction(
+	uniform3fv = reinterpret_cast<Uniform3fvFunc *>(_loadFunction(
 				"glUniform3fv", failures));
-	_Uniform4fv = reinterpret_cast<Uniform4fvFunc *>(LoadFunction(
+	uniform4fv = reinterpret_cast<Uniform4fvFunc *>(_loadFunction(
 				"glUniform4fv", failures));
-	_Uniform1iv = reinterpret_cast<Uniform1ivFunc *>(LoadFunction(
+	uniform1iv = reinterpret_cast<Uniform1ivFunc *>(_loadFunction(
 				"glUniform1iv", failures));
-	_Uniform2iv = reinterpret_cast<Uniform2ivFunc *>(LoadFunction(
+	uniform2iv = reinterpret_cast<Uniform2ivFunc *>(_loadFunction(
 				"glUniform2iv", failures));
-	_Uniform3iv = reinterpret_cast<Uniform3ivFunc *>(LoadFunction(
+	uniform3iv = reinterpret_cast<Uniform3ivFunc *>(_loadFunction(
 				"glUniform3iv", failures));
-	_Uniform4iv = reinterpret_cast<Uniform4ivFunc *>(LoadFunction(
+	uniform4iv = reinterpret_cast<Uniform4ivFunc *>(_loadFunction(
 				"glUniform4iv", failures));
-	_UniformMatrix2fv = 
-		reinterpret_cast<UniformMatrix2fvFunc *>(LoadFunction(
+	uniformMatrix2fv = 
+		reinterpret_cast<UniformMatrix2fvFunc *>(_loadFunction(
 					"glUniformMatrix2fv", failures));
-	_UniformMatrix3fv = 
-		reinterpret_cast<UniformMatrix3fvFunc *>(LoadFunction(
+	uniformMatrix3fv = 
+		reinterpret_cast<UniformMatrix3fvFunc *>(_loadFunction(
 					"glUniformMatrix3fv", failures));
-	_UniformMatrix4fv = 
-		reinterpret_cast<UniformMatrix4fvFunc *>(LoadFunction(
+	uniformMatrix4fv = 
+		reinterpret_cast<UniformMatrix4fvFunc *>(_loadFunction(
 					"glUniformMatrix4fv", failures));
 
-	_GenTextures = reinterpret_cast<GenTexturesFunc *>(LoadFunction(
+	genTextures = reinterpret_cast<GenTexturesFunc *>(_loadFunction(
 				"glGenTextures", failures));
-	_DeleteTextures = reinterpret_cast<DeleteTexturesFunc *>(LoadFunction(
+	deleteTextures = reinterpret_cast<DeleteTexturesFunc *>(_loadFunction(
 				"glDeleteTextures", failures));
-	_BindTexture = reinterpret_cast<BindTextureFunc *>(LoadFunction(
+	bindTexture = reinterpret_cast<BindTextureFunc *>(_loadFunction(
 				"glBindTexture", failures));
-	_TexImage2D = reinterpret_cast<TexImage2DFunc *>(LoadFunction(
+	texImage2D = reinterpret_cast<TexImage2DFunc *>(_loadFunction(
 				"glTexImage2D", failures));
-	_TexParameterf = reinterpret_cast<TexParameterfFunc *>(LoadFunction(
+	texParameterf = reinterpret_cast<TexParameterfFunc *>(_loadFunction(
 				"glTexParameterf", failures));
-	_TexParameteri = reinterpret_cast<TexParameteriFunc *>(LoadFunction(
+	texParameteri = reinterpret_cast<TexParameteriFunc *>(_loadFunction(
 				"glTexParameteri", failures));
-	_TexParameterfv = reinterpret_cast<TexParameterfvFunc *>(LoadFunction(
+	texParameterfv = reinterpret_cast<TexParameterfvFunc *>(_loadFunction(
 				"glTexParameterfv", failures));
-	_TexParameteriv = reinterpret_cast<TexParameterivFunc *>(LoadFunction(
+	texParameteriv = reinterpret_cast<TexParameterivFunc *>(_loadFunction(
 				"glTexParameteriv", failures));
-	_ActiveTexture = reinterpret_cast<ActiveTextureFunc *>(LoadFunction(
+	activeTexture = reinterpret_cast<ActiveTextureFunc *>(_loadFunction(
 				"glActiveTexture", failures));
 
-	_GenFramebuffers = reinterpret_cast<GenFramebuffersFunc *>(LoadFunction(
+	genFramebuffers = reinterpret_cast<GenFramebuffersFunc *>(_loadFunction(
 				"glGenFramebuffers", failures));
-	_DeleteFramebuffers = 
-		reinterpret_cast<DeleteFramebuffersFunc *>(LoadFunction(
+	deleteFramebuffers = 
+		reinterpret_cast<DeleteFramebuffersFunc *>(_loadFunction(
 					"glDeleteFramebuffers", failures));
-	_BindFramebuffer = reinterpret_cast<BindFramebufferFunc *>(LoadFunction(
+	bindFramebuffer = reinterpret_cast<BindFramebufferFunc *>(_loadFunction(
 				"glBindFramebuffer", failures));
-	_FramebufferTexture2D = 
-		reinterpret_cast<FramebufferTexture2DFunc *>(LoadFunction(
+	framebufferTexture2D = 
+		reinterpret_cast<FramebufferTexture2DFunc *>(_loadFunction(
 					"glFramebufferTexture2D", failures));
-	_CheckFramebufferStatus = 
-		reinterpret_cast<CheckFramebufferStatusFunc *>(LoadFunction(
+	checkFramebufferStatus = 
+		reinterpret_cast<CheckFramebufferStatusFunc *>(_loadFunction(
 					"glCheckFramebufferStatus", failures));
-	_ReadPixels = 
-		reinterpret_cast<ReadPixelsFunc *>(LoadFunction(
+	readPixels = 
+		reinterpret_cast<ReadPixelsFunc *>(_loadFunction(
 					"glReadPixels", failures));
 
-	_FrontFace = reinterpret_cast<FrontFaceFunc *>(LoadFunction(
+	frontFace = reinterpret_cast<FrontFaceFunc *>(_loadFunction(
 				"glFrontFace", failures));
-	_CullFace = reinterpret_cast<CullFaceFunc *>(LoadFunction(
+	cullFace = reinterpret_cast<CullFaceFunc *>(_loadFunction(
 				"glCullFace", failures));
-	_Enable = reinterpret_cast<EnableFunc *>(LoadFunction(
+	enable = reinterpret_cast<EnableFunc *>(_loadFunction(
 				"glEnable", failures));
-	_Disable = reinterpret_cast<DisableFunc *>(LoadFunction(
+	disable = reinterpret_cast<DisableFunc *>(_loadFunction(
 				"glDisable", failures));
 
 

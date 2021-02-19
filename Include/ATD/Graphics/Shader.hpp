@@ -75,88 +75,95 @@ public:
 	 * @brief ...
 	 * @param name - ...
 	 * @param value - ... */
-	void SetUniform(const std::string &name, float value);
+	void setUniform(const std::string &name, float value);
 
 	/**
 	 * @brief ...
 	 * @param name - ...
 	 * @param value - ... */
-	void SetUniform(const std::string &name, int value);
+	void setUniform(const std::string &name, int value);
 
 	/**
 	 * @brief ...
 	 * @param name - ...
 	 * @param value - ... */
-	void SetUniform(const std::string &name, const Vector2F &value);
+	void setUniform(const std::string &name, const Vector2F &value);
 
 	/**
 	 * @brief ...
 	 * @param name - ...
 	 * @param value - ... */
-	void SetUniform(const std::string &name, const Vector2I &value);
+	void setUniform(const std::string &name, const Vector2I &value);
 
 	/**
 	 * @brief ...
 	 * @param name - ...
 	 * @param value - ... */
-	void SetUniform(const std::string &name, const Vector3F &value);
+	void setUniform(const std::string &name, const Vector3F &value);
 
 	/**
 	 * @brief ...
 	 * @param name - ...
 	 * @param value - ... */
-	void SetUniform(const std::string &name, const Vector3I &value);
+	void setUniform(const std::string &name, const Vector3I &value);
 
 	/**
 	 * @brief ...
 	 * @param name - ...
 	 * @param value - ... */
-	void SetUniform(const std::string &name, const Vector4F &value);
+	void setUniform(const std::string &name, const Vector4F &value);
 
 	/**
 	 * @brief ...
 	 * @param name - ...
 	 * @param value - ... */
-	void SetUniform(const std::string &name, const Vector4I &value);
+	void setUniform(const std::string &name, const Vector4I &value);
 
 	/**
 	 * @brief ...
 	 * @param name - ...
 	 * @param value - ... */
-	void SetUniform(const std::string &name, const Matrix3F &value);
+	void setUniform(const std::string &name, const Matrix3F &value);
 
 	/**
 	 * @brief ...
 	 * @param name - ...
 	 * @param value - ... */
-	void SetUniform(const std::string &name, const Matrix4F &value);
+	void setUniform(const std::string &name, const Matrix4F &value);
 
 	/**
 	 * @brief Enables given texture unit for uniform sampler 'name'
 	 * @param name - ...
 	 * @param unit - ... */
-	void SetUniformSampler2DUnit(const std::string &name, 
+	void setUniformSampler2DUnit(const std::string &name, 
 			const Texture::Unit &unit);
 
 	/**
 	 * @brief Enables given texture unit for uniform sampler 'name'
 	 * @param name - ...
 	 * @param unit - ... */
-	void SetUniformSamplerCubeUnit(const std::string &name, 
+	void setUniformSamplerCubeUnit(const std::string &name, 
 			const Texture::Unit &unit);
 
-	// TODO: size_t GetUniformArraySize(const std::string &name);
+	// TODO: size_t getUniformArraySize(const std::string &name);
 
-	void CheckIfUniformsSet() const;
+	/**
+	 * @brief ... */
+	void checkIfUniformsSet() const;
 
-	/* TODO: CheckIfSamplersSet(); */
-
-	Gl::Uint GetGlId() const;
+	/* TODO: checkIfSamplersSet(); */
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	bool IsCanvasRequired() const;
+	inline Gl::Uint glId() const
+	{ return m_program; }
+
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline bool isCanvasRequired() const
+	{ return m_isCanvasRequired; }
 
 	// TODO: Debug functions for listing all unoptimized uniforms,
 	// TODO: Debug functions for listing all unoptimized attributes.
@@ -177,11 +184,18 @@ private:
 	typedef std::map<std::string, UniformLocationDesc> UniformLocationMap;
 
 
-	void CompileShader(const std::string &shaderSource, 
+	/**
+	 * @brief ...
+	 * @param shaderSource - ...
+	 * @param shaderType   - ...
+	 * @param shaderId     - ... */
+	void compileShader(const std::string &shaderSource, 
 			Gl::Enum shaderType, 
-			Gl::Uint *shaderId);
+			Gl::Uint &shaderId);
 
-	void InitUniforms();
+	/**
+	 * @brief ... */
+	void initUniforms();
 
 
 	Gl::Uint m_program;
@@ -192,7 +206,8 @@ private:
 };
 
 /**
- * @brief shader for drawing 2D vertices */
+ * @brief shader for drawing 2D vertices
+ * @class ... */
 class Shader2D : public Shader
 {
 public:
@@ -225,10 +240,13 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	const VertexBuffer2D::AttrIndices &GetAttrIndices() const;
+	const VertexBuffer2D::AttrIndices &getAttrIndices() const;
 
 private:
-	void CheckAttributes();
+	/**
+	 * @brief ...
+	 * @throws ... */
+	void checkAttributes();
 
 	// TODO: CheckUniforms() ? (unfProject and unfTransform)
 
@@ -237,7 +255,8 @@ private:
 };
 
 /**
- * @brief shader for drawing 3D vertices */
+ * @brief shader for drawing 3D vertices
+ * @class ... */
 class Shader3D : public Shader
 {
 public:
@@ -276,10 +295,13 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	const VertexBuffer3D::AttrIndices &GetAttrIndices() const;
+	const VertexBuffer3D::AttrIndices &getAttrIndices() const;
 
 private:
-	void CheckAttributes();
+	/**
+	 * @brief ...
+	 * @throws ... */
+	void checkAttributes();
 
 	// TODO: CheckUniforms() ? (unfProject and unfTransform)
 

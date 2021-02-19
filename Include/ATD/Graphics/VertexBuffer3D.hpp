@@ -18,12 +18,14 @@
 namespace ATD {
 
 /**
- * @brief ... */
+ * @brief ...
+ * @class ... */
 class VertexBuffer3D
 {
 public:
 	/**
-	 * @brief ... */
+	 * @brief ...
+	 * @class ... */
 	class Usage
 	{
 	public:
@@ -97,17 +99,20 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	Gl::Uint GetGlId() const;
+	inline Gl::Uint glId() const
+	{ return m_bufferId; }
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	size_t Size() const;
+	inline size_t size() const
+	{ return m_size; }
 
 	/**
 	 * @brief ...
 	 * @return ... */
-	Primitive GetPrimitive() const;
+	inline const Primitive &primitive() const
+	{ return m_primitive; }
 
 	/**
 	 * @brief Draw vertices using current OpenGL texture and shader.
@@ -115,7 +120,7 @@ public:
 	 *
 	 * Texture and shader must be set via proper ::Usage subclass before 
 	 * calling this function. */
-	void DrawSelfInternal(const AttrIndices &attrIndices) const;
+	void drawSelfInternal(const AttrIndices &attrIndices) const;
 
 private:
 	Gl::Uint m_bufferId;

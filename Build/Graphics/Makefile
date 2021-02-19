@@ -1,3 +1,6 @@
+
+# Defines:
+
 ROOTDIR := ../..
 BUILDDIR := $(ROOTDIR)/Build
 NAME := Graphics

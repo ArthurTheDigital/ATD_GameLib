@@ -11,13 +11,13 @@ class Camera
 public:
 	Camera();
 
-	void RotateAround(const ATD::Vector2D &deltaFrc, 
+	void rotateAround(const ATD::Vector2D &deltaFrc, 
 			const ATD::Vector3D &center);
 
-	void ChangeDistance(const double delta, 
+	void changeDistance(const double delta, 
 			const ATD::Vector3D &center);
 
-	ATD::Projection3D GetProjection() const;
+	ATD::Projection3D getProjection() const;
 
 private:
 	ATD::Vector3D m_position;
@@ -30,13 +30,13 @@ private:
 
 /* auxiliary: */
 
-ATD::Quaternion AngleXyToQuaternion(const ATD::Vector2D &angleXyFrc)
+ATD::Quaternion angleXyToQuaternion(const ATD::Vector2D &angleXyFrc)
 {
 	ATD::Quaternion rotationX = 
-		ATD::Quaternion::Rotation(angleXyFrc.x, ATD::Vector3D(1., 0., 0.));
+		ATD::Quaternion::rotation(angleXyFrc.x, ATD::Vector3D(1., 0., 0.));
 
 	ATD::Quaternion rotationY = 
-		ATD::Quaternion::Rotation(angleXyFrc.y, ATD::Vector3D(0., 1., 0.));
+		ATD::Quaternion::rotation(angleXyFrc.y, ATD::Vector3D(0., 1., 0.));
 
 	return rotationX * rotationY;
 }
@@ -51,10 +51,10 @@ Camera::Camera()
 	, m_projectionVld(false)
 {}
 
-void Camera::RotateAround(const ATD::Vector2D &deltaFrc, 
+void Camera::rotateAround(const ATD::Vector2D &deltaFrc, 
 		const ATD::Vector3D &center)
 {
-	double newAngleFrcX = ATD::Clamp<double>(m_angleFrc.x + deltaFrc.x, 
+	double newAngleFrcX = ATD::clamp<double>(m_angleFrc.x + deltaFrc.x, 
 			-0.24, 0.24);
 
 	double newAngleFrcY = m_angleFrc.y + deltaFrc.y;
@@ -62,12 +62,12 @@ void Camera::RotateAround(const ATD::Vector2D &deltaFrc,
 
 	ATD::Vector2D newAngleFrc = ATD::Vector2D(newAngleFrcX, newAngleFrcY);
 
-	ATD::Quaternion oldRotation = AngleXyToQuaternion(m_angleFrc);
-	ATD::Quaternion newRotation = AngleXyToQuaternion(newAngleFrc);
+	ATD::Quaternion oldRotation = angleXyToQuaternion(m_angleFrc);
+	ATD::Quaternion newRotation = angleXyToQuaternion(newAngleFrc);
 
 	ATD::Vector3D oldPositionRelative = m_position - center;
 	ATD::Vector3D newPositionRelative = 
-		newRotation.ApplyRotation(oldRotation.Inverted().ApplyRotation(
+		newRotation.applyRotation(oldRotation.inverted().applyRotation(
 					oldPositionRelative));
 
 	m_angleFrc = newAngleFrc;
@@ -75,12 +75,12 @@ void Camera::RotateAround(const ATD::Vector2D &deltaFrc,
 	m_projectionVld = false;
 }
 
-void Camera::ChangeDistance(const double delta, 
+void Camera::changeDistance(const double delta, 
 		const ATD::Vector3D &center)
 {
 	ATD::Vector3D oldPositionRelative = m_position - center;
-	double oldDistance = oldPositionRelative.Length();
-	double newDistance = ATD::Clamp<double>(oldDistance + delta, 0.1, 100.);
+	double oldDistance = oldPositionRelative.length();
+	double newDistance = ATD::clamp<double>(oldDistance + delta, 0.1, 100.);
 	ATD::Vector3D newPositionRelative = 
 		oldPositionRelative * (newDistance / oldDistance);
 
@@ -88,12 +88,12 @@ void Camera::ChangeDistance(const double delta,
 	m_projectionVld = false;
 }
 
-ATD::Projection3D Camera::GetProjection() const
+ATD::Projection3D Camera::getProjection() const
 {
 	if (!m_projectionVld) {
 		m_projection = 
 			ATD::Projection3D(ATD::Transform3D(ATD::Vector3D(1., 1., 1.), 
-						AngleXyToQuaternion(m_angleFrc), m_position));
+						angleXyToQuaternion(m_angleFrc), m_position));
 	}
 
 	return m_projection;

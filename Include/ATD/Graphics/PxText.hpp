@@ -1,4 +1,10 @@
-
+/**
+ * @file      
+ * @brief     PxText (drawable pixel text) class.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -21,28 +27,33 @@ namespace ATD {
  *
  * How to handle text being edited? Recreate it from scratch every time? */
 
-class PxText : public FrameBuffer::Drawable
+/**
+ * @brief ...
+ * @class ... */
+class PxText : public FrameBuffer::Drawable2D
 {
 public:
 	typedef std::shared_ptr<PxText> Ptr;
 	typedef std::shared_ptr<const PxText> CPtr;
 
 
-	// TODO: Pick a default pxFont and change the args order
+	/* FIXME: Pick a default pxFont and change the args order */
+	/**
+	 * @brief ...
+	 * @param pxFontPtr - ...
+	 * @param unicode - ... */
 	PxText(PxFont::CPtr pxFontPtr, const Unicode &unicode = Unicode());
 
-	void SetOffset(const Vector2L &offset);
-
-	virtual void DrawSelf(FrameBuffer &target) const override;
+	/**
+	 * @brief ...
+	 * @param target - ... */
+	virtual void drawSelf(FrameBuffer &target) const override;
 
 private:
-
-
 	Unicode m_unicode;
 	PxFont::CPtr m_pxFontPtr;
 
 	VertexBuffer2D m_vertices;
-	Transform2D m_transform;
 };
 
 } /* namespace ATD */

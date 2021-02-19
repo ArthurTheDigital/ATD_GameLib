@@ -8,10 +8,9 @@
 
 #pragma once
 
-#include <ATD/Core/Functions.hpp>
+#include <ATD/Core/LpMath.hpp>
 
-#include <math.h>
-
+#include <cmath>
 #include <stdexcept>
 
 
@@ -72,7 +71,7 @@ public:
 	 *
 	 * Since Y axis is directed down, for the viewer it would be clockwise 
 	 * rotation. */
-	inline Vector2<T> RotatedCw90(unsigned count = 1) const
+	inline Vector2<T> rotatedCw90(unsigned count = 1) const
 	{
 		Vector2<T> r(*this);
 		for (unsigned i = 0; i < count % 4; i++) {
@@ -86,7 +85,7 @@ public:
 	 * @brief Dot multiplication.
 	 * @param v - ...
 	 * @return ... */
-	inline T Dot(const Vector2<T> &v) const
+	inline T dot(const Vector2<T> &v) const
 	{ return (x * v.x + y * v.y); }
 
 	/**
@@ -110,7 +109,7 @@ public:
 	 *   |                 
 	 *   V(b=0, 2)         
 	 *                     */
-	inline T Cross(const Vector2<T> &v) const
+	inline T cross(const Vector2<T> &v) const
 	{ return (x * v.y - y * v.x); }
 
 	/* Constant arithmetics: */
@@ -192,13 +191,18 @@ public:
 	T y;
 };
 
+// TODO:
+
 /**
  * @brief 2D vector template for real values (aka float, double)
- * @class ... */
+ * @class ...
+ *
+ * T must be either float or double. */
 template<typename T>
 class Vector2Real : public Vector2<T>
 {
 public:
+
 	/**
 	 * @brief ... */
 	inline Vector2Real()
@@ -221,7 +225,7 @@ public:
 	{}
 
 	/**
-	 * @brief ...
+	 * @brief Conversion from Vector2<T>.
 	 * @param other - ... */
 	inline Vector2Real(const Vector2<T> &other)
 		: Vector2<T>(other.x, other.y)
@@ -230,7 +234,7 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	inline T LengthSquare() const
+	inline T lengthSquare() const
 	{
 		return (Vector2<T>::x * Vector2<T>::x + 
 				Vector2<T>::y * Vector2<T>::y);
@@ -239,28 +243,47 @@ public:
 	/**
 	 * @brief ...
 	 * @return ... */
-	inline T Length() const
-	{ return Root<T, 2>(LengthSquare()); }
+	inline T length() const
+	{ return ::sqrt(lengthSquare()); }
+
+	/**
+	 * @brief Fast length calculation with no checks.
+	 * @return length if non-0, garbage otherwise. */
+	inline T lengthLp() const
+	{ return static_cast<T>(Lp::sqrt(static_cast<float>(lengthSquare()))); }
 
 	/**
 	 * @brief ...
 	 * @return vector of the same direction, but of 1. length */
-	inline Vector2Real<T> Normalized() const
+	inline Vector2Real<T> normalized() const
 	{
-		T n = Length();
-		return Vector2Real<T>(Vector2<T>(Vector2<T>::x, Vector2<T>::y) / n);
+		T len = length();
+		return Vector2Real<T>(Vector2<T>(Vector2<T>::x, Vector2<T>::y) / len);
+	}
+
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline Vector2Real<T> normalizedLp() const
+	{
+		T rLen = static_cast<T>(
+				Lp::rSqrt(
+					static_cast<float>(
+						lengthSquare())));
+
+		return Vector2Real<T>(Vector2<T>::x * rLen, Vector2<T>::y * rLen);
 	}
 
 	/**
 	 * @brief ...
 	 * @param angleFrc - angle as a fraction of a circle clockwise
 	 * @return ... */
-	inline Vector2Real<T> RotatedCw(double angleFrc) const
+	inline Vector2Real<T> rotatedCw(double angleFrc) const
 	{
 		/* M_PI defined in math.h. */
-		double rads = (angleFrc - ::floor(angleFrc)) * 2. * M_PI;
-		T aSin = static_cast<T>(::sin(rads));
-		T aCos = static_cast<T>(::cos(rads));
+		const double rads = (angleFrc - ::floor(angleFrc)) * 2. * M_PI;
+		const T aSin = static_cast<T>(::sin(rads));
+		const T aCos = static_cast<T>(::cos(rads));
 
 		return Vector2Real<T>(Vector2<T>::x * aCos - Vector2<T>::y * aSin, 
 				Vector2<T>::x * aSin + Vector2<T>::y * aCos);
@@ -271,7 +294,6 @@ public:
 
 typedef Vector2<int8_t> Vector2I8;
 typedef Vector2<uint8_t> Vector2U8;
-
 typedef Vector2<unsigned> Vector2U;
 typedef Vector2<size_t> Vector2S;
 typedef Vector2<int> Vector2I;

@@ -3,7 +3,7 @@
  * @brief     Image class implementation.
  * @details   ...
  * @author    ArthurTheDigital (arthurthedigital@gmail.com)
- * @copyright GPL v3
+ * @copyright GPL v3.
  * @since     $Id: $ */
 
 #include <ATD/Graphics/Image.hpp>
@@ -34,20 +34,20 @@ struct CustomJpegErrorMgr
 	jmp_buf jmp;
 };
 
-const std::string JPEG_ERROR_DELIMITER = "\n";
+const std::string _JPEG_ERROR_DELIMITER = "\n";
 
-static void CustomJpegOutputMessage(j_common_ptr info)
+static void _customJpegOutputMessage(j_common_ptr info)
 {
 	char buffer[JMSG_LENGTH_MAX];
 	(*info->err->format_message) (info, buffer);
 
 	CustomJpegErrorMgr *err = reinterpret_cast<CustomJpegErrorMgr *>(info->err);
 	err->str += 
-			(err->str.size() ? JPEG_ERROR_DELIMITER : std::string()) + 
+			(err->str.size() ? _JPEG_ERROR_DELIMITER : std::string()) + 
 			std::string(buffer);
 }
 
-static void CustomJpegErrorExit(j_common_ptr info)
+static void _customJpegErrorExit(j_common_ptr info)
 {
 	CustomJpegErrorMgr *err = reinterpret_cast<CustomJpegErrorMgr *>(info->err);
 	(*info->err->output_message) (info);
@@ -89,7 +89,7 @@ ATD::Image::Image(const ATD::Vector2S &size,
 		const ATD::Pixel &pixel)
 	: Loadable()
 	, m_size(size)
-	, m_pixels(m_size.x * m_size.y ? new Pixel[m_size.x * m_size.y] : nullptr)
+	, m_pixels((m_size.x * m_size.y != 0) ? new Pixel[m_size.x * m_size.y] : nullptr)
 {
 	for (size_t iP = 0; iP < m_size.x * m_size.y; iP++) {
 		m_pixels[iP] = pixel;
@@ -99,9 +99,11 @@ ATD::Image::Image(const ATD::Vector2S &size,
 ATD::Image::Image(const ATD::Image &other)
 	: Loadable()
 	, m_size(other.m_size)
-	, m_pixels(m_size.x * m_size.y ? new Pixel[m_size.x * m_size.y] : nullptr)
+	, m_pixels((m_size.x * m_size.y != 0) ? new Pixel[m_size.x * m_size.y] : nullptr)
 {
-	::memcpy(m_pixels, other.m_pixels, m_size.x * m_size.y * sizeof(Pixel));
+	::memcpy(static_cast<void *>(m_pixels), 
+			static_cast<const void *>(other.m_pixels), 
+			m_size.x * m_size.y * sizeof(Pixel));
 }
 
 ATD::Image::~Image()
@@ -121,11 +123,11 @@ ATD::Image &ATD::Image::operator=(const ATD::Image &other)
 	return *this;
 }
 
-ATD::Pixel ATD::Image::GetPixel(const ATD::Vector2L &position, 
+ATD::Pixel ATD::Image::getPixel(const ATD::Vector2L &position, 
 		bool repeat) const
 {
 	if (repeat) {
-		if (m_size.x * m_size.y) {
+		if (m_size.x * m_size.y != 0) {
 			Vector2L p(position);
 
 			/* Both non-zero, division acceptable */
@@ -140,20 +142,9 @@ ATD::Pixel ATD::Image::GetPixel(const ATD::Vector2L &position,
 			return Pixel();
 		}
 	} else {
-		return RectL(m_size).Contains(position) ? 
+		return RectL(m_size).contains(position) ? 
 			m_pixels[position.y * m_size.x + position.x] : Pixel();
 	}
-}
-
-const ATD::Pixel *ATD::Image::GetPixels() const
-{ return m_pixels; }
-
-ATD::Pixel *ATD::Image::GetPixels()
-{ return m_pixels; }
-
-ATD::Vector2S ATD::Image::Size() const
-{
-	return m_size;
 }
 
 bool ATD::Image::operator==(const ATD::Image &other) const
@@ -170,45 +161,45 @@ bool ATD::Image::operator!=(const ATD::Image &other) const
 	return !(operator==(other));
 }
 
-void ATD::Image::Clear(const ATD::Pixel &pixel)
+void ATD::Image::clear(const ATD::Pixel &pixel)
 {
 	for (size_t iP = 0; iP < m_size.x * m_size.y; iP++) {
 		m_pixels[iP] = pixel;
 	}
 }
 
-void ATD::Image::Draw(const ATD::Vector2L &position, 
+void ATD::Image::draw(const ATD::Vector2L &position, 
 		const ATD::Pixel &pixel)
 {
-	ImageImpl::DrawCell<Pixel>(
+	ImageImpl::drawCell<Pixel>(
 			m_size, m_pixels, 
 			position, 
 			pixel
 			);
 }
 
-void ATD::Image::Draw(const ATD::Vector2L &position, 
+void ATD::Image::draw(const ATD::Vector2L &position, 
 			const ATD::Image &texture, 
 			ATD::Image::MixerFunc mixer)
 {
-	ImageImpl::DrawImage<Pixel>(
+	ImageImpl::drawImage<Pixel>(
 			m_size, m_pixels, 
 			position, 
 			texture.m_size, texture.m_pixels, 
 			mixer ? mixer : 
 				[this](const Pixel &dst, const Pixel &src) {
-					return this->MixOpacity(dst, src);
+					return this->mixOpacity(dst, src);
 				}
 			);
 }
 
-void ATD::Image::Draw(const ATD::Vector2L &position, 
+void ATD::Image::draw(const ATD::Vector2L &position, 
 			const ATD::Image &texture, 
 			const ATD::RectL &bounds, 
 			bool repeat, 
 			ATD::Image::MixerFunc mixer)
 {
-	ImageImpl::DrawBounded<Pixel>(
+	ImageImpl::drawBounded<Pixel>(
 			m_size, m_pixels, 
 			position, 
 			texture.m_size, texture.m_pixels, 
@@ -216,64 +207,64 @@ void ATD::Image::Draw(const ATD::Vector2L &position,
 			repeat, 
 			mixer ? mixer : 
 				[this](const Pixel &dst, const Pixel &src) {
-					return this->MixOpacity(dst, src);
+					return this->mixOpacity(dst, src);
 				}
 			);
 }
 
-void ATD::Image::Draw(const ATD::Image::Drawable &drawable)
+void ATD::Image::draw(const ATD::Image::Drawable &drawable)
 {
-	drawable.DrawSelf(*this);
+	drawable.drawSelf(*this);
 }
 
-void ATD::Image::OnLoad(const ATD::Fs::Path &path)
+void ATD::Image::onLoad(const ATD::Fs::Path &path)
 {
 	/* Open file for reading */
-	std::string pathStr = path.Native();
+	std::string pathStr = path.native();
 	FILE *file = ::fopen(pathStr.c_str(), "rb");
 	if (!file) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'fopen(%s, \"r\")' failure: %d %s", 
+		throw std::runtime_error(Aux::printf("'fopen(%s, \"r\")' failure: %d %s", 
 					pathStr.c_str(), errnoVal, ::strerror(errnoVal)));
 	}
 
 	/* PNG */
-	if (IsPng(file)) {
+	if (isPng(file)) {
 		try {
-			LoadAsPng(file);
+			loadAsPng(file);
 			::fclose(file);
 			return;
 		} catch (const std::exception &e) {
 			::fclose(file);
-			throw std::runtime_error(Printf("file '%s' as png: %s", 
+			throw std::runtime_error(Aux::printf("file '%s' as png: %s", 
 						pathStr.c_str(), e.what()));
 		}
 	}
 
 	/* JPEG */
-	if (IsJpeg(file)) {
+	if (isJpeg(file)) {
 		try {
-			LoadAsJpeg(file);
+			loadAsJpeg(file);
 			::fclose(file);
 			return;
 		} catch (const std::exception &e) {
 			::fclose(file);
-			throw std::runtime_error(Printf("file '%s' as jpeg: %s", 
+			throw std::runtime_error(Aux::printf("file '%s' as jpeg: %s", 
 						pathStr.c_str(), e.what()));
 		}
 	}
 
-	if (IsGif(file)) {
+	if (isGif(file)) {
 		::fclose(file);
 		try {
 			AnimatedGif gif;
-			gif.Load(path);
-			operator=(*gif.GetFrame(0));
+			gif.load(path);
+			operator=(*gif.framePtr(0));
 
 			/* File already closed */
 			return;
 		} catch (const std::exception &e) {
-			throw std::runtime_error(Printf("file '%s' as gif: %s", 
+			throw std::runtime_error(Aux::printf("file '%s' as gif: %s", 
 						pathStr.c_str(), e.what()));
 		}
 
@@ -281,7 +272,7 @@ void ATD::Image::OnLoad(const ATD::Fs::Path &path)
 		file = ::fopen(pathStr.c_str(), "rb");
 		if (!file) {
 			int errnoVal = errno;
-			throw std::runtime_error(Printf(
+			throw std::runtime_error(Aux::printf(
 						"'fopen(%s, \"r\")' failure: %d %s", 
 						pathStr.c_str(), errnoVal, ::strerror(errnoVal)));
 		}
@@ -290,22 +281,22 @@ void ATD::Image::OnLoad(const ATD::Fs::Path &path)
 	/* FIXME: Shall I add more formats? Webp? Bmp? */
 
 	::fclose(file);
-	throw std::runtime_error(Printf("file '%s' has unknown format", 
+	throw std::runtime_error(Aux::printf("file '%s' has unknown format", 
 				pathStr.c_str()));
 }
 
-void ATD::Image::OnSave(const ATD::Fs::Path &path) const
+void ATD::Image::onSave(const ATD::Fs::Path &path) const
 {
 	/* Open file for writing */
-	std::string pathStr = path.Native();
+	std::string pathStr = path.native();
 	FILE *file = ::fopen(pathStr.c_str(), "wb");
 	if (!file) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'fopen(%s, \"w\")' failure: %d %s", 
+		throw std::runtime_error(Aux::printf("'fopen(%s, \"w\")' failure: %d %s", 
 					pathStr.c_str(), errnoVal, ::strerror(errnoVal)));
 	}
 
-	size_t extension = path.ExtensionFromList(EXTENSIONS);
+	size_t extension = path.extensionFromList(EXTENSIONS);
 	switch (extension) {
 		case EXT_GIF:
 			{
@@ -314,9 +305,9 @@ void ATD::Image::OnSave(const ATD::Fs::Path &path) const
 				try {
 					AnimatedGif gif(*this, m_size, 
 							std::vector<Vector2L>(1, Vector2L(0, 0)));
-					gif.Save(path);
+					gif.save(path);
 				} catch (const std::exception &e) {
-					throw std::runtime_error(Printf("file '%s' as gif: %s", 
+					throw std::runtime_error(Aux::printf("file '%s' as gif: %s", 
 								pathStr.c_str(), e.what()));
 				}
 			}
@@ -327,12 +318,12 @@ void ATD::Image::OnSave(const ATD::Fs::Path &path) const
 			{
 				/* JPEG */
 				try {
-					SaveAsJpeg(file);
+					saveAsJpeg(file);
 					::fclose(file);
 					return;
 				} catch (const std::exception &e) {
 					::fclose(file);
-					throw std::runtime_error(Printf("file '%s' as jpeg: %s", 
+					throw std::runtime_error(Aux::printf("file '%s' as jpeg: %s", 
 								pathStr.c_str(), e.what()));
 				}
 			}
@@ -343,19 +334,19 @@ void ATD::Image::OnSave(const ATD::Fs::Path &path) const
 			{
 				/* PNG as default */
 				try {
-					SaveAsPng(file);
+					saveAsPng(file);
 					::fclose(file);
 					return;
 				} catch (const std::exception &e) {
 					::fclose(file);
-					throw std::runtime_error(Printf("file '%s' as png: %s", 
+					throw std::runtime_error(Aux::printf("file '%s' as png: %s", 
 								pathStr.c_str(), e.what()));
 				}
 			}
 	}
 }
 
-ATD::Pixel ATD::Image::MixOpacity(const ATD::Pixel &dst, 
+ATD::Pixel ATD::Image::mixOpacity(const ATD::Pixel &dst, 
 		const ATD::Pixel &src) const
 {
 	return Pixel(
@@ -370,13 +361,13 @@ ATD::Pixel ATD::Image::MixOpacity(const ATD::Pixel &dst,
 
 /* Png check/load/save implementation */
 
-bool ATD::Image::IsPng(FILE *file) const
+bool ATD::Image::isPng(FILE *file) const
 {
 	/* Remember the file offset */
 	long offset = ::ftell(file);
 	if (offset == -1) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'ftell(..)' failure: %d %s", 
+		throw std::runtime_error(Aux::printf("'ftell(..)' failure: %d %s", 
 					errnoVal, ::strerror(errnoVal)));
 	}
 
@@ -397,14 +388,14 @@ bool ATD::Image::IsPng(FILE *file) const
 	return true;
 }
 
-void ATD::Image::LoadAsPng(FILE *file)
+void ATD::Image::loadAsPng(FILE *file)
 {
 	/* Init png read structures */
 	png_structp pngPtr = ::png_create_read_struct(PNG_LIBPNG_VER_STRING, 
 			nullptr, nullptr, nullptr);
 	if (!pngPtr) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'%s(..)' failure: %d %s", 
+		throw std::runtime_error(Aux::printf("'%s(..)' failure: %d %s", 
 					"png_create_read_struct", errnoVal, 
 					::strerror(errnoVal)));
 	}
@@ -412,14 +403,14 @@ void ATD::Image::LoadAsPng(FILE *file)
 	if (!infoPtr) {
 		int errnoVal = errno;
 		::png_destroy_read_struct(&pngPtr, nullptr, nullptr);
-		throw std::runtime_error(Printf("'%s(..)' failure: %d %s", 
+		throw std::runtime_error(Aux::printf("'%s(..)' failure: %d %s", 
 					"png_create_info_struct", errnoVal, 
 					::strerror(errnoVal)));
 	}
 	if (::setjmp(png_jmpbuf(pngPtr))) {
 		int errnoVal = errno;
 		::png_destroy_read_struct(&pngPtr, &infoPtr, nullptr);
-		throw std::runtime_error(Printf("libpng internal error: %d %s", 
+		throw std::runtime_error(Aux::printf("libpng internal error: %d %s", 
 					errnoVal, ::strerror(errnoVal)));
 	}
 	::png_init_io(pngPtr, file);
@@ -460,7 +451,7 @@ void ATD::Image::LoadAsPng(FILE *file)
 
 	/* Read the image */
 	Pixel *newPixels = nullptr;
-	if (newSize.x * newSize.y) {
+	if (newSize.x * newSize.y != 0) {
 		newPixels = new Pixel[newSize.x * newSize.y];
 
 		png_bytep *rowPtrs = new png_bytep[newSize.y];
@@ -491,14 +482,14 @@ void ATD::Image::LoadAsPng(FILE *file)
 	m_pixels = newPixels;
 }
 
-void ATD::Image::SaveAsPng(FILE *file) const
+void ATD::Image::saveAsPng(FILE *file) const
 {
 	/* Init png write structures */
 	png_structp pngPtr = ::png_create_write_struct(PNG_LIBPNG_VER_STRING, 
 			nullptr, nullptr, nullptr);
 	if (!pngPtr) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'%s(..)' failure: %d %s", 
+		throw std::runtime_error(Aux::printf("'%s(..)' failure: %d %s", 
 					"png_create_write_struct", errnoVal, 
 					::strerror(errnoVal)));
 	}
@@ -506,14 +497,14 @@ void ATD::Image::SaveAsPng(FILE *file) const
 	if (!infoPtr) {
 		int errnoVal = errno;
 		::png_destroy_write_struct(&pngPtr, nullptr);
-		throw std::runtime_error(Printf("'%s(..)' failure: %d %s", 
+		throw std::runtime_error(Aux::printf("'%s(..)' failure: %d %s", 
 					"png_create_info_struct", errnoVal, 
 					::strerror(errnoVal)));
 	}
 	if (::setjmp(png_jmpbuf(pngPtr))) {
 		int errnoVal = errno;
 		::png_destroy_write_struct(&pngPtr, &infoPtr);
-		throw std::runtime_error(Printf("libpng internal error: %d %s", 
+		throw std::runtime_error(Aux::printf("libpng internal error: %d %s", 
 					errnoVal, ::strerror(errnoVal)));
 	}
 	::png_init_io(pngPtr, file);
@@ -550,13 +541,13 @@ void ATD::Image::SaveAsPng(FILE *file) const
 	::png_destroy_write_struct(&pngPtr, &infoPtr);
 }
 
-bool ATD::Image::IsJpeg(FILE *file) const
+bool ATD::Image::isJpeg(FILE *file) const
 {
 	/* Remember the file offset */
 	long offset = ::ftell(file);
 	if (offset == -1) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'ftell(..)' failure: %d %s", 
+		throw std::runtime_error(Aux::printf("'ftell(..)' failure: %d %s", 
 					errnoVal, ::strerror(errnoVal)));
 	}
 
@@ -564,8 +555,8 @@ bool ATD::Image::IsJpeg(FILE *file) const
 	jpeg_decompress_struct info;
 	CustomJpegErrorMgr error;
 	info.err = ::jpeg_std_error(&error.pub);
-	error.pub.output_message = CustomJpegOutputMessage;
-	error.pub.error_exit = CustomJpegErrorExit;
+	error.pub.output_message = _customJpegOutputMessage;
+	error.pub.error_exit = _customJpegErrorExit;
 	if (::setjmp(error.jmp)) {
 		/* Not a valid jpeg header. */
 		::jpeg_destroy_decompress(&info);
@@ -586,20 +577,20 @@ bool ATD::Image::IsJpeg(FILE *file) const
 	return true;
 }
 
-void ATD::Image::LoadAsJpeg(FILE *file)
+void ATD::Image::loadAsJpeg(FILE *file)
 {
 	/* Init jpeg read structures */
 	jpeg_decompress_struct info;
 	CustomJpegErrorMgr error;
 	info.err = ::jpeg_std_error(&error.pub);
-	error.pub.output_message = CustomJpegOutputMessage;
-	error.pub.error_exit = CustomJpegErrorExit;
+	error.pub.output_message = _customJpegOutputMessage;
+	error.pub.error_exit = _customJpegErrorExit;
 	if (::setjmp(error.jmp)) {
 		/* Here the decompress was already tried, an error happened 
 		 * and jump to this place occured. Just a reminder, that C 
 		 * is a macroassembler indeed. */
 		::jpeg_destroy_decompress(&info);
-		throw std::runtime_error(Printf("failed to load: %s", 
+		throw std::runtime_error(Aux::printf("failed to load: %s", 
 					error.str.c_str()));
 	}
 
@@ -642,19 +633,19 @@ void ATD::Image::LoadAsJpeg(FILE *file)
 	::jpeg_destroy_decompress(&info);
 }
 
-void ATD::Image::SaveAsJpeg(FILE *file) const
+void ATD::Image::saveAsJpeg(FILE *file) const
 {
 	/* Init jpeg write structures */
 	jpeg_compress_struct info;
 	CustomJpegErrorMgr error;
 	info.err = ::jpeg_std_error(&error.pub);
-	error.pub.output_message = CustomJpegOutputMessage;
-	error.pub.error_exit = CustomJpegErrorExit;
+	error.pub.output_message = _customJpegOutputMessage;
+	error.pub.error_exit = _customJpegErrorExit;
 	if (::setjmp(error.jmp)) {
 		/* Here the compress was already tried, an error happened 
 		 * and jump to this place occured. */
 		::jpeg_destroy_compress(&info);
-		throw std::runtime_error(Printf("failed to save: %s", 
+		throw std::runtime_error(Aux::printf("failed to save: %s", 
 					error.str.c_str()));
 	}
 
@@ -687,7 +678,7 @@ void ATD::Image::SaveAsJpeg(FILE *file) const
 	::jpeg_destroy_compress(&info);
 }
 
-bool ATD::Image::IsGif(FILE *file) const
+bool ATD::Image::isGif(FILE *file) const
 {
 	size_t headerLen = 6;
 	const std::string gif87 = "GIF87A";
@@ -697,7 +688,7 @@ bool ATD::Image::IsGif(FILE *file) const
 	long offset = ::ftell(file);
 	if (offset == -1) {
 		int errnoVal = errno;
-		throw std::runtime_error(Printf("'ftell(..)' failure: %d %s", 
+		throw std::runtime_error(Aux::printf("'ftell(..)' failure: %d %s", 
 					errnoVal, ::strerror(errnoVal)));
 	}
 

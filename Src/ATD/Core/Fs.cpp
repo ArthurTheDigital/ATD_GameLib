@@ -1,9 +1,10 @@
 /**
-* @file     
-* @brief    Fs functions implementation.
-* @details  License: GPL v3.
-* @author   ArthurTheDigital (arthurthedigital@gmail.com)
-* @since    $Id: $ */
+ * @file      
+ * @brief     Fs functions implementation.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3
+ * @since     $Id: $ */
 
 #include <ATD/Core/Fs.hpp>
 
@@ -26,7 +27,7 @@
 
 /* Auxiliary */
 
-static void PathBreakdown(const std::string &path, 
+static void _pathBreakdown(const std::string &path, 
 		const std::string &delimiter, 
 		bool &absolute, 
 #if defined _WIN32
@@ -84,7 +85,7 @@ static void PathBreakdown(const std::string &path,
 	} while (curr != std::string::npos);
 }
 
-static std::string PathAssemble(const std::string &delimiter, 
+static std::string _pathAssemble(const std::string &delimiter, 
 		bool absolute, 
 #if defined _WIN32
 		/* TODO: Add data for Windows absolute path. */
@@ -131,19 +132,19 @@ ATD::Fs::Stat::Stat(const ATD::Fs::Path &path)
 	int statResult;
 #if defined _WIN32
 	struct _stat stBuf;
-	statResult = ::_stat(path.Native().c_str(), &stBuf);
+	statResult = ::_stat(path.native().c_str(), &stBuf);
 #else
 	struct stat stBuf;
-	statResult = ::stat(path.Native().c_str(), &stBuf);
+	statResult = ::stat(path.native().c_str(), &stBuf);
 #endif
 
 	if (statResult == -1) {
 		/* Nasty error happened. */
 		int errnoVal = errno;
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"Cannot stat \"%s\" : %d %s", 
-					path.Native().c_str(), 
+					path.native().c_str(), 
 					errnoVal, ::strerror(errnoVal)
 					)
 				);
@@ -157,22 +158,22 @@ ATD::Fs::Stat::Stat()
 	: Stat(ATD::Fs::Path())
 {}
 
-bool ATD::Fs::Stat::IsDir() const
+bool ATD::Fs::Stat::isDir() const
 {
 	return S_ISDIR(m_mode);
 }
 
-bool ATD::Fs::Stat::IsReg() const
+bool ATD::Fs::Stat::isReg() const
 {
 	return S_ISREG(m_mode);
 }
 
-bool ATD::Fs::Stat::IsLnk() const
+bool ATD::Fs::Stat::isLnk() const
 {
 	return S_ISLNK(m_mode);
 }
 
-size_t ATD::Fs::Stat::Size() const
+size_t ATD::Fs::Stat::size() const
 {
 	return static_cast<size_t>(m_size);
 }
@@ -211,7 +212,7 @@ ATD::Fs::Path::Path(const std::string &path,
 	, m_preComputedNative()
 	, m_preComputedCommon()
 {
-	PathBreakdown(path, 
+	_pathBreakdown(path, 
 			type == COMMON ? COMMON_FILE_DELIMITER : NATIVE_FILE_DELIMITER, 
 			m_absolute, 
 #if defined _WIN32
@@ -223,28 +224,28 @@ ATD::Fs::Path::Path(const std::string &path,
 
 	if (m_absolute && m_reverseCount) {
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"Absolute path \"%s\" shall not contain reverse shifts", 
-					Native().c_str()
+					native().c_str()
 					)
 				);
 	}
 }
 
-std::string ATD::Fs::Path::Common() const
+std::string ATD::Fs::Path::common() const
 {
-	if (IsAbsolute()) {
+	if (isAbsolute()) {
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"No common version for absolute path \"%s\"", 
-					Native().c_str()
+					native().c_str()
 					)
 				);
 	}
 
 	if (COMMON_FILE_DELIMITER != NATIVE_FILE_DELIMITER) {
 		if (!m_preComputedCommon.size()) {
-			m_preComputedCommon = PathAssemble(COMMON_FILE_DELIMITER, 
+			m_preComputedCommon = _pathAssemble(COMMON_FILE_DELIMITER, 
 					m_absolute, 
 #if defined _WIN32
 					/* TODO: Add data for Windows absolute path. */
@@ -256,14 +257,14 @@ std::string ATD::Fs::Path::Common() const
 		return m_preComputedCommon;
 	} else {
 		/* Small optimization to not store same cache twice */
-		return Native();
+		return native();
 	}
 }
 
-std::string ATD::Fs::Path::Native() const
+std::string ATD::Fs::Path::native() const
 {
 	if (!m_preComputedNative.size()) {
-		m_preComputedNative = PathAssemble(NATIVE_FILE_DELIMITER, 
+		m_preComputedNative = _pathAssemble(NATIVE_FILE_DELIMITER, 
 				m_absolute, 
 #if defined _WIN32
 				/* TODO: Add data for Windows absolute path. */
@@ -275,15 +276,20 @@ std::string ATD::Fs::Path::Native() const
 	return m_preComputedNative;
 }
 
-bool ATD::Fs::Path::IsAbsolute() const
+bool ATD::Fs::Path::isAbsolute() const
 {
 	return m_absolute;
 }
 
-ATD::Fs::Path ATD::Fs::Path::Joined(const Path &subPath) const
+ATD::Fs::Path ATD::Fs::Path::joined(const Path &subPath) const
 {
-	if (subPath.IsAbsolute()) {
-		throw std::runtime_error(Printf("Cannot join absolute path \"%s\"", subPath.Native().c_str()));
+	if (subPath.isAbsolute()) {
+		throw std::runtime_error(
+				Aux::printf(
+					"Cannot join absolute path \"%s\"", 
+					subPath.native().c_str()
+					)
+				);
 	}
 
 	Path result;
@@ -303,10 +309,10 @@ ATD::Fs::Path ATD::Fs::Path::Joined(const Path &subPath) const
 	return result;
 }
 
-ATD::Fs::Path ATD::Fs::Path::Relative(const ATD::Fs::Path &source) const
+ATD::Fs::Path ATD::Fs::Path::relative(const ATD::Fs::Path &source) const
 {
-	Path srcAbs = source.Absolute();
-	Path dstAbs = Absolute();
+	Path srcAbs = source.absolute();
+	Path dstAbs = absolute();
 
 #if defined _WIN32
 	// TODO: Throw exception in case of different Windows tomes
@@ -328,9 +334,9 @@ ATD::Fs::Path ATD::Fs::Path::Relative(const ATD::Fs::Path &source) const
 	return Path(false, relRC, relItems);
 }
 
-ATD::Fs::Path ATD::Fs::Path::Absolute() const
+ATD::Fs::Path ATD::Fs::Path::absolute() const
 {
-	if (IsAbsolute()) {
+	if (isAbsolute()) {
 		return *this;
 	} else {
 		std::string wdBuffer;
@@ -346,15 +352,16 @@ ATD::Fs::Path ATD::Fs::Path::Absolute() const
 						continue;
 					} else {
 						throw std::runtime_error(
-								Printf(
-									"Buffer of size \"%lu * 2^%lu\" is too small for work directory", 
+								Aux::printf(
+									"Buffer of size \"%lu * 2^%lu\" is too small for "
+									"work directory", 
 									PATH_MAX_GUESS_START, PATH_MAX_GUESS_POW2
 									)
 								);
 					}
 				}
 				throw std::runtime_error(
-						Printf(
+						Aux::printf(
 							"Failed to get work directory : %d %s", 
 							errnoVal, ::strerror(errnoVal)
 							)
@@ -364,11 +371,11 @@ ATD::Fs::Path ATD::Fs::Path::Absolute() const
 
 		/* ::getcwd returns absolute path to the work dir. And if the current 
 		 * path is relative, it is assumed to be relative to work dir */
-		return Path(wdBuffer, NATIVE).Joined(*this);
+		return Path(wdBuffer, NATIVE).joined(*this);
 	}
 }
 
-ATD::Fs::Path ATD::Fs::Path::ParentDir() const
+ATD::Fs::Path ATD::Fs::Path::parentDir() const
 {
 	size_t pdRC = m_reverseCount;
 	std::vector<std::string> pdItems = m_items;
@@ -382,16 +389,16 @@ ATD::Fs::Path ATD::Fs::Path::ParentDir() const
 	return Path(m_absolute, pdRC, pdItems);
 }
 
-std::string ATD::Fs::Path::Filename() const
+std::string ATD::Fs::Path::filename() const
 {
 	return m_items.size() ? m_items.back() : 
 		m_reverseCount ? REVERSE_SHIFT : 
 		CURR_DIR;
 }
 
-size_t ATD::Fs::Path::ExtensionFromList(const std::vector<std::string> &extensions) const
+size_t ATD::Fs::Path::extensionFromList(const std::vector<std::string> &extensions) const
 {
-	::fprintf(stderr, "Extension resolv start\n");
+	/* ::fprintf(stderr, "Extension resolv start\n"); // DEBUG */
 
 	if (!m_items.size()) { return static_cast<size_t>(-1); }
 
@@ -413,10 +420,14 @@ size_t ATD::Fs::Path::ExtensionFromList(const std::vector<std::string> &extensio
 	for (size_t extIter = 0; extIter < extensions.size(); extIter++) {
 		candidates.insert(extIter);
 	}
-	for (size_t fnRIter = 0; fnRIter < filename.size() && candidates.size() > 0; fnRIter++) {
-		for (auto cIter = candidates.begin(); cIter != candidates.end();) {
+	for (size_t fnRIter = 0; 
+			fnRIter < filename.size() && candidates.size() > 0; 
+			fnRIter++) {
+		for (auto cIter = candidates.begin(); 
+				cIter != candidates.end();) {
 			if (extensions[*cIter].size() > fnRIter) {
-				if (extensions[*cIter][extensions[*cIter].size() - fnRIter - 1] != filename[filename.size() - fnRIter - 1]) {
+				if (extensions[*cIter][extensions[*cIter].size() - fnRIter - 1] != 
+						filename[filename.size() - fnRIter - 1]) {
 					cIter = candidates.erase(cIter);
 				} else {
 					cIter++;
@@ -434,20 +445,20 @@ size_t ATD::Fs::Path::ExtensionFromList(const std::vector<std::string> &extensio
 		}
 	}
 
-	::fprintf(stderr, "Extension resolved\n");
+	/* ::fprintf(stderr, "Extension resolved\n"); // DEBUG */
 
 	return match;
 }
 
-bool ATD::Fs::Path::Exists() const
+bool ATD::Fs::Path::exists() const
 {
 	int statResult;
 #if defined _WIN32
 	struct _stat stBuf;
-	statResult = ::_stat(Native().c_str(), &stBuf);
+	statResult = ::_stat(native().c_str(), &stBuf);
 #else
 	struct stat stBuf;
-	statResult = ::stat(Native().c_str(), &stBuf);
+	statResult = ::stat(native().c_str(), &stBuf);
 #endif
 
 	if (statResult == 0) {
@@ -457,9 +468,9 @@ bool ATD::Fs::Path::Exists() const
 		if (errnoVal != ENOENT) {
 			/* Nasty error happened. */
 			throw std::runtime_error(
-					Printf(
+					Aux::printf(
 						"Cannot stat \"%s\" : %d %s", 
-						Native().c_str(), 
+						native().c_str(), 
 						errnoVal, ::strerror(errnoVal)
 						)
 					);
@@ -468,69 +479,69 @@ bool ATD::Fs::Path::Exists() const
 	return false;
 }
 
-ATD::Fs::Path ATD::Fs::Path::Linked(bool recursively) const
+ATD::Fs::Path ATD::Fs::Path::linked(bool recursively) const
 {
 	Stat st(*this);
-	if (!st.IsLnk()) {
+	if (!st.isLnk()) {
 		return *this;
 	} else {
-		std::string lnkbuffer(st.Size(), '\0');
-		ssize_t readlinkResult = ::readlink(Native().c_str(), &lnkbuffer[0], lnkbuffer.size());
+		std::string lnkbuffer(st.size(), '\0');
+		ssize_t readlinkResult = ::readlink(native().c_str(), &lnkbuffer[0], lnkbuffer.size());
 		int errnoVal = errno;
 
 		if (readlinkResult == -1) {
 			throw std::runtime_error(
-					Printf(
+					Aux::printf(
 						"Link \"%s\" cannot be read : %d %s", 
-						Native().c_str(), 
+						native().c_str(), 
 						errnoVal, ::strerror(errnoVal)
 						)
 					);
 		}
 
 		Path linked(lnkbuffer, NATIVE);
-		if (!linked.IsAbsolute()) {
-			linked = Joined(linked);
+		if (!linked.isAbsolute()) {
+			linked = joined(linked);
 		}
 
 		if (recursively) {
-			return linked.Linked();
+			return linked.linked();
 		} else {
 			return linked;
 		}
 	}
 }
 
-void ATD::Fs::Path::Mkdir() const
+void ATD::Fs::Path::mkDir() const
 {
 	std::vector<Path> pathCache;
 	pathCache.push_back(*this);
 
-	while (!pathCache.back().Exists()) {
+	while (!pathCache.back().exists()) {
 		if (!pathCache.back().m_items.size()) {
-			/* Reverse part of the path is inaccessible - mkdir is futile! */
+			/* Reverse part of the path is inaccessible - mkDir is futile! */
 			throw std::runtime_error(
-					Printf(
-						"Path \"%s\" is inaccessible -> Mkdir(\"%s\") is futile", 
-						pathCache.back().Native().c_str(), 
-						Native().c_str()
+					Aux::printf(
+						"Path \"%s\" is inaccessible -> mkDir(\"%s\") is futile", 
+						pathCache.back().native().c_str(), 
+						native().c_str()
 						)
 					);
 		}
-		pathCache.push_back(pathCache.back().ParentDir());
+		pathCache.push_back(pathCache.back().parentDir());
 	}
 
 	/* Because, the last added path exists */
 	for (auto pcRIter = pathCache.rbegin() + 1; pcRIter != pathCache.rend(); pcRIter++) {
-		int mkdirResult = ::mkdir(pcRIter->Native().c_str(), 0666);
+		int mkdirResult = ::mkdir(pcRIter->native().c_str(), 0666);
 		if (mkdirResult == -1) {
 			if (errno != EEXIST) {
 				if (pcRIter != pathCache.rbegin() + 1) {
 					throw std::runtime_error(
-							Printf(
+							Aux::printf(
 								"Partial: created \"%s\" /required \"%s\"", 
-								pcRIter->Native().c_str(), 
-								Native().c_str()
+								pcRIter->native().c_str(), 
+								native().c_str()
 								)
 							);
 				}
@@ -539,16 +550,16 @@ void ATD::Fs::Path::Mkdir() const
 	}
 }
 
-std::vector<ATD::Fs::Path> ATD::Fs::Path::Readdir(bool showEverything) const
+std::vector<ATD::Fs::Path> ATD::Fs::Path::readDir(bool showEverything) const
 {
 	std::set<std::string> entryNames;
 	DIR *dir;
-	if (!(dir = ::opendir(Native().c_str()))) {
+	if (!(dir = ::opendir(native().c_str()))) {
 		int errnoVal = errno;
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"Cannot open \"%s\" as directory : %d %s",
-					Native().c_str(), 
+					native().c_str(), 
 					errnoVal, 
 					::strerror(errnoVal)
 					)
@@ -576,12 +587,12 @@ std::vector<ATD::Fs::Path> ATD::Fs::Path::Readdir(bool showEverything) const
 	for (auto enIter = entryNames.begin(); 
 			enIter != entryNames.end(); 
 			enIter++) {
-		Path path = Joined(*enIter);
+		Path path = joined(*enIter);
 		if (!showEverything) {
 			try
 			{
 				Stat st(path);
-				if (!(st.IsReg() || st.IsLnk() || st.IsDir())) {
+				if (!(st.isReg() || st.isLnk() || st.isDir())) {
 					continue;
 				}
 			} catch (...) {
@@ -594,80 +605,80 @@ std::vector<ATD::Fs::Path> ATD::Fs::Path::Readdir(bool showEverything) const
 	return paths;
 }
 
-void ATD::Fs::Path::Copy(const ATD::Fs::Path &destination) const
+void ATD::Fs::Path::copy(const ATD::Fs::Path &destination) const
 {
-	if (!Exists()) {
+	if (!exists()) {
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"No path \"%s\" to Move()", 
-					Native().c_str()
+					native().c_str()
 					)
 				);
 	}
-	if (destination.Exists()) {
+	if (destination.exists()) {
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"Destination occupied \"%s\"", 
-					destination.Native().c_str()
+					destination.native().c_str()
 					)
 				);
 	}
 
-	CopyImpl(destination);
+	copyImpl(destination);
 }
 
-void ATD::Fs::Path::Unlink() const
+void ATD::Fs::Path::unlink() const
 {
-	if (Stat(*this).IsDir()) {
-		std::vector<Path> contents = Readdir(true);
+	if (Stat(*this).isDir()) {
+		std::vector<Path> contents = readDir(true);
 		for (auto cIter = contents.begin(); cIter != contents.end(); cIter++) {
-			cIter->Unlink();
+			cIter->unlink();
 		}
-		::rmdir(Native().c_str());
+		::rmdir(native().c_str());
 	} else {
-		::unlink(Native().c_str());
+		::unlink(native().c_str());
 	}
 }
 
-void ATD::Fs::Path::Move(const ATD::Fs::Path &destination) const
+void ATD::Fs::Path::move(const ATD::Fs::Path &destination) const
 {
-	if (!Exists()) {
+	if (!exists()) {
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"No path \"%s\" to Move()", 
-					Native().c_str()
+					native().c_str()
 					)
 				);
 	}
-	if (destination.Exists()) {
+	if (destination.exists()) {
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"Destination occupied \"%s\"", 
-					destination.Native().c_str()
+					destination.native().c_str()
 					)
 				);
 	}
 
 	/* If fails, throws exception itself */
-	destination.ParentDir().Mkdir();
+	destination.parentDir().mkDir();
 
-	int renameResult = ::rename(Native().c_str(), destination.Native().c_str());
+	int renameResult = ::rename(native().c_str(), destination.native().c_str());
 	if (renameResult == -1) {
 		int errnoVal = errno;
 		if (errnoVal != EXDEV) {
 			throw std::runtime_error(
-					Printf(
+					Aux::printf(
 						"Cannot rename \"%s\" -> \"%s\" : %d %s", 
-						Native().c_str(), 
-						destination.Native().c_str(), 
+						native().c_str(), 
+						destination.native().c_str(), 
 						errnoVal, 
 						::strerror(errnoVal)
 						)
 					);
 		} else {
 			/* Move between devices */
-			CopyImpl(destination);
-			Unlink();
+			copyImpl(destination);
+			unlink();
 		}
 	}
 }
@@ -683,16 +694,16 @@ ATD::Fs::Path::Path(bool absolute,
 	, m_preComputedCommon()
 {}
 
-void ATD::Fs::Path::CopyImpl(const ATD::Fs::Path &destination) const
+void ATD::Fs::Path::copyImpl(const ATD::Fs::Path &destination) const
 {
 	Stat st(*this);
-	if (st.IsDir()) {
-		destination.Mkdir();
-		auto entries = Readdir();
+	if (st.isDir()) {
+		destination.mkDir();
+		auto entries = readDir();
 		for (auto eIter = entries.begin(); eIter != entries.end(); eIter++) {
-			eIter->CopyImpl(destination.Joined(eIter->Filename()));
+			eIter->copyImpl(destination.joined(eIter->filename()));
 		}
-	} else if (st.IsLnk()) {
+	} else if (st.isLnk()) {
 		/* Just copy the links themselves as "cp -R" does. 
 		 * This may lead to broken links, however other 
 		 * alternatives are more confusing for programmer. 
@@ -706,18 +717,18 @@ void ATD::Fs::Path::CopyImpl(const ATD::Fs::Path &destination) const
 		 * This can be implemented, but it is more confusing for 
 		 * programmer to use. */
 
-		std::string lnkbuffer(st.Size(), '\0');
+		std::string lnkbuffer(st.size(), '\0');
 
 		if (::readlink(
-					Native().c_str(), 
+					native().c_str(), 
 					&lnkbuffer[0], 
 					lnkbuffer.size()
 					) == -1) {
 			int errnoVal = errno;
 			throw std::runtime_error(
-					Printf(
+					Aux::printf(
 						"Cannot read link \"%s\" : %d %s", 
-						Native().c_str(), 
+						native().c_str(), 
 						errnoVal, ::strerror(errnoVal)
 						)
 					);
@@ -725,67 +736,67 @@ void ATD::Fs::Path::CopyImpl(const ATD::Fs::Path &destination) const
 
 		if (::symlink(
 				lnkbuffer.c_str(), 
-				destination.Native().c_str()
+				destination.native().c_str()
 				) == -1) {
 			int errnoVal = errno;
 			throw std::runtime_error(
-					Printf(
+					Aux::printf(
 						"Cannot create link \"%s\" : %d %s", 
-						destination.Native().c_str(), 
+						destination.native().c_str(), 
 						errnoVal, ::strerror(errnoVal)
 						)
 					);
 		}
 	} else {
 		/* Regular file */
-		std::string buffer(st.Size() + 1, '\0');
+		std::string buffer(st.size() + 1, '\0');
 		FILE *file;
-		if (!(file = fopen(Native().c_str(), "r"))) {
+		if (!(file = fopen(native().c_str(), "r"))) {
 			int errnoVal = errno;
 			throw std::runtime_error(
-					Printf(
+					Aux::printf(
 						"Cannot open \"%s\" for reading : %d %s", 
-						Native().c_str(), 
+						native().c_str(), 
 						errnoVal, ::strerror(errnoVal)
 						)
 					);
 		} else {
-			size_t bytesRead = ::fread(&buffer[0], 1, st.Size(), file);
+			size_t bytesRead = ::fread(&buffer[0], 1, st.size(), file);
 			int errnoVal = errno;
 			::fclose(file);
 
-			if (bytesRead != st.Size() && errnoVal) {
+			if (bytesRead != st.size() && errnoVal) {
 				throw std::runtime_error(
-					Printf(
+					Aux::printf(
 						"Incomplete read %lu/%lu from \"%s\" : %d %s", 
-						bytesRead, st.Size(), 
-						Native().c_str(), 
+						bytesRead, st.size(), 
+						native().c_str(), 
 						errnoVal, ::strerror(errnoVal)
 						)
 					);
 			}
 		}
 
-		if (!(file = fopen(destination.Native().c_str(), "w"))) {
+		if (!(file = fopen(destination.native().c_str(), "w"))) {
 			int errnoVal = errno;
 			throw std::runtime_error(
-					Printf(
+					Aux::printf(
 						"Cannot open \"%s\" for writing : %d %s", 
-						destination.Native().c_str(), 
+						destination.native().c_str(), 
 						errnoVal, ::strerror(errnoVal)
 						)
 					);
 		} else {
-			size_t bytesWritten = ::fwrite(buffer.c_str(), 1, st.Size(), file);
+			size_t bytesWritten = ::fwrite(buffer.c_str(), 1, st.size(), file);
 			int errnoVal = errno;
 			::fclose(file);
 
-			if (bytesWritten != st.Size() && errnoVal) {
+			if (bytesWritten != st.size() && errnoVal) {
 				throw std::runtime_error(
-					Printf(
+					Aux::printf(
 						"Incomplete write %lu/%lu to \"%s\" : %d %s", 
-						bytesWritten, st.Size(), 
-						destination.Native().c_str(), 
+						bytesWritten, st.size(), 
+						destination.native().c_str(), 
 						errnoVal, ::strerror(errnoVal)
 						)
 					);
@@ -798,10 +809,10 @@ void ATD::Fs::Path::CopyImpl(const ATD::Fs::Path &destination) const
 /* Fs */
 
 ATD::Fs::Fs(const Path &binPath)
-	: m_binDir(binPath.ParentDir())
+	: m_binDir(binPath.parentDir())
 {}
 
-ATD::Fs::Path ATD::Fs::BinDir() const
+ATD::Fs::Path ATD::Fs::binDir() const
 {
 	return m_binDir;
 }

@@ -23,53 +23,53 @@ ATD::Loadable::Loadable()
 ATD::Loadable::~Loadable()
 {}
 
-void ATD::Loadable::Load(const ATD::Fs::Path &filename)
+void ATD::Loadable::load(const ATD::Fs::Path &filename)
 {
 	/* Load the Loadable itself. */
-	OnLoad(filename);
+	onLoad(filename);
 
 	/* Check the dependency table. */
-	CheckDependencyTable();
+	checkDependencyTable();
 
 	/* Recursively load all the dependencies. */
 	for (auto &depPair : m_dependencyTable) {
-		depPair.first->Load(*depPair.second);
+		depPair.first->load(*depPair.second);
 	}
 
-	OnLoadFinished();
+	onLoadFinished();
 
 	/* Nullify the 'm_hasChanged' bit. */
 	m_hasChanged = false;
 }
 
-void ATD::Loadable::Save(const ATD::Fs::Path &filename) const
+void ATD::Loadable::save(const ATD::Fs::Path &filename) const
 {
 	/* Save the Loadable itself if required. */
 	if (m_hasChanged) {
-		OnSave(filename);
+		onSave(filename);
 	}
 
 	/* Check the dependency table. */
-	CheckDependencyTable();
+	checkDependencyTable();
 
 	/* Recursively load all the dependencies. */
 	for (auto &depPair : m_dependencyTable) {
-		depPair.first->Save(*depPair.second);
+		depPair.first->save(*depPair.second);
 	}
 
-	OnSaveFinished();
+	onSaveFinished();
 
 	/* Nullify the 'm_hasChanged' bit. */
 	m_hasChanged = false;
 }
 
 const ATD::Loadable::DependencyTable &
-	ATD::Loadable::GetDependencyTable() const
+	ATD::Loadable::getDependencyTable() const
 {
 	return m_dependencyTable;
 }
 
-void ATD::Loadable::AddDependency(ATD::Loadable *dependency)
+void ATD::Loadable::addDependency(ATD::Loadable *dependency)
 {
 	m_dependencyTable.insert(
 			std::pair<Loadable *, std::shared_ptr<Fs::Path>>(
@@ -77,7 +77,7 @@ void ATD::Loadable::AddDependency(ATD::Loadable *dependency)
 				nullptr));
 }
 
-void ATD::Loadable::SetDependencyPath(ATD::Loadable *dependency, 
+void ATD::Loadable::setDependencyPath(ATD::Loadable *dependency, 
 		const ATD::Fs::Path &filename)
 {
 	m_dependencyTable.at(dependency) = 
@@ -85,7 +85,7 @@ void ATD::Loadable::SetDependencyPath(ATD::Loadable *dependency,
 				new Fs::Path(filename));
 }
 
-const ATD::Fs::Path &ATD::Loadable::GetDependencyPath(
+const ATD::Fs::Path &ATD::Loadable::getDependencyPath(
 		ATD::Loadable *dependency) const
 {
 	auto dependencyPathPtr = m_dependencyTable.at(dependency);
@@ -95,18 +95,18 @@ const ATD::Fs::Path &ATD::Loadable::GetDependencyPath(
 	return *dependencyPathPtr;
 }
 
-void ATD::Loadable::SetChanged()
+void ATD::Loadable::setChanged()
 {
 	m_hasChanged = true;
 }
 
-void ATD::Loadable::OnLoadFinished()
+void ATD::Loadable::onLoadFinished()
 {}
 
-void ATD::Loadable::OnSaveFinished() const
+void ATD::Loadable::onSaveFinished() const
 {}
 
-void ATD::Loadable::CheckDependencyTable() const
+void ATD::Loadable::checkDependencyTable() const
 {
 	std::set<Loadable *> faultDependencies;
 	for (auto &depPair : m_dependencyTable) {
@@ -118,13 +118,13 @@ void ATD::Loadable::CheckDependencyTable() const
 		std::string faultDependenciesStr;
 		for (auto &faultDep : faultDependencies) {
 			if (!faultDependenciesStr.size()) {
-				faultDependenciesStr = Printf("%p", faultDep);
+				faultDependenciesStr = Aux::printf("%p", faultDep);
 			} else {
-				faultDependenciesStr += Printf(", %p", faultDep);
+				faultDependenciesStr += Aux::printf(", %p", faultDep);
 			}
 		}
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"Unresolved dependencies: [%s]", 
 					faultDependenciesStr.c_str()));
 	}

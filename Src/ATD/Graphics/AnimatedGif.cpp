@@ -1,3 +1,10 @@
+/**
+ * @file      
+ * @brief     Animated gif handling.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #include <ATD/Graphics/AnimatedGif.hpp>
 
@@ -14,7 +21,7 @@
 
 /* ATD::AnimatedGif auxiliary: */
 
-static void FillPixel(ATD::Pixel *dstData, const ATD::Vector2S &dstSize, 
+static void _fillPixel(ATD::Pixel *dstData, const ATD::Vector2S &dstSize, 
 		const ATD::Pixel &pixel, const ATD::RectL &area)
 {
 	for (long y = area.y; y < area.y + area.h; y++) {
@@ -24,7 +31,7 @@ static void FillPixel(ATD::Pixel *dstData, const ATD::Vector2S &dstSize,
 	}
 }
 
-static int InterlacedToNormal(int pxId, int width, int height)
+static int _interlacedToNormal(int pxId, int width, int height)
 {
 	int pass1Border = (height + 7) / 8 * width;
 	int pass2Border = pass1Border + (height + 7 - 4) / 8 * width;
@@ -48,7 +55,7 @@ static int InterlacedToNormal(int pxId, int width, int height)
 	return pxResId;
 }
 
-static uint16_t ColorDistanceRGB(const ATD::Pixel &c1, const ATD::Pixel &c2)
+static uint16_t _colorDistanceRGB(const ATD::Pixel &c1, const ATD::Pixel &c2)
 {
 	/* Manhettan distance between pixel values (transparency ignored) */
 	return (c1.r < c2.r ? c2.r - c1.r : c1.r - c2.r) + 
@@ -59,7 +66,7 @@ static uint16_t ColorDistanceRGB(const ATD::Pixel &c1, const ATD::Pixel &c2)
 static const uint16_t MAX_COLOR_DISTANCE = 0x00FF * 3;
 static const uint16_t DFT_COLOR_DISTANCE = 0xFFFF; /* Impossible value */
 
-static std::vector<ATD::Pixel> ExtractColormap(const ATD::Image &image, 
+static std::vector<ATD::Pixel> _extractColormap(const ATD::Image &image, 
 		size_t maxColormapSize = ATD::AnimatedGif::MAX_COLORMAP_SIZE)
 {
 	/* Trivial case */
@@ -81,9 +88,9 @@ static std::vector<ATD::Pixel> ExtractColormap(const ATD::Image &image,
 	std::map<uint32_t, CDesc> rawColormap;
 
 	/* Obtain color values and descriptors */
-	for (size_t pxIter = 0; pxIter < image.Size().x * image.Size().y; 
+	for (size_t pxIter = 0; pxIter < image.size().x * image.size().y; 
 			pxIter++) {
-		ATD::Pixel nextPixel = image.GetPixels()[pxIter];
+		ATD::Pixel nextPixel = image.data()[pxIter];
 		nextPixel.a = 0xFF;
 
 		auto rcmIter = rawColormap.find(nextPixel.value);
@@ -101,7 +108,7 @@ static std::vector<ATD::Pixel> ExtractColormap(const ATD::Image &image,
 				/* No self-comparison possible, because, color vales are 
 				 * unique as std::map keys and the next one is not yet 
 				 * inserted. */
-				uint16_t nextDistance = ColorDistanceRGB(nextPixel, 
+				uint16_t nextDistance = _colorDistanceRGB(nextPixel, 
 						ATD::Pixel(rcmIter2->first));
 				if (nextDistance < rcmIter2->second.nnDistance) {
 					rcmIter2->second.nnDistance = nextDistance;
@@ -124,7 +131,7 @@ static std::vector<ATD::Pixel> ExtractColormap(const ATD::Image &image,
 		std::function<float(const CDesc &)> importanceFunc = 
 			[image](const CDesc &desc)->float {
 				return static_cast<float>(desc.weight) / 
-						static_cast<float>(image.Size().x * image.Size().y) + 
+						static_cast<float>(image.size().x * image.size().y) + 
 					static_cast<float>(desc.nnDistance) / 
 						static_cast<float>(MAX_COLOR_DISTANCE);
 			};
@@ -164,7 +171,7 @@ static std::vector<ATD::Pixel> ExtractColormap(const ATD::Image &image,
 				for (auto rcmIter2 = rawColormap.begin(); 
 						rcmIter2 != rawColormap.end(); rcmIter2++) {
 					if (rcmIter2->first != rcmIter->first) {
-						uint16_t distance = ColorDistanceRGB(
+						uint16_t distance = _colorDistanceRGB(
 								ATD::Pixel(rcmIter->first), 
 								ATD::Pixel(rcmIter2->first));
 						if (distance < rcmIter->second.nnDistance) {
@@ -186,13 +193,13 @@ static std::vector<ATD::Pixel> ExtractColormap(const ATD::Image &image,
 	return colormap;
 }
 
-static uint8_t IndexInColorMap(const ATD::Pixel &pixel, 
+static uint8_t _indexInColormap(const ATD::Pixel &pixel, 
 		const std::vector<ATD::Pixel> &colorMap)
 {
 	uint8_t index = 0;
 	uint16_t pxDistance = 0xFFFF; 
 	for (size_t pxIndex = 0; pxIndex < colorMap.size(); pxIndex++) {
-		uint16_t curPxDistance = ColorDistanceRGB(pixel, colorMap[pxIndex]);
+		uint16_t curPxDistance = _colorDistanceRGB(pixel, colorMap[pxIndex]);
 		if (curPxDistance < pxDistance) {
 			index = pxIndex;
 			pxDistance = curPxDistance;
@@ -210,54 +217,45 @@ ATD::AnimatedGif::Player::Player(ATD::AnimatedGif::CPtr gifPtr)
 	, m_playedMs(0)
 {}
 
-ATD::AnimatedGif::CPtr ATD::AnimatedGif::Player::GetGif() const
-{ return m_gifPtr; }
-
-void ATD::AnimatedGif::Player::Reset()
+void ATD::AnimatedGif::Player::reset()
 {
 	m_curFrameIndex = 0;
 	m_curFramePlayedMs = 0;
 	m_playedMs = 0;
 }
 
-void ATD::AnimatedGif::Player::Update(long elapsedMs)
+void ATD::AnimatedGif::Player::update(long elapsedMs)
 {
-	if (m_gifPtr->FramesCount()) {
-		elapsedMs %= m_gifPtr->DurationMs();
-		if (elapsedMs < 0) { elapsedMs += m_gifPtr->DurationMs(); }
+	if (m_gifPtr->framesCount()) {
+		elapsedMs %= m_gifPtr->durationMs();
+		if (elapsedMs < 0) { elapsedMs += m_gifPtr->durationMs(); }
 
 		long curFramePlayedMs = m_curFramePlayedMs + elapsedMs;
 		size_t prevFrameIndex = static_cast<long>(m_curFrameIndex) - 1 < 0 ? 
-			m_gifPtr->FramesCount() - 1 : m_curFrameIndex - 1;
+			m_gifPtr->framesCount() - 1 : m_curFrameIndex - 1;
 		while (curFramePlayedMs >= 0) {
 			prevFrameIndex = m_curFrameIndex;
 			m_curFrameIndex += 1;
-			m_curFrameIndex %= m_gifPtr->FramesCount();
-			curFramePlayedMs -= m_gifPtr->GetFrameDelayMs(prevFrameIndex);
+			m_curFrameIndex %= m_gifPtr->framesCount();
+			curFramePlayedMs -= m_gifPtr->frameDelayMs(prevFrameIndex);
 		}
 		m_curFrameIndex = prevFrameIndex;
 		m_curFramePlayedMs = curFramePlayedMs + 
-			m_gifPtr->GetFrameDelayMs(prevFrameIndex);
+			m_gifPtr->frameDelayMs(prevFrameIndex);
 
 		m_playedMs += elapsedMs;
-		m_playedMs %= m_gifPtr->DurationMs();
+		m_playedMs %= m_gifPtr->durationMs();
 	}
 }
 
-ATD::Image::CPtr ATD::AnimatedGif::Player::GetCurrentFrame() const
-{ return m_gifPtr->GetFrame(m_curFrameIndex); }
-
-size_t ATD::AnimatedGif::Player::GetPlayedMs() const
-{ return m_playedMs; }
-
-void ATD::AnimatedGif::Player::SetPlayedMs(size_t playedMs)
+void ATD::AnimatedGif::Player::setPlayedMs(size_t playedMs)
 {
-	playedMs %= m_gifPtr->DurationMs();
+	playedMs %= m_gifPtr->durationMs();
 
 	m_curFrameIndex = 0;
 	m_curFramePlayedMs = 0;
 	m_playedMs = 0;
-	Update(static_cast<long>(playedMs));
+	update(static_cast<long>(playedMs));
 }
 
 
@@ -291,7 +289,7 @@ ATD::AnimatedGif::AnimatedGif(const ATD::Image &spriteSheet,
 		Frame nextFrame;
 		nextFrame.imgPtr = Image::Ptr(new Image(m_size, Pixel(background.r, 
 						background.g, background.b)));
-		nextFrame.imgPtr->Draw(Vector2L(), spriteSheet, RectL(framePos, 
+		nextFrame.imgPtr->draw(Vector2L(), spriteSheet, RectL(framePos, 
 					m_size));
 		nextFrame.delayMs = delayMs;
 
@@ -308,17 +306,17 @@ ATD::AnimatedGif::AnimatedGif(const std::vector<ATD::Image::CPtr> &frames,
 	, m_frames()
 {
 	for (auto &frame : frames) {
-		if (frame->Size().x > m_size.x) { m_size.x = frame->Size().x; }
-		if (frame->Size().y > m_size.y) { m_size.y = frame->Size().y; }
+		if (frame->size().x > m_size.x) { m_size.x = frame->size().x; }
+		if (frame->size().y > m_size.y) { m_size.y = frame->size().y; }
 	}
 
 	for (auto &frame : frames) {
 		Frame nextFrame;
 		nextFrame.imgPtr = Image::Ptr(new Image(m_size, Pixel(background.r, 
 						background.g, background.b)));
-		RectL bounds = RectL(frame->Size()).AlignClamped(RectL(m_size), 
+		RectL bounds = RectL(frame->size()).alignClamped(RectL(m_size), 
 					alignX, alignY);
-		nextFrame.imgPtr->Draw(bounds.Pos(), *frame);
+		nextFrame.imgPtr->draw(bounds.pos(), *frame);
 		nextFrame.delayMs = delayMs;
 
 		m_frames.push_back(nextFrame);
@@ -341,54 +339,18 @@ ATD::AnimatedGif::AnimatedGif(const ATD::AnimatedGif &other)
 ATD::AnimatedGif::~AnimatedGif()
 {}
 
-ATD::Vector2S ATD::AnimatedGif::Size() const
-{ return m_size; }
-
-size_t ATD::AnimatedGif::FramesCount() const
-{ return m_frames.size(); }
-
-ATD::Image::CPtr ATD::AnimatedGif::GetFrame(size_t frameIndex) const
-{
-	if (frameIndex >= m_frames.size()) {
-		throw std::runtime_error(Printf("out of range (access %lu/%lu)", 
-					frameIndex, m_frames.size()));
-	}
-	return static_cast<Image::CPtr>(m_frames[frameIndex].imgPtr);
-}
-
-ATD::Image::Ptr ATD::AnimatedGif::GetFrame(size_t frameIndex)
-{
-	if (frameIndex >= m_frames.size()) {
-		throw std::runtime_error(Printf("out of range (access %lu/%lu)", 
-					frameIndex, m_frames.size()));
-	}
-	return m_frames[frameIndex].imgPtr;
-}
-
-size_t ATD::AnimatedGif::GetFrameDelayMs(size_t frameIndex) const
-{
-	if (frameIndex >= m_frames.size()) {
-		throw std::runtime_error(Printf("out of range (access %lu/%lu)", 
-					frameIndex, m_frames.size()));
-	}
-	return m_frames[frameIndex].delayMs;
-}
-
-void ATD::AnimatedGif::SetFrameDelayMs(size_t frameIndex, 
+void ATD::AnimatedGif::setFrameDelayMs(size_t frameIndex, 
 		size_t delayMs)
 {
-	if (frameIndex >= m_frames.size()) {
-		throw std::runtime_error(Printf("out of range (access %lu/%lu)", 
-					frameIndex, m_frames.size()));
-	}
+	checkFrameIndex(frameIndex);
 	if (delayMs > MAX_DELAY_MS) {
-		throw std::runtime_error(Printf("too large delay time (%lu/%lu)", 
+		throw std::runtime_error(Aux::printf("too large delay time (%lu/%lu)", 
 					delayMs, MAX_DELAY_MS));
 	}
 	m_frames[frameIndex].delayMs = delayMs;
 }
 
-size_t ATD::AnimatedGif::DurationMs() const
+size_t ATD::AnimatedGif::durationMs() const
 {
 	if (!m_duration) {
 		for (auto &frame : m_frames) { m_duration += frame.delayMs; }
@@ -396,14 +358,14 @@ size_t ATD::AnimatedGif::DurationMs() const
 	return m_duration;
 }
 
-void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
+void ATD::AnimatedGif::onLoad(const ATD::Fs::Path &filename)
 {
 	/* Read GIF data from file */
-	FILE *file = ::fopen(filename.Native().c_str(), "rb");
+	FILE *file = ::fopen(filename.native().c_str(), "rb");
 	if (!file) {
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"'fopen(%s, ..)' failure: %d %s", 
-					filename.Native().c_str(), errno, 
+					filename.native().c_str(), errno, 
 					::strerror(errno)
 					));
 	}
@@ -412,7 +374,7 @@ void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
 	GifFileType *info = nullptr;
 	info = ::DGifOpenFileHandle(::fileno(file), &error);
 	if (!info || error) {
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"'DGifOpenFileHandle(..)' failure: %d %s", 
 					error, ::GifErrorString(error)
 					));
@@ -421,7 +383,7 @@ void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
 	if (::DGifSlurp(info) == GIF_ERROR) {
 		int slurpErr = info->Error;
 		::DGifCloseFile(info, &error);
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"'DGifSlurp(..)' failure: %d %s", 
 					slurpErr, ::GifErrorString(slurpErr)
 					));
@@ -468,7 +430,7 @@ void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
 			 * are yet to be defined (reserved by GIF89A standard). */
 			case 0x0: /* Fill background (the only option for 1st frame) */
 				{
-					FillPixel(nextFrame.imgPtr->GetPixels(), m_size, 
+					_fillPixel(nextFrame.imgPtr->data(), m_size, 
 							background, ATD::RectL(m_size));
 				}
 				break;
@@ -476,8 +438,8 @@ void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
 			case 0x1: /* Do not dispose */
 				{
 					if (m_frames.size()) {
-						::memcpy(nextFrame.imgPtr->GetPixels(), 
-								m_frames.back().imgPtr->GetPixels(), 
+						::memcpy(static_cast<void *>(nextFrame.imgPtr->data()), 
+								static_cast<const void *>(m_frames.back().imgPtr->data()), 
 								m_size.x * m_size.y * sizeof(Pixel));
 					}
 				}
@@ -486,11 +448,11 @@ void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
 			case 0x2: /* Dispose to background */
 				{
 					if (m_frames.size()) {
-						::memcpy(nextFrame.imgPtr->GetPixels(), 
-								m_frames.back().imgPtr->GetPixels(), 
+						::memcpy(static_cast<void *>(nextFrame.imgPtr->data()), 
+								static_cast<const void *>(m_frames.back().imgPtr->data()), 
 								m_size.x * m_size.y * sizeof(Pixel));
 					}
-					FillPixel(nextFrame.imgPtr->GetPixels(), m_size, 
+					_fillPixel(nextFrame.imgPtr->data(), m_size, 
 							background, 
 							ATD::RectL(curIDesc.Left, curIDesc.Top, 
 								curIDesc.Width, curIDesc.Height
@@ -502,8 +464,8 @@ void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
 			case 0x3: /* Dispose to previous */
 				{
 					if (m_frames.size()) {
-						::memcpy(nextFrame.imgPtr->GetPixels(), 
-								m_frames.back().imgPtr->GetPixels(), 
+						::memcpy(static_cast<void *>(nextFrame.imgPtr->data()), 
+								static_cast<const void *>(m_frames.back().imgPtr->data()), 
 								m_size.x * m_size.y * sizeof(Pixel));
 					}
 
@@ -514,8 +476,8 @@ void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
 								(curIDesc.Top + dY) * m_size.x + 
 								curIDesc.Left;
 
-							::memcpy(&nextFrame.imgPtr->GetPixels()[i], 
-									&prevFrame.imgPtr->GetPixels()[i], 
+							::memcpy(static_cast<void *>(&nextFrame.imgPtr->data()[i]), 
+									static_cast<const void *>(&prevFrame.imgPtr->data()[i]), 
 									curIDesc.Width * sizeof(Pixel));
 						}
 					}
@@ -532,7 +494,7 @@ void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
 			info->SColorMap;
 
 		if (!curColorMap) {
-			throw std::runtime_error(Printf(
+			throw std::runtime_error(Aux::printf(
 						"no color map for frame %u", 
 						m_frames.size()
 						));
@@ -544,7 +506,7 @@ void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
 					pxIter++) {
 
 				int pxId = curIDesc.Interlace ? 
-					InterlacedToNormal(pxIter, curIDesc.Width, 
+					_interlacedToNormal(pxIter, curIDesc.Width, 
 							curIDesc.Height) : 
 					pxIter;
 
@@ -554,7 +516,7 @@ void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
 
 				int colorId = static_cast<int>(curImage.RasterBits[pxId]);
 
-				nextFrame.imgPtr->GetPixels()[pxDstIter] = Pixel(
+				nextFrame.imgPtr->data()[pxDstIter] = Pixel(
 						curColorMap->Colors[colorId].Red, 
 						curColorMap->Colors[colorId].Green, 
 						curColorMap->Colors[colorId].Blue, 
@@ -568,21 +530,21 @@ void ATD::AnimatedGif::OnLoad(const ATD::Fs::Path &filename)
 	/* Close GIF file */
 	::DGifCloseFile(info, &error);
 	if (error) {
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"'DGifCloseFile(..)' failure: %d %s", 
 					error, ::GifErrorString(error)
 					));
 	}
 }
 
-void ATD::AnimatedGif::OnSave(const ATD::Fs::Path &filename) const
+void ATD::AnimatedGif::onSave(const ATD::Fs::Path &filename) const
 {
 	/* Open file for writing and init encoder */
-	FILE *file = ::fopen(filename.Native().c_str(), "wb");
+	FILE *file = ::fopen(filename.native().c_str(), "wb");
 	if (!file) {
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"'fopen(%s, ..)' failure: %d %s", 
-					filename.Native().c_str(), errno, 
+					filename.native().c_str(), errno, 
 					::strerror(errno)
 					));
 	}
@@ -592,7 +554,7 @@ void ATD::AnimatedGif::OnSave(const ATD::Fs::Path &filename) const
 	info = ::EGifOpenFileHandle(::fileno(file), &error);
 	if (!info || error) {
 		::fclose(file);
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"'EGifOpenFileHandle(..)' failure: %d %s", 
 					error, ::GifErrorString(error)
 					));
@@ -625,14 +587,14 @@ void ATD::AnimatedGif::OnSave(const ATD::Fs::Path &filename) const
 	/* info->ImageCount is automatically set while adding images */
 	for (size_t imgIter = 0; imgIter < m_frames.size(); imgIter++) {
 		size_t imgSize = 
-			m_frames[imgIter].imgPtr->Size().x * 
-			m_frames[imgIter].imgPtr->Size().y;
+			m_frames[imgIter].imgPtr->size().x * 
+			m_frames[imgIter].imgPtr->size().y;
 
 		SavedImage img;
 		img.ImageDesc.Left = 0;
 		img.ImageDesc.Top = 0;
-		img.ImageDesc.Width = m_frames[imgIter].imgPtr->Size().x;
-		img.ImageDesc.Height = m_frames[imgIter].imgPtr->Size().y;
+		img.ImageDesc.Width = m_frames[imgIter].imgPtr->size().x;
+		img.ImageDesc.Height = m_frames[imgIter].imgPtr->size().y;
 		img.ImageDesc.Interlace = false;
 		img.RasterBits = nullptr;
 		img.ExtensionBlockCount = 0;
@@ -640,7 +602,7 @@ void ATD::AnimatedGif::OnSave(const ATD::Fs::Path &filename) const
 
 		try {
 			std::vector<ATD::Pixel> colormap = 
-				ExtractColormap(*(m_frames[imgIter].imgPtr));
+				_extractColormap(*(m_frames[imgIter].imgPtr));
 
 			/* Colormap */
 			{
@@ -669,8 +631,8 @@ void ATD::AnimatedGif::OnSave(const ATD::Fs::Path &filename) const
 			img.RasterBits = new GifByteType[imgSize];
 			for (size_t pxIter = 0; pxIter < imgSize; pxIter++) {
 				img.RasterBits[pxIter] = 
-					IndexInColorMap(
-							m_frames[imgIter].imgPtr->GetPixels()[pxIter], 
+					_indexInColormap(
+							m_frames[imgIter].imgPtr->data()[pxIter], 
 							colormap);
 			}
 
@@ -701,7 +663,7 @@ void ATD::AnimatedGif::OnSave(const ATD::Fs::Path &filename) const
 			/* Close file */
 			::EGifCloseFile(info, nullptr);
 
-			throw std::runtime_error(Printf("on image %lu: %s", imgIter, 
+			throw std::runtime_error(Aux::printf("on image %lu: %s", imgIter, 
 						e.what()));
 		}
 
@@ -725,7 +687,7 @@ void ATD::AnimatedGif::OnSave(const ATD::Fs::Path &filename) const
 			/* Close file */
 			::EGifCloseFile(info, nullptr);
 
-			throw std::runtime_error(Printf(
+			throw std::runtime_error(Aux::printf(
 						"'EGifGCBToSavedExtension' failure: %s", 
 						::GifErrorString(info->Error)));
 		}
@@ -741,7 +703,7 @@ void ATD::AnimatedGif::OnSave(const ATD::Fs::Path &filename) const
 	if (::EGifSpew(info) == GIF_ERROR) {
 		int spewErr = info->Error;
 		::EGifCloseFile(info, nullptr);
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"'EGifSpew(..)' failure: %d %s", 
 					spewErr, ::GifErrorString(spewErr)
 					));
@@ -750,10 +712,18 @@ void ATD::AnimatedGif::OnSave(const ATD::Fs::Path &filename) const
 	/* Close file */
 	::EGifCloseFile(info, &error);
 	if (error) {
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"'EGifCloseFile(..)' failure: %d %s", 
 					error, ::GifErrorString(error)
 					));
+	}
+}
+
+void ATD::AnimatedGif::checkFrameIndex(size_t frameIndex) const
+{
+	if (frameIndex >= m_frames.size()) {
+		throw std::runtime_error(ATD::Aux::printf("out of range (access %lu/%lu)", 
+					frameIndex, m_frames.size()));
 	}
 }
 

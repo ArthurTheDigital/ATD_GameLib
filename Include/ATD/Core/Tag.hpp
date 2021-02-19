@@ -1,9 +1,10 @@
 /**
- * @file     
- * @brief    Tag system.
- * @details  License: GPL v3.$
- * @author   ArthurTheDigital (arthurthedigital@gmail.com)
- * @since    $Id: $ */
+ * @file      
+ * @brief     Tag system.
+ * @detail    ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -73,7 +74,7 @@ public:
 		 * @return true, if matches, false otherwise
 		 *
 		 * Note: Empty expression matchs any tag. */
-		bool Check(const Tag &tag) const;
+		bool check(const Tag &tag) const;
 
 		/**
 		 * @brief ... */
@@ -107,7 +108,7 @@ public:
 private:
 	std::set<std::string> m_tags;
 
-friend bool Expression::Check(const Tag &tag) const;
+friend bool Expression::check(const Tag &tag) const;
 };
 
 } /* namespace ATD */

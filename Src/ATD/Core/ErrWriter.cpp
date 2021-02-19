@@ -1,3 +1,10 @@
+/**
+ * @file      
+ * @brief     ErrWriter class for debug.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3
+ * @since     $Id: $ */
 
 #include <ATD/Core/ErrWriter.hpp>
 
@@ -20,9 +27,9 @@ const std::string ATD::ErrWriter::LINE_BREAKER = "\n";
 
 ATD::ErrWriter::ErrWriter()
 	: Debug::Observer()
-{ Attach(&debug); }
+{ attach(&debug); }
 
-void ATD::ErrWriter::OnNotify(const Debug::Line &line)
+void ATD::ErrWriter::onNotify(const Debug::Line &line)
 {
 	try {
 		/* Print line to a single string */
@@ -61,16 +68,16 @@ void ATD::ErrWriter::OnNotify(const Debug::Line &line)
 
 		::fprintf(stderr, "%s", oss.str().c_str());
 	} catch (const std::exception &e_err) {
-		/* If any error happened, LogWriter shall Detach()!
+		/* If any error happened, LogWriter shall detach()!
 		 *
 		 * Because, otherwise, an error during debug output will invoke 
 		 * extra debug output, and trying to process that, LogWriter will 
 		 * definetely face the SAME error.
 		 * Endless loop. */
-		Detach();
+		detach();
 		::fprintf(stderr, "CRITICAL ERROR: \"LogWriter\" failure: %s\n", e_err.what());
 	} catch (...) {
-		Detach();
+		detach();
 		::fprintf(stderr, "CRITICAL ERROR: \"LogWriter\" failure: ???\n");
 	}
 }

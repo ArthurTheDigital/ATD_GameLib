@@ -4,7 +4,7 @@
  * @detail    ...
  * @author    ArthurTheDigital (arthurthedigital@gmail.com)
  * @copyright GPL v3.
- * @since     $Id: $ */ 
+ * @since     $Id: $ */
 
 #include <ATD/Core/Quaternion.hpp>
 
@@ -15,10 +15,10 @@
 
 /* ATD::Quaternion static funcs auxiliary: */
 
-static void CheckRotationQuaternion(const ATD::Quaternion &rotation)
+static void _checkRotationQuaternion(const ATD::Quaternion &rotation)
 {
 	const double eps = 0.000001;
-	double normSquare = rotation.s * rotation.s + rotation.v.LengthSquare();
+	double normSquare = rotation.s * rotation.s + rotation.v.lengthSquare();
 	if (normSquare < 1. - eps || normSquare > 1. + eps) {
 		throw std::runtime_error("not a rotation quaternion");
 	}
@@ -27,16 +27,16 @@ static void CheckRotationQuaternion(const ATD::Quaternion &rotation)
 
 /* ATD::Quaternion static funcs: */
 
-ATD::Quaternion ATD::Quaternion::Rotation(double angleFrc, 
+ATD::Quaternion ATD::Quaternion::rotation(double angleFrc, 
 		const ATD::Vector3D &axis)
 {
 	const double circle = M_PI * 2.;
 	return Quaternion(::cos(angleFrc * circle * 0.5), 
-			axis.Normalized() * ::sin(angleFrc * circle * 0.5));
+			axis.normalized() * ::sin(angleFrc * circle * 0.5));
 }
 
-ATD::Quaternion ATD::Quaternion::Rotation()
-{ return Rotation(0., Vector3D(1., 0., 0.)); }
+ATD::Quaternion ATD::Quaternion::rotation()
+{ return rotation(0., Vector3D(1., 0., 0.)); }
 
 
 /* ATD::Quaternion: */
@@ -54,9 +54,9 @@ ATD::Quaternion::Quaternion(const ATD::Quaternion &other)
 	: Quaternion(other.s, other.v)
 {}
 
-ATD::Quaternion ATD::Quaternion::Inverted() const
+ATD::Quaternion ATD::Quaternion::inverted() const
 {
-	double normSquare = s * s + v.LengthSquare();
+	double normSquare = s * s + v.lengthSquare();
 	if (normSquare == 0.) {
 		/* FIXME: Is "Division by zero" better? */
 		throw std::runtime_error("Zero quaternion inversion");
@@ -95,29 +95,29 @@ ATD::Quaternion &ATD::Quaternion::operator*=(const ATD::Quaternion &other)
 	return *this;
 }
 
-ATD::Vector3D ATD::Quaternion::ApplyRotation(const ATD::Vector3D &target) const
+ATD::Vector3D ATD::Quaternion::applyRotation(const ATD::Vector3D &target) const
 {
-	CheckRotationQuaternion(*this);
-	return Quaternion(Inverted() * Quaternion(target) * (*this)).v;
+	_checkRotationQuaternion(*this);
+	return Quaternion(inverted() * Quaternion(target) * (*this)).v;
 }
 
-ATD::Matrix4F ATD::Quaternion::GetMatrixRotation() const
+ATD::Matrix4F ATD::Quaternion::getRotationMatrix() const
 {
-	CheckRotationQuaternion(*this);
+	_checkRotationQuaternion(*this);
 
 	const Quaternion &r = *this;
-	const Quaternion rInv = Inverted();
+	const Quaternion rInv = inverted();
 
 	Vector3D uX = Quaternion(rInv * Quaternion(Vector3D(1., 0., 0.)) * r).v;
 	Vector3D uY = Quaternion(rInv * Quaternion(Vector3D(0., 1., 0.)) * r).v;
 	Vector3D uZ = Quaternion(rInv * Quaternion(Vector3D(0., 0., 1.)) * r).v;
 
-	Matrix4F rotation;
-	rotation[0][0] = uX.x; rotation[0][1] = uY.x; rotation[0][2] = uZ.x;
-	rotation[1][0] = uX.y; rotation[1][1] = uY.y; rotation[1][2] = uZ.y;
-	rotation[2][0] = uX.z; rotation[2][1] = uY.z; rotation[2][2] = uZ.z;
+	Matrix4F rotM4;
+	rotM4[0][0] = uX.x; rotM4[0][1] = uY.x; rotM4[0][2] = uZ.x;
+	rotM4[1][0] = uX.y; rotM4[1][1] = uY.y; rotM4[1][2] = uZ.y;
+	rotM4[2][0] = uX.z; rotM4[2][1] = uY.z; rotM4[2][2] = uZ.z;
 	
-	return rotation;
+	return rotM4;
 }
 
 ATD::Quaternion ATD::Quaternion::operator+(const ATD::Quaternion &other) const

@@ -1,3 +1,10 @@
+/**
+ * @file      
+ * @brief     Matrix3 template and classes.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -40,31 +47,31 @@ public:
 
 	inline Matrix3<T> operator*(const Matrix3<T> &mLeft) const
 	{
-		std::array<Vector3<T>, 3> rRows = GetRows();
-		std::array<Vector3<T>, 3> lCols = mLeft.GetCols();
+		std::array<Vector3<T>, 3> rRows = rows();
+		std::array<Vector3<T>, 3> lCols = mLeft.cols();
 
 		return Matrix3<T>(
 				std::array<T, 9>{{
-						rRows[0].Dot(lCols[0]), rRows[0].Dot(lCols[1]), 
-						rRows[0].Dot(lCols[2]), 
+						rRows[0].dot(lCols[0]), rRows[0].dot(lCols[1]), 
+						rRows[0].dot(lCols[2]), 
 
-						rRows[1].Dot(lCols[0]), rRows[1].Dot(lCols[1]), 
-						rRows[1].Dot(lCols[2]), 
+						rRows[1].dot(lCols[0]), rRows[1].dot(lCols[1]), 
+						rRows[1].dot(lCols[2]), 
 
-						rRows[2].Dot(lCols[0]), rRows[2].Dot(lCols[1]), 
-						rRows[2].Dot(lCols[2])
+						rRows[2].dot(lCols[0]), rRows[2].dot(lCols[1]), 
+						rRows[2].dot(lCols[2])
 					}}
 				);
 	}
 
 	inline Vector3<T> operator*(const Vector3<T> &v) const
 	{
-		std::array<Vector3<T>, 3> rRows = GetRows();
+		std::array<Vector3<T>, 3> rRows = rows();
 
 		return Vector3<T>(
-				rRows[0].Dot(v), 
-				rRows[1].Dot(v), 
-				rRows[2].Dot(v)
+				rRows[0].dot(v), 
+				rRows[1].dot(v), 
+				rRows[2].dot(v)
 				);
 	}
 
@@ -77,7 +84,7 @@ private:
 		}}
 	{}
 
-	inline std::array<Vector3<T>, 3> GetRows() const
+	inline std::array<Vector3<T>, 3> rows() const
 	{
 		return std::array<Vector3<T>, 3>{{
 			Vector3<T>((*this)[0][0], (*this)[0][1], (*this)[0][2]), 
@@ -86,7 +93,7 @@ private:
 		}};
 	}
 
-	inline std::array<Vector3<T>, 3> GetCols() const
+	inline std::array<Vector3<T>, 3> cols() const
 	{
 		return std::array<Vector3<T>, 3>{{
 			Vector3<T>((*this)[0][0], (*this)[1][0], (*this)[2][0]), 

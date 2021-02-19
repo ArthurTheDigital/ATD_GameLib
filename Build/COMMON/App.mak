@@ -1,58 +1,79 @@
 
 # Shall be predefined:
-#
+
+# ROOTDIR - root dir for app itself
+# BUILDDIR - build dir for the app
+# NAME
 # LIBDIR - dir with library binaries
 # INCDIR - dir with library include headers
-#
-# ROOTDIR - root dir for app itself
-# NAME
+
 # DEFINES
 # LIBS
 
 
-# Basic defines
+# Primary vars:
 
-SRCDIR := $(ROOTDIR)/Src
 DATADIR := $(ROOTDIR)/Data
+SRCDIR := $(ROOTDIR)/Src
+FILEDIRS := $(SRCDIR) $(INCDIR)
 
 OBJDIR := $(ROOTDIR)/Obj
 BINDIR := $(ROOTDIR)/Bin
 
-DIRS += $(OBJDIR)/
-DIRS += $(BINDIR)/
+DIRS += $(OBJDIR)
+DIRS += $(BINDIR)
 
 
-# Basic functions
+# Functions:
 
-atd-collect-files = $(foreach wrd,$(1),$(shell \
-	recls(){\
-		for f in $$(ls $$1);do\
-			if [ "$$(stat -c%F $$1/$$f)" = "directory" ];\
-				then recls $$1/$$f;\
-				else echo "$$1/$$f";\
-			fi;\
-		done;\
-	};\
-	echo $$(recls $(wrd))\
+# Syntax macros.
+NULL := 
+SPACE := $(NULL) #
+COMMA := ,
+
+# Collect file paths of all the files in the given directories.
+collect-files = $(foreach directory,$(1),$(shell \
+	chmod ugo+x $(BUILDDIR)/SCRIPTS/CollectFiles.sh;\
+	./$(BUILDDIR)/SCRIPTS/CollectFiles.sh $(directory);\
 ))
 
-__COMMA := ,
+# Cast a list to comma-separated list.
+cast-to-comma-list = $(subst $(SPACE),$(COMMA),$(strip $(1)))
+
+# List files if exist
+list-existing-files = $(foreach wrd,$(1),$(shell \
+	if [ -f $(wrd) ];\
+		then echo "$(wrd)";\
+	fi;\
+))
 
 
-# Secondary defines
+# Secondary vars:
 
-SOURCES := $(filter %.cpp,$(call atd-collect-files,$(SRCDIR)))
-HEADERS := $(filter %.hpp,$(call atd-collect-files,$(SRCDIR)))
+ATDLIBFILES := $(patsubst %,$(LIBDIR)/lib%.so,$(filter atd-%,$(LIBS)))
+LIBFILES := $(call list-existing-files,$(ATDLIBS))
+
+FILES := $(call collect-files,$(FILEDIRS))
+SOURCES := $(filter $(SRCDIR)/%.cpp,$(FILES))
+
 OBJECTS := $(patsubst $(SRCDIR)/%,$(OBJDIR)/%.o,$(SOURCES))
-SRCDATA := $(call atd-collect-files,$(DATADIR))
+BINARY := $(BINDIR)/$(NAME)
+
+SRCDATA := $(call collect-files,$(DATADIR))
 BINDATA := $(patsubst $(DATADIR)/%,$(BINDIR)/%,$(SRCDATA))
 
-DIRS += $(sort $(dir $(OBJECTS)))
-DIRS += $(sort $(dir $(BINDATA)))
+DIRS += $(patsubst %/,%,$(dir $(OBJECTS)))
+DIRS += $(patsubst %/,%,$(dir $(BINDATA)))
 DIRS := $(sort $(DIRS))
 
-BINARY := $(BINDIR)/$(NAME)
 CURDIR := $(shell pwd)
+
+TRACKDIR := $(OBJDIR)/TRACKER
+TRACKMASTER := $(TRACKDIR)/track.master
+TRACKDIRSRC := $(TRACKDIR)/$(notdir $(SRCDIR))
+
+
+# Compilation vars:
 
 CXX := g++
 CFLAGS += -std=c++11
@@ -63,31 +84,57 @@ CFLAGS += -O2
 DEFFLAGS += $(addprefix -D,$(DEFINES))
 INCFLAGS += $(addprefix -isystem ,$(INCDIR))
 LDPREFLAGS += -L$(CURDIR)/$(LIBDIR)
-LDPREFLAGS += -Wl$(__COMMA)-rpath$(__COMMA)$(CURDIR)/$(LIBDIR)
+LDPREFLAGS += -Wl$(COMMA)-rpath$(COMMA)$(CURDIR)/$(LIBDIR)
 LDPREFLAGS += -Wall
 LDFLAGS += $(addprefix -l,$(LIBS))
 
 
 # Targets
 
-.PHONY: all clean
-
+.PHONY: bin tracker clean
 .SECONDEXPANSION:
 
-all: $(BINARY) $(BINDATA)
+
+# Bin:
+
+bin: $(TRACKMASTER) $(BINARY) $(BINDATA)
+
+$(BINARY): $(OBJECTS) \
+	$(LIBFILES) \
+	| $$(@D)
+	$(CXX) $(CFLAGS) $(LDPREFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(OBJDIR)/%.cpp.o: $(SRCDIR)/%.cpp \
+	$$(call list-existing-files,$$(TRACKDIRSRC)/%.cpp.tracker) \
+	| $$(@D)
+	$(CXX) -c $(CFLAGS) $(INCFLAGS) $(DEFFLAGS) -o $@ $<
+
+$(BINDATA): $$(patsubst $$(BINDIR)/%,$$(DATADIR)/%,$$@) \
+	| $$(@D)
+	cp $(patsubst $(BINDIR)/%,$(DATADIR)/%,$@) $@
+
+
+# Tracker:
+
+tracker: $(TRACKMASTER)
+
+$(TRACKMASTER): $(FILES)
+	chmod ugo+x ./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh
+	./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh \
+		--source-dir $(SRCDIR) \
+		--tracker-dir $(TRACKDIR) \
+		--source-files $(call cast-to-comma-list,$(SOURCES)) \
+		--sysinclude-dirs $(INCDIR)
+
+
+# Clean:
 
 clean:
 	rm -Rf $(BINDIR)
 	rm -Rf $(OBJDIR)
 
-$(BINARY): $(OBJECTS) | $$(dir $$@)
-	$(CXX) $(CFLAGS) $(LDPREFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(OBJDIR)/%.cpp.o: $(SRCDIR)/%.cpp $(HEADERS) | $$(dir $$@)
-	$(CXX) -c $(CFLAGS) $(INCFLAGS) $(DEFFLAGS) -o $@ $<
-
-$(BINDATA): $$(patsubst $$(BINDIR)/%,$$(DATADIR)/%,$$@) | $$(dir $$@)
-	cp $(patsubst $(BINDIR)/%,$(DATADIR)/%,$@) $@
+# Dirs:
 
 $(DIRS):
 	mkdir -pv $@

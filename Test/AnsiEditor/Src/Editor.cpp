@@ -17,7 +17,6 @@
 
 
 // TODO: Redesign to be more clear?
-// TODO: Debug filename drawing.
 
 /* Editor constants */
 
@@ -40,10 +39,6 @@ const ATD::Unicode Editor::CANVAS_FRAME_GLYPHS = ATD::Unicode(
 const ATD::Unicode Editor::MENU_FRAME_GLYPHS = ATD::Unicode(
 		"╍╏┏┓┛┗"
 		);
-
-static const std::string SymBuf = "⍂▧◆╳╳╳☒⚀⚄▣◍"
-"⣿⣿⣿⣿"
-"⣿⣿⣿⣿";
 
 const ATD::Unicode Editor::BRUSH_GLYPHS = ATD::Unicode(
 		"⬮@AVWGIH0♦✱❖✖✕✜✚"
@@ -87,42 +82,42 @@ Editor::Editor()
 	, m_blinkCounter(0)
 {}
 
-void Editor::Update(ATD::Ansi::Keyboard &kb)
+void Editor::update(ATD::Ansi::Keyboard &kb)
 {
 	if (m_brushActive && m_state == State::MAIN) {
-		m_canvas.Draw(m_brushPos, GetBrush());
+		m_canvas.draw(m_brushPos, getBrush());
 	}
 
-	auto key = kb.Get();
+	auto key = kb.get();
 	if (key) {
 		switch (m_state) {
 			case State::MAIN:
-				UpdOnMain(*key);
+				updOnMain(*key);
 				if (m_state == State::SAVE_AS) {
-					kb.SetFilter(SAVE_AS_KEYS);
+					kb.setFilter(SAVE_AS_KEYS);
 				}
 				break;
 
 			case State::CHOOSE_GLYPH:
-				UpdOnChooseGlyph(*key);
+				updOnChooseGlyph(*key);
 				break;
 
 			case State::CHOOSE_COLOR:
-				UpdOnChooseColor(*key, m_brushFg);
+				updOnChooseColor(*key, m_brushFg);
 				break;
 
 			case State::SAVE_AS:
-				UpdOnSaveAs(*key);
+				updOnSaveAsKey(*key);
 				if (m_state != State::SAVE_AS) {
-					kb.SetFilter(SAVED_KEYS);
+					kb.setFilter(SAVED_KEYS);
 				} else {
-					UpdOnSaveAs(kb.GetUnparsed());
+					updOnSaveAsStr(kb.getUnparsed());
 				}
 				break;
 
 			case State::SAVED:
-				UpdOnSaved(*key);
-				kb.SetFilter(ATD::Ansi::Keyboard::ALL_KEYS);
+				updOnSaved(*key);
+				kb.setFilter(ATD::Ansi::Keyboard::ALL_KEYS);
 				break;
 
 			default:
@@ -130,41 +125,43 @@ void Editor::Update(ATD::Ansi::Keyboard &kb)
 				break;
 		}
 	} else if (m_state == State::SAVE_AS) {
-		UpdOnSaveAs(kb.GetUnparsed());
+		updOnSaveAsStr(kb.getUnparsed());
 	}
-	UpdBlink();
+	updBlink();
 }
 
-void Editor::DrawSelf(ATD::Ansi::Image &target) const
+void Editor::drawSelf(ATD::Ansi::Image &target) const
 {
 	/* Draw canvas */
-	DrawFrame(target, CANVAS_POSITION - ATD::Vector2L(1, 1), CANVAS_SIZE, CANVAS_FRAME_GLYPHS);
-	target.Draw(CANVAS_POSITION, m_canvas);
+	drawFrame(target, CANVAS_POSITION - ATD::Vector2L(1, 1), CANVAS_SIZE, 
+			CANVAS_FRAME_GLYPHS);
+
+	target.draw(CANVAS_POSITION, m_canvas);
 
 	/* Draw brush */
-	ATD::Ansi::Glyph brush = GetBrush();
+	ATD::Ansi::Glyph brush = getBrush();
 	if (m_brushActive) {
-		brush.Mode(
+		brush.setMode(
 				m_blinkPhase ? 
-				(brush.Mode() | ATD::Ansi::Glyph::M_REVERSED) : 
-				(brush.Mode() & ~ATD::Ansi::Glyph::M_REVERSED)
+				(brush.mode() | ATD::Ansi::Glyph::M_REVERSED) : 
+				(brush.mode() & ~ATD::Ansi::Glyph::M_REVERSED)
 				);
 	} else {
-		brush.SetUnicode(ATD::Unicode("⎕").Front());
+		brush.setUnicode(ATD::Unicode("⎕").front());
 	}
-	target.Draw(CANVAS_POSITION + m_brushPos, brush);
+	target.draw(CANVAS_POSITION + m_brushPos, brush);
 
 	/* Draw status */
-	target.Draw(ATD::Vector2L(2, CANVAS_POSITION.y), 
-			ATD::Printf("Brush [%s]", m_brushActive ? " ON" : "OFF"));
+	target.draw(ATD::Vector2L(2, CANVAS_POSITION.y), 
+			ATD::Aux::printf("Brush [%s]", m_brushActive ? " ON" : "OFF"));
 
-	target.Draw(ATD::Vector2L(2, CANVAS_POSITION.y + 2), 
-			ATD::Printf("Glyph [%s]", 
-				ATD::Unicode::StrFromGlyph(
+	target.draw(ATD::Vector2L(2, CANVAS_POSITION.y + 2), 
+			ATD::Aux::printf("Glyph [%s]", 
+				ATD::Unicode::strFromGlyph(
 					BRUSH_GLYPHS[m_brushGlyphNo]).c_str()));
 
-	target.Draw(ATD::Vector2L(2, CANVAS_POSITION.y + 4), 
-			ATD::Printf("Color [\033[38;5;%lum█\033[0m] %lu", 
+	target.draw(ATD::Vector2L(2, CANVAS_POSITION.y + 4), 
+			ATD::Aux::printf("Color [\033[38;5;%lum█\033[0m] %lu", 
 				m_brushFg, m_brushFg));
 
 	ATD::Vector2L hintPosition = 
@@ -176,9 +173,9 @@ void Editor::DrawSelf(ATD::Ansi::Image &target) const
 		case State::MAIN:
 			{
 				/* Draw hint */
-				target.Draw(
+				target.draw(
 						hintPosition, 
-						ATD::Printf(
+						ATD::Aux::printf(
 							"b - activate/deactivate brush\n"
 							"i - pick brush states from canvas\n"
 							"g - choose glyph for brush\n"
@@ -195,18 +192,18 @@ void Editor::DrawSelf(ATD::Ansi::Image &target) const
 					hintPosition + ATD::Vector2L(0, 1);
 
 				/* Draw 'Choose Glyph' menu */
-				DrawFrame(target, 
+				drawFrame(target, 
 						cgMenuPosition - ATD::Vector2L(1, 1), 
 						GLYPH_MENU_SIZE, 
 						MENU_FRAME_GLYPHS);
 
-				for (size_t gIter = 0; gIter < BRUSH_GLYPHS.Size(); gIter++) {
+				for (size_t gIter = 0; gIter < BRUSH_GLYPHS.size(); gIter++) {
 					ATD::Vector2L delta(
 							static_cast<long>(gIter % GLYPH_MENU_SIZE.x), 
 							static_cast<long>(gIter / GLYPH_MENU_SIZE.x)
 							);
 
-					target.Draw(cgMenuPosition + delta, 
+					target.draw(cgMenuPosition + delta, 
 							ATD::Ansi::Glyph(BRUSH_GLYPHS[gIter]));
 				}
 				if (m_blinkPhase) {
@@ -217,11 +214,11 @@ void Editor::DrawSelf(ATD::Ansi::Image &target) const
 							static_cast<long>(m_brushGlyphNo / 
 								GLYPH_MENU_SIZE.x)
 							);
-					target.Draw(cgMenuPosition + delta, 
+					target.draw(cgMenuPosition + delta, 
 							ATD::Ansi::Glyph(
 								BRUSH_GLYPHS[m_brushGlyphNo], 
-								ATD::Ansi::Glyph::FOREGROUND_DEFAULT, 
-								ATD::Ansi::Glyph::BACKGROUND_DEFAULT, 
+								ATD::Ansi::Glyph::FORECOLOR_DEFAULT, 
+								ATD::Ansi::Glyph::BACKCOLOR_DEFAULT, 
 								ATD::Ansi::Glyph::M_REVERSED
 								)
 							);
@@ -234,21 +231,22 @@ void Editor::DrawSelf(ATD::Ansi::Image &target) const
 				ATD::Vector2L ccMenuPosition = hintPosition + ATD::Vector2L(0, 1);
 
 				/* Draw 'Choose Color' menu */
-				DrawFrame(target, ccMenuPosition - ATD::Vector2L(1, 1), COLOR_MENU_SIZE, MENU_FRAME_GLYPHS);
+				drawFrame(target, ccMenuPosition - ATD::Vector2L(1, 1), COLOR_MENU_SIZE, 
+						MENU_FRAME_GLYPHS);
+
 				for (size_t cIter = 0; cIter < 0x100; cIter++) {
 					ATD::Vector2L delta(
 							static_cast<long>(cIter % COLOR_MENU_SIZE.x), 
 							static_cast<long>(cIter / COLOR_MENU_SIZE.x)
 							);
 
-					target.Draw(
+					target.draw(
 							ccMenuPosition + delta, 
 							ATD::Ansi::Glyph(
 								ATD::Unicode(
-									(m_brushFg == 
-										static_cast<unsigned char>(cIter)) ? 
+									(m_brushFg == static_cast<unsigned char>(cIter)) ? 
 									"█" : 
-									"⣿").Front(), 
+									"⣿").front(), 
 								static_cast<unsigned char>(cIter)
 								)
 							);
@@ -261,30 +259,33 @@ void Editor::DrawSelf(ATD::Ansi::Image &target) const
 				ATD::Vector2L saveMenuPosition = 
 					hintPosition + ATD::Vector2L(0, 1);
 
-				DrawFrame(target, 
+				drawFrame(target, 
 						saveMenuPosition - ATD::Vector2L(1, 1), 
 						SAVE_MENU_SIZE, 
 						MENU_FRAME_GLYPHS);
 
 				ATD::Unicode fnGlyphs = 
-					ATD::Unicode(m_filename).Copy(0, SAVE_MENU_SIZE.x);
+					ATD::Unicode(m_filename).copy(0, SAVE_MENU_SIZE.x);
 
-				ATD::Vector2S caretPos(fnGlyphs.Size(), 0);
+				ATD::Vector2S caretPos(fnGlyphs.size(), 0);
 
 				if (caretPos.x >= SAVE_MENU_SIZE.x) {
 					caretPos.x = 0;
 					caretPos.y++;
 				}
 
-				target.Draw(saveMenuPosition, 
-						ATD::Ansi::Image(fnGlyphs.Str()));
+				target.draw(saveMenuPosition, 
+						ATD::Ansi::Image(fnGlyphs.str()));
+
+				target.draw(saveMenuPosition, 
+						ATD::Ansi::Image(m_filename));
 
 				if (m_blinkPhase) {
 					ATD::Ansi::Glyph caret = 
-						target.GetGlyph(saveMenuPosition + caretPos);
+						target.getGlyph(saveMenuPosition + caretPos);
 
-					caret.Mode(ATD::Ansi::Glyph::M_REVERSED);
-					target.Draw(saveMenuPosition + caretPos, caret);
+					caret.setMode(ATD::Ansi::Glyph::M_REVERSED);
+					target.draw(saveMenuPosition + caretPos, caret);
 				}
 			}
 			break;
@@ -295,15 +296,15 @@ void Editor::DrawSelf(ATD::Ansi::Image &target) const
 					hintPosition + ATD::Vector2L(0, 1);
 
 				ATD::Ansi::Image errImage(
-						ATD::Unicode(m_saveErr).Copy(0, 
-							SAVE_MENU_SIZE.x).Str());
+						ATD::Unicode(m_saveErr).copy(0, 
+							SAVE_MENU_SIZE.x).str());
 
-				DrawFrame(target, 
+				drawFrame(target, 
 						errMenuPosition - ATD::Vector2L(1, 1), 
 						SAVE_MENU_SIZE, 
 						MENU_FRAME_GLYPHS);
 
-				target.Draw(errMenuPosition, errImage);
+				target.draw(errMenuPosition, errImage);
 			}
 
 		default:
@@ -313,22 +314,22 @@ void Editor::DrawSelf(ATD::Ansi::Image &target) const
 
 }
 
-void Editor::Save(const std::string &name)
+void Editor::save(const std::string &name)
 {
 	ATD::Fs::Path path(name);
-	if (!path.Exists()) {
-		FILE *file = ::fopen(path.Native().c_str(), "w");
+	if (!path.exists()) {
+		FILE *file = ::fopen(path.native().c_str(), "w");
 		if (file) {
-			std::string output = m_canvas.Str();
+			std::string output = m_canvas.str();
 			::fwrite(output.c_str(), 1, output.size(), file);
 			::fclose(file);
-			m_saveErr = ATD::Printf("Saved as '%s'", name.c_str());
+			m_saveErr = ATD::Aux::printf("Saved as '%s'", name.c_str());
 		} else {
-			m_saveErr = ATD::Printf("Did not save:\n'%s'\n%s", 
+			m_saveErr = ATD::Aux::printf("Did not save:\n'%s'\n%s", 
 					name.c_str(), ::strerror(errno));
 		}
 	} else {
-		m_saveErr = ATD::Printf("Did not save:\nFile '%s' already exists", 
+		m_saveErr = ATD::Aux::printf("Did not save:\nFile '%s' already exists", 
 				name.c_str());
 	}
 }
@@ -336,24 +337,26 @@ void Editor::Save(const std::string &name)
 /* === */
 
 
-void Editor::UpdOnMain(const ATD::Ansi::Key &key)
+void Editor::updOnMain(const ATD::Ansi::Key &key)
 {
 	ATD::Vector2L n_brushPos = m_brushPos;
 
 	switch (key) {
 		case ATD::Ansi::Key::B:
+			/* Brush up/down. */
 			{
 				m_brushActive = !m_brushActive;
 			}
 			break;
 
 		case ATD::Ansi::Key::I:
+			/* Pick color glyph, front color and back color from canvas. */
 			{
 				if (!m_brushActive) {
-					ATD::Ansi::Glyph glyph = m_canvas.GetGlyph(m_brushPos);
-					m_brushFg = glyph.Foreground();
-					for (size_t gNo = 0; gNo < BRUSH_GLYPHS.Size(); gNo++) {
-						if (glyph.GetUnicode() == BRUSH_GLYPHS[gNo]) {
+					ATD::Ansi::Glyph glyph = m_canvas.getGlyph(m_brushPos);
+					m_brushFg = glyph.forecolor();
+					for (size_t gNo = 0; gNo < BRUSH_GLYPHS.size(); gNo++) {
+						if (glyph.unicode() == BRUSH_GLYPHS[gNo]) {
 							m_brushGlyphNo = gNo;
 							break;
 						}
@@ -363,18 +366,21 @@ void Editor::UpdOnMain(const ATD::Ansi::Key &key)
 			break;
 
 		case ATD::Ansi::Key::G:
+			/* Open 'choose glyph' menu. */
 			{
 				m_state = State::CHOOSE_GLYPH;
 			}
 			break;
 
 		case ATD::Ansi::Key::C:
+			/* Open 'choose color' menu. */
 			{
 				m_state = State::CHOOSE_COLOR;
 			}
 			break;
 
 		case ATD::Ansi::Key::S:
+			/* Open 'savw as' menu. */
 			{
 				m_state = State::SAVE_AS;
 				m_filename = "";
@@ -382,24 +388,28 @@ void Editor::UpdOnMain(const ATD::Ansi::Key &key)
 			break;
 
 		case ATD::Ansi::Key::UP:
+			/* Move brush ▲. */
 			{
 				n_brushPos += ATD::Vector2L(0, -1);
 			}
 			break;
 
 		case ATD::Ansi::Key::DOWN:
+			/* Move brush ▼. */
 			{
 				n_brushPos += ATD::Vector2L(0, 1);
 			}
 			break;
 
 		case ATD::Ansi::Key::LEFT:
+			/* Move brush ◀. */
 			{
 				n_brushPos += ATD::Vector2L(-1, 0);
 			}
 			break;
 
 		case ATD::Ansi::Key::RIGHT:
+			/* Move brush ▶. */
 			{
 				n_brushPos += ATD::Vector2L(1, 0);
 			}
@@ -410,15 +420,15 @@ void Editor::UpdOnMain(const ATD::Ansi::Key &key)
 			break;
 	}
 
-	if (ATD::RectL(CANVAS_SIZE).Contains(n_brushPos)) {
+	if (ATD::RectL(CANVAS_SIZE).contains(n_brushPos)) {
 		m_brushPos = n_brushPos;
 		if (m_brushActive) {
-			m_canvas.Draw(m_brushPos, GetBrush());
+			m_canvas.draw(m_brushPos, getBrush());
 		}
 	}
 }
 
-void Editor::UpdOnChooseGlyph(const ATD::Ansi::Key &key)
+void Editor::updOnChooseGlyph(const ATD::Ansi::Key &key)
 {
 	/* 'gs' stands for Glyph Selection */
 	ATD::Vector2L n_gsPos(
@@ -435,13 +445,13 @@ void Editor::UpdOnChooseGlyph(const ATD::Ansi::Key &key)
 		default: {} break;
 	}
 
-	if (ATD::RectL(GLYPH_MENU_SIZE).Contains(n_gsPos)) {
+	if (ATD::RectL(GLYPH_MENU_SIZE).contains(n_gsPos)) {
 		m_brushGlyphNo = 
 			static_cast<size_t>(n_gsPos.y * GLYPH_MENU_SIZE.x + n_gsPos.x);
 	}
 }
 
-void Editor::UpdOnChooseColor(const ATD::Ansi::Key &key, unsigned char &color)
+void Editor::updOnChooseColor(const ATD::Ansi::Key &key, unsigned char &color)
 {
 	/* 'cs' stands for Color Selection */
 	ATD::Vector2L n_csPos(
@@ -458,17 +468,17 @@ void Editor::UpdOnChooseColor(const ATD::Ansi::Key &key, unsigned char &color)
 		default: {} break;
 	}
 
-	if (ATD::RectL(COLOR_MENU_SIZE).Contains(n_csPos)) {
+	if (ATD::RectL(COLOR_MENU_SIZE).contains(n_csPos)) {
 		color = static_cast<size_t>(n_csPos.y * COLOR_MENU_SIZE.x + n_csPos.x);
 	}
 }
 
-void Editor::UpdOnSaveAs(const ATD::Ansi::Key &key)
+void Editor::updOnSaveAsKey(const ATD::Ansi::Key &key)
 {
 	switch(key) {
 		case ATD::Ansi::Key::ENTER:
 			{
-				Save(m_filename);
+				save(m_filename);
 				m_state = State::SAVED;
 			}
 			break;
@@ -477,8 +487,8 @@ void Editor::UpdOnSaveAs(const ATD::Ansi::Key &key)
 			{
 				if (m_filename.size()) {
 					ATD::Unicode fnGlyphs(m_filename);
-					fnGlyphs.Erase(fnGlyphs.Size() - 1, 1);
-					m_filename = fnGlyphs.Str();
+					fnGlyphs.erase(fnGlyphs.size() - 1, 1);
+					m_filename = fnGlyphs.str();
 				}
 			}
 			break;
@@ -489,12 +499,12 @@ void Editor::UpdOnSaveAs(const ATD::Ansi::Key &key)
 	}
 }
 
-void Editor::UpdOnSaveAs(const std::string &input)
+void Editor::updOnSaveAsStr(const std::string &input)
 {
 	m_filename += input;
 }
 
-void Editor::UpdOnSaved(const ATD::Ansi::Key &key)
+void Editor::updOnSaved(const ATD::Ansi::Key &key)
 {
 	switch(key) {
 		case ATD::Ansi::Key::ENTER: { m_state = State::MAIN; } break;
@@ -502,7 +512,7 @@ void Editor::UpdOnSaved(const ATD::Ansi::Key &key)
 	}
 }
 
-void Editor::UpdBlink()
+void Editor::updBlink()
 {
 	m_blinkCounter++;
 	while (m_blinkCounter > UPD_PER_BLINK) {
@@ -511,39 +521,40 @@ void Editor::UpdBlink()
 	}
 }
 
-void Editor::DrawFrame(ATD::Ansi::Image &target, 
+/* FIXME: Use Frame.hpp? */
+void Editor::drawFrame(ATD::Ansi::Image &target, 
 		const ATD::Vector2L &position, 
 		const ATD::Vector2S &size, 
 		const ATD::Unicode &frameGlyphs) const
 {
-	if (frameGlyphs.Size() < 6) { return; }
+	if (frameGlyphs.size() < 6) { return; }
 
 	ATD::Vector2L frameTL = position;
 	ATD::Vector2L frameBR = 
 		position + static_cast<ATD::Vector2L>(size) + ATD::Vector2L(1, 1);
 
-	target.Draw(frameTL, ATD::Ansi::Glyph(frameGlyphs[2]));
+	target.draw(frameTL, ATD::Ansi::Glyph(frameGlyphs[2]));
 
-	target.Draw(ATD::Vector2L(frameTL.x, frameBR.y), 
+	target.draw(ATD::Vector2L(frameTL.x, frameBR.y), 
 			ATD::Ansi::Glyph(frameGlyphs[5]));
 
-	target.Draw(frameBR, ATD::Ansi::Glyph(frameGlyphs[4]));
+	target.draw(frameBR, ATD::Ansi::Glyph(frameGlyphs[4]));
 
-	target.Draw(ATD::Vector2L(frameBR.x, frameTL.y), 
+	target.draw(ATD::Vector2L(frameBR.x, frameTL.y), 
 			ATD::Ansi::Glyph(frameGlyphs[3]));
 
 	for (size_t iH = 1; iH <= size.x; iH++) {
-		target.Draw(ATD::Vector2L(frameTL.x + iH, frameTL.y), 
+		target.draw(ATD::Vector2L(frameTL.x + iH, frameTL.y), 
 				ATD::Ansi::Glyph(frameGlyphs[0]));
 
-		target.Draw(ATD::Vector2L(frameTL.x + iH, frameBR.y), 
+		target.draw(ATD::Vector2L(frameTL.x + iH, frameBR.y), 
 				ATD::Ansi::Glyph(frameGlyphs[0]));
 	}
 	for (size_t iV = 1; iV <= size.y; iV++) {
-		target.Draw(ATD::Vector2L(frameTL.x, frameTL.y + iV), 
+		target.draw(ATD::Vector2L(frameTL.x, frameTL.y + iV), 
 				ATD::Ansi::Glyph(frameGlyphs[1]));
 
-		target.Draw(ATD::Vector2L(frameBR.x, frameTL.y + iV), 
+		target.draw(ATD::Vector2L(frameBR.x, frameTL.y + iV), 
 				ATD::Ansi::Glyph(frameGlyphs[1]));
 	}
 }

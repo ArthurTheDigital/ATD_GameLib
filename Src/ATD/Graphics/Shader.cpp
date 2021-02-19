@@ -18,7 +18,7 @@
 /* ATD::Shader auxiliary: */
 
 /*
-static bool IsSamplerType(const ATD::Gl::Enum type)
+static bool _isSamplerType(const ATD::Gl::Enum type)
 {
 	const std::set<ATD::Gl::Enum> unfmTypeSamplerSet = {
 		ATD::Gl::SAMPLER_2D, 
@@ -30,7 +30,7 @@ static bool IsSamplerType(const ATD::Gl::Enum type)
 }
 */
 
-static std::string UniformToStr(const std::string &unfmName, 
+static std::string _uniformToStr(const std::string &unfmName, 
 		const ATD::Gl::Enum &unfmType)
 {
 	const std::map<ATD::Gl::Enum, std::string> unfmTypeMap = {
@@ -69,12 +69,12 @@ static std::string UniformToStr(const std::string &unfmName,
 typedef std::pair<std::string, ATD::Gl::Enum> AttrDesc;
 typedef std::map<AttrDesc, ATD::Gl::Uint> AttrIndexMap;
 
-static void FillAttrIndexMap(const ATD::Shader &shader, 
+static void _fillAttrIndexMap(const ATD::Shader &shader, 
 		AttrIndexMap &indexMap)
 {
 	ATD::Shader::Usage use(shader);
 	ATD::Gl::Uint attrCount;
-	ATD::gl._GetProgramiv(shader.GetGlId(), ATD::Gl::ACTIVE_ATTRIBUTES, 
+	ATD::gl.getProgramiv(shader.glId(), ATD::Gl::ACTIVE_ATTRIBUTES, 
 			reinterpret_cast<ATD::Gl::Int *>(&attrCount));
 
 	const size_t attrNameBufferSize = 1024;
@@ -85,7 +85,7 @@ static void FillAttrIndexMap(const ATD::Shader &shader,
 		ATD::Gl::Int attrSize;
 		ATD::Gl::Enum attrType;
 
-		ATD::gl._GetActiveAttrib(shader.GetGlId(), 
+		ATD::gl.getActiveAttrib(shader.glId(), 
 				attrIndex, 
 				attrNameBufferSize, 
 				&attrNameLength, 
@@ -100,7 +100,7 @@ static void FillAttrIndexMap(const ATD::Shader &shader,
 	}
 }
 
-static std::string AttrDescToStr(const AttrDesc &attrDesc)
+static std::string _attrDescToStr(const AttrDesc &attrDesc)
 {
 	/* There is a small amount of types, that OpenGL allow to be shader 
 	 * attributes. Hence, I think, it is faster to just if/else through 
@@ -126,18 +126,18 @@ ATD::Shader::Usage::Usage(const ATD::Shader &shader)
 	: m_prevProgram(0)
 	, m_activated(false)
 {
-	gl._GetIntegerv(Gl::CURRENT_PROGRAM, 
+	gl.getIntegerv(Gl::CURRENT_PROGRAM, 
 			reinterpret_cast<Gl::Int *>(&m_prevProgram));
 
-	if (m_prevProgram != shader.GetGlId()) {
-		gl._UseProgram(shader.GetGlId());
+	if (m_prevProgram != shader.glId()) {
+		gl.useProgram(shader.glId());
 		m_activated = true;
 	}
 }
 
 ATD::Shader::Usage::~Usage()
 {
-	if (m_activated) { gl._UseProgram(m_prevProgram); }
+	if (m_activated) { gl.useProgram(m_prevProgram); }
 }
 
 
@@ -151,7 +151,7 @@ ATD::Shader::Shader(const std::string &vertexSource,
 	, m_uniformLocationMap()
 	, m_isCanvasRequired(false)
 {
-	m_program = gl._CreateProgram();
+	m_program = gl.createProgram();
 
 	if (m_program == 0) {
 		throw std::runtime_error("Cannot create new shader program");
@@ -159,88 +159,88 @@ ATD::Shader::Shader(const std::string &vertexSource,
 	/* IPRINTF("", "created new shader program %u", m_program); // DEBUG */
 
 
-	CompileShader(vertexSource, Gl::VERTEX_SHADER, &m_vertexShaderId);
-	CompileShader(fragmentSource, Gl::FRAGMENT_SHADER, &m_fragmentShaderId);
+	compileShader(vertexSource, Gl::VERTEX_SHADER, m_vertexShaderId);
+	compileShader(fragmentSource, Gl::FRAGMENT_SHADER, m_fragmentShaderId);
 
 	Gl::Int success = 0;
 	const size_t errorLogSize = 1024;
 	std::string errorLog(errorLogSize, '\0');
 
-	gl._LinkProgram(m_program);
-	gl._GetProgramiv(m_program, Gl::LINK_STATUS, &success);
+	gl.linkProgram(m_program);
+	gl.getProgramiv(m_program, Gl::LINK_STATUS, &success);
 	if (!success) {
-		gl._GetProgramInfoLog(m_program, errorLogSize, nullptr, 
+		gl.getProgramInfoLog(m_program, errorLogSize, nullptr, 
 				reinterpret_cast<Gl::Char *>(&errorLog[0]));
 
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"Cannot link shader program %u\n%s\n", 
 					m_program, errorLog.c_str()));
 	}
 
-	gl._ValidateProgram(m_program);
-	gl._GetProgramiv(m_program, Gl::VALIDATE_STATUS, &success);
+	gl.validateProgram(m_program);
+	gl.getProgramiv(m_program, Gl::VALIDATE_STATUS, &success);
 	if (!success) {
-		gl._GetProgramInfoLog(m_program, errorLogSize, nullptr, 
+		gl.getProgramInfoLog(m_program, errorLogSize, nullptr, 
 				reinterpret_cast<Gl::Char *>(&errorLog[0]));
 
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"Cannot validate shader program %u\n%s\n", 
 					m_program, errorLog.c_str()));
 	}
 
-	InitUniforms();
+	initUniforms();
 }
 
 ATD::Shader::~Shader()
 {
-	if (m_program) { gl._DeleteProgram(m_program); }
-	if (m_vertexShaderId) { gl._DeleteShader(m_vertexShaderId); }
-	if (m_fragmentShaderId) { gl._DeleteShader(m_fragmentShaderId); }
+	if (m_program) { gl.deleteProgram(m_program); }
+	if (m_vertexShaderId) { gl.deleteShader(m_vertexShaderId); }
+	if (m_fragmentShaderId) { gl.deleteShader(m_fragmentShaderId); }
 }
 
-void ATD::Shader::SetUniform(const std::string &name, float value)
+void ATD::Shader::setUniform(const std::string &name, float value)
 {
 	const Gl::Enum type = Gl::FLOAT;
 	auto unfmLDIter = m_uniformLocationMap.find(name);
 	if (unfmLDIter != m_uniformLocationMap.end()) {
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
-			gl._Uniform1f(unfmLDIter->second.location, 
+			gl.uniform1f(unfmLDIter->second.location, 
 					static_cast<Gl::Float>(value));
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::SetUniform(const std::string &name, int value)
+void ATD::Shader::setUniform(const std::string &name, int value)
 {
 	const Gl::Enum type = Gl::INT;
 	auto unfmLDIter = m_uniformLocationMap.find(name);
 	if (unfmLDIter != m_uniformLocationMap.end()) {
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
-			gl._Uniform1i(unfmLDIter->second.location, 
+			gl.uniform1i(unfmLDIter->second.location, 
 					static_cast<Gl::Int>(value));
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::SetUniform(const std::string &name, 
+void ATD::Shader::setUniform(const std::string &name, 
 		const ATD::Vector2F &value)
 {
 	const Gl::Enum type = Gl::FLOAT_VEC2;
@@ -248,22 +248,22 @@ void ATD::Shader::SetUniform(const std::string &name,
 	if (unfmLDIter != m_uniformLocationMap.end()) {
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
-			gl._Uniform2f(unfmLDIter->second.location, 
+			gl.uniform2f(unfmLDIter->second.location, 
 					static_cast<Gl::Float>(value.x), 
 					static_cast<Gl::Float>(value.y));
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::SetUniform(const std::string &name, 
+void ATD::Shader::setUniform(const std::string &name, 
 		const ATD::Vector2I &value)
 {
 	const Gl::Enum type = Gl::INT_VEC2;
@@ -271,22 +271,22 @@ void ATD::Shader::SetUniform(const std::string &name,
 	if (unfmLDIter != m_uniformLocationMap.end()) {
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
-			gl._Uniform2i(unfmLDIter->second.location, 
+			gl.uniform2i(unfmLDIter->second.location, 
 					static_cast<Gl::Int>(value.x), 
 					static_cast<Gl::Int>(value.y));
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::SetUniform(const std::string &name, 
+void ATD::Shader::setUniform(const std::string &name, 
 		const ATD::Vector3F &value)
 {
 	const Gl::Enum type = Gl::FLOAT_VEC3;
@@ -294,23 +294,23 @@ void ATD::Shader::SetUniform(const std::string &name,
 	if (unfmLDIter != m_uniformLocationMap.end()) {
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
-			gl._Uniform3f(unfmLDIter->second.location, 
+			gl.uniform3f(unfmLDIter->second.location, 
 					static_cast<Gl::Float>(value.x), 
 					static_cast<Gl::Float>(value.y), 
 					static_cast<Gl::Float>(value.z));
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::SetUniform(const std::string &name, 
+void ATD::Shader::setUniform(const std::string &name, 
 		const ATD::Vector3I &value)
 {
 	const Gl::Enum type = Gl::INT_VEC3;
@@ -318,23 +318,23 @@ void ATD::Shader::SetUniform(const std::string &name,
 	if (unfmLDIter != m_uniformLocationMap.end()) {
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
-			gl._Uniform3i(unfmLDIter->second.location, 
+			gl.uniform3i(unfmLDIter->second.location, 
 					static_cast<Gl::Int>(value.x), 
 					static_cast<Gl::Int>(value.y), 
 					static_cast<Gl::Int>(value.z));
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::SetUniform(const std::string &name, 
+void ATD::Shader::setUniform(const std::string &name, 
 		const ATD::Vector4F &value)
 {
 	const Gl::Enum type = Gl::FLOAT_VEC4;
@@ -342,7 +342,7 @@ void ATD::Shader::SetUniform(const std::string &name,
 	if (unfmLDIter != m_uniformLocationMap.end()) {
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
-			gl._Uniform4f(unfmLDIter->second.location, 
+			gl.uniform4f(unfmLDIter->second.location, 
 					static_cast<Gl::Float>(value.x), 
 					static_cast<Gl::Float>(value.y), 
 					static_cast<Gl::Float>(value.z), 
@@ -350,16 +350,16 @@ void ATD::Shader::SetUniform(const std::string &name,
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::SetUniform(const std::string &name, 
+void ATD::Shader::setUniform(const std::string &name, 
 		const ATD::Vector4I &value)
 {
 	const Gl::Enum type = Gl::INT_VEC4;
@@ -367,7 +367,7 @@ void ATD::Shader::SetUniform(const std::string &name,
 	if (unfmLDIter != m_uniformLocationMap.end()) {
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
-			gl._Uniform4i(unfmLDIter->second.location, 
+			gl.uniform4i(unfmLDIter->second.location, 
 					static_cast<Gl::Int>(value.x), 
 					static_cast<Gl::Int>(value.y), 
 					static_cast<Gl::Int>(value.z), 
@@ -375,16 +375,16 @@ void ATD::Shader::SetUniform(const std::string &name,
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::SetUniform(const std::string &name, 
+void ATD::Shader::setUniform(const std::string &name, 
 		const ATD::Matrix3F &value)
 {
 	const Gl::Enum type = Gl::FLOAT_MAT3;
@@ -392,21 +392,21 @@ void ATD::Shader::SetUniform(const std::string &name,
 	if (unfmLDIter != m_uniformLocationMap.end()) {
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
-			gl._UniformMatrix3fv(unfmLDIter->second.location, 1, Gl::TRUE, 
+			gl.uniformMatrix3fv(unfmLDIter->second.location, 1, Gl::TRUE, 
 					reinterpret_cast<const Gl::Float *>(&value));
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::SetUniform(const std::string &name, 
+void ATD::Shader::setUniform(const std::string &name, 
 		const ATD::Matrix4F &value)
 {
 	const Gl::Enum type = Gl::FLOAT_MAT4;
@@ -414,21 +414,21 @@ void ATD::Shader::SetUniform(const std::string &name,
 	if (unfmLDIter != m_uniformLocationMap.end()) {
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
-			gl._UniformMatrix4fv(unfmLDIter->second.location, 1, Gl::TRUE, 
+			gl.uniformMatrix4fv(unfmLDIter->second.location, 1, Gl::TRUE, 
 					reinterpret_cast<const Gl::Float *>(&value));
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::SetUniformSampler2DUnit(const std::string &name, 
+void ATD::Shader::setUniformSampler2DUnit(const std::string &name, 
 		const ATD::Texture::Unit &unit)
 {
 	const Gl::Enum type = Gl::SAMPLER_2D;
@@ -437,23 +437,23 @@ void ATD::Shader::SetUniformSampler2DUnit(const std::string &name,
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
 			/* Yes, that's right. Int. */
-			gl._Uniform1i(
+			gl.uniform1i(
 					unfmLDIter->second.location, 
 					static_cast<Gl::Int>(
 						static_cast<unsigned>(unit)));
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::SetUniformSamplerCubeUnit(const std::string &name, 
+void ATD::Shader::setUniformSamplerCubeUnit(const std::string &name, 
 		const ATD::Texture::Unit &unit)
 {
 	const Gl::Enum type = Gl::SAMPLER_CUBE;
@@ -462,30 +462,30 @@ void ATD::Shader::SetUniformSamplerCubeUnit(const std::string &name,
 		if (unfmLDIter->second.type == type) {
 			Usage use(*this);
 			/* Yes, that's right. Int. */
-			gl._Uniform1i(
+			gl.uniform1i(
 					unfmLDIter->second.location, 
 					static_cast<Gl::Int>(
 						static_cast<unsigned>(unit)));
 
 			unfmLDIter->second.isSet = true;
 		} else {
-			throw std::runtime_error(Printf("no '%s' in shader %u", 
-						UniformToStr(name, type).c_str(), m_program));
+			throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+						_uniformToStr(name, type).c_str(), m_program));
 		}
 	} else {
-		throw std::runtime_error(Printf("no '%s' in shader %u", 
-					UniformToStr(name, type).c_str(), m_program));
+		throw std::runtime_error(Aux::printf("no '%s' in shader %u", 
+					_uniformToStr(name, type).c_str(), m_program));
 	}
 }
 
-void ATD::Shader::CheckIfUniformsSet() const
+void ATD::Shader::checkIfUniformsSet() const
 {
 	std::vector<std::string> unfmNamesUnset;
 	for (auto unfmLDIter = m_uniformLocationMap.begin(); 
 			unfmLDIter != m_uniformLocationMap.end(); 
 			unfmLDIter++) {
 		if (!unfmLDIter->second.isSet) {
-			unfmNamesUnset.push_back(UniformToStr(unfmLDIter->first, 
+			unfmNamesUnset.push_back(_uniformToStr(unfmLDIter->first, 
 						unfmLDIter->second.type));
 		}
 	}
@@ -494,26 +494,20 @@ void ATD::Shader::CheckIfUniformsSet() const
 		for (size_t uIndex = 1; uIndex < unfmNamesUnset.size(); uIndex++) {
 			uUnsetStr += std::string("; ") + unfmNamesUnset[uIndex];
 		}
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"shader %u has uniforms uninitialized:\n%s", 
 					m_program, uUnsetStr.c_str()));
 	}
 }
 
-ATD::Gl::Uint ATD::Shader::GetGlId() const
-{ return m_program; }
-
-bool ATD::Shader::IsCanvasRequired() const
-{ return m_isCanvasRequired; }
-
-void ATD::Shader::CompileShader(const std::string &shaderSource, 
+void ATD::Shader::compileShader(const std::string &shaderSource, 
 		ATD::Gl::Enum shaderType, 
-		ATD::Gl::Uint *shaderId)
+		ATD::Gl::Uint &shaderId)
 {
-	*shaderId = gl._CreateShader(shaderType);
-	if (*shaderId == 0) {
+	shaderId = gl.createShader(shaderType);
+	if (shaderId == 0) {
 		throw std::runtime_error(
-				Printf(
+				Aux::printf(
 					"Cannot create new %s shader", 
 					shaderType == Gl::VERTEX_SHADER ? "vertex" : 
 					shaderType == Gl::FRAGMENT_SHADER ? "fragment" : 
@@ -526,32 +520,32 @@ void ATD::Shader::CompileShader(const std::string &shaderSource,
 		reinterpret_cast<const Gl::Char *>(shaderSource.data());
 
 	Gl::Int shaderSourceLen = static_cast<Gl::Int>(shaderSource.size());
-	gl._ShaderSource(*shaderId, 1, &shaderSourceStr, &shaderSourceLen);
+	gl.shaderSource(shaderId, 1, &shaderSourceStr, &shaderSourceLen);
 
 	Gl::Int success = 0;
 	const size_t errorLogSize = 1024;
 	std::string errorLog(errorLogSize, '\0');
 
-	gl._CompileShader(*shaderId);
-	gl._GetShaderiv(*shaderId, Gl::COMPILE_STATUS, &success);
+	gl.compileShader(shaderId);
+	gl.getShaderiv(shaderId, Gl::COMPILE_STATUS, &success);
 	if (!success) {
-		gl._GetShaderInfoLog(*shaderId, errorLogSize, nullptr, 
+		gl.getShaderInfoLog(shaderId, errorLogSize, nullptr, 
 				reinterpret_cast<Gl::Char *>(&errorLog[0]));
 
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"Cannot compile shader %u\n%s\n", 
-					*shaderId, errorLog.c_str()));
+					shaderId, errorLog.c_str()));
 	}
 
-	gl._AttachShader(m_program, *shaderId);
+	gl.attachShader(m_program, shaderId);
 }
 
-void ATD::Shader::InitUniforms()
+void ATD::Shader::initUniforms()
 {
 	/* Fill uniform location map. */
 	Usage use(*this);
 	Gl::Uint unfmCount;
-	gl._GetProgramiv(m_program, Gl::ACTIVE_UNIFORMS, 
+	gl.getProgramiv(m_program, Gl::ACTIVE_UNIFORMS, 
 			reinterpret_cast<Gl::Int *>(&unfmCount));
 
 	const size_t unfmNameBufferSize = 1024;
@@ -563,7 +557,7 @@ void ATD::Shader::InitUniforms()
 		Gl::Int unfmSize;
 		Gl::Enum unfmType;
 
-		gl._GetActiveUniform(m_program, 
+		gl.getActiveUniform(m_program, 
 				unfmIndex, 
 				unfmNameBufferSize, 
 				&unfmNameLength, 
@@ -572,7 +566,7 @@ void ATD::Shader::InitUniforms()
 				reinterpret_cast<Gl::Char *>(&unfmNameBuffer[0]));
 
 		std::string unfmName = unfmNameBuffer.substr(0, unfmNameLength);
-		Gl::Int unfmLocation = gl._GetUniformLocation(m_program, 
+		Gl::Int unfmLocation = gl.getUniformLocation(m_program, 
 				unfmName.c_str());
 
 		if (unfmLocation != static_cast<Gl::Int>(-1)) {
@@ -603,10 +597,10 @@ void ATD::Shader::InitUniforms()
 		if (uniformsStr.size()) {
 			uniformsStr += 
 				std::string(", ") + 
-				UniformToStr(udPair.first, udPair.second.type);
+				_uniformToStr(udPair.first, udPair.second.type);
 		} else {
 			uniformsStr = 
-				UniformToStr(udPair.first, udPair.second.type);
+				_uniformToStr(udPair.first, udPair.second.type);
 		}
 	}
 	IPRINTF("", "%lu uniforms initialized in shader %u: [%s]", 
@@ -638,20 +632,20 @@ ATD::Shader2D::Shader2D(const std::string &vertexSource,
 	: Shader(vertexSource, fragmentSource)
 	, m_attrIndices()
 {
-	CheckAttributes();
+	checkAttributes();
 }
 
-const ATD::VertexBuffer2D::AttrIndices &ATD::Shader2D::GetAttrIndices() const
+const ATD::VertexBuffer2D::AttrIndices &ATD::Shader2D::getAttrIndices() const
 { return m_attrIndices; }
 
-void ATD::Shader2D::CheckAttributes()
+void ATD::Shader2D::checkAttributes()
 {
 	const AttrDesc positionADesc("atrPosition", Gl::FLOAT_VEC2);
 	const AttrDesc texCoordsADesc("atrTexCoord", Gl::FLOAT_VEC2);
 	const AttrDesc colorADesc("atrColor", Gl::FLOAT_VEC4);
 
 	AttrIndexMap attrIndexMap;
-	FillAttrIndexMap(*this, attrIndexMap);
+	_fillAttrIndexMap(*this, attrIndexMap);
 
 	/* Check attributes index map: */
 	{
@@ -660,9 +654,9 @@ void ATD::Shader2D::CheckAttributes()
 			m_attrIndices.positionIndex = positionAIter->second;
 			attrIndexMap.erase(positionAIter);
 		} else {
-			throw std::runtime_error(Printf(
+			throw std::runtime_error(Aux::printf(
 						"cannot create Shader2D without '%s'", 
-						AttrDescToStr(positionADesc).c_str()));
+						_attrDescToStr(positionADesc).c_str()));
 		}
 	}
 	{
@@ -683,13 +677,13 @@ void ATD::Shader2D::CheckAttributes()
 	}
 	if (attrIndexMap.size()) {
 		auto attrIter = attrIndexMap.begin();
-		std::string attrStr = AttrDescToStr(attrIter->first);
+		std::string attrStr = _attrDescToStr(attrIter->first);
 
 		attrIter++;
 		for (; attrIter != attrIndexMap.end(); attrIter++) {
-			attrStr += std::string("; ") + AttrDescToStr(attrIter->first);
+			attrStr += std::string("; ") + _attrDescToStr(attrIter->first);
 		}
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"unsupported attributes in Shader2D:\n%s", 
 					attrStr.c_str()));
 	}
@@ -727,13 +721,13 @@ ATD::Shader3D::Shader3D(const std::string &vertexSource,
 	: Shader(vertexSource, fragmentSource)
 	, m_attrIndices()
 {
-	CheckAttributes();
+	checkAttributes();
 }
 
-const ATD::VertexBuffer3D::AttrIndices &ATD::Shader3D::GetAttrIndices() const
+const ATD::VertexBuffer3D::AttrIndices &ATD::Shader3D::getAttrIndices() const
 { return m_attrIndices; }
 
-void ATD::Shader3D::CheckAttributes()
+void ATD::Shader3D::checkAttributes()
 {
 	const AttrDesc positionADesc("atrPosition", Gl::FLOAT_VEC3);
 	const AttrDesc texCoordsADesc("atrTexCoord", Gl::FLOAT_VEC2);
@@ -741,7 +735,7 @@ void ATD::Shader3D::CheckAttributes()
 	const AttrDesc colorADesc("atrColor", Gl::FLOAT_VEC4);
 
 	AttrIndexMap attrIndexMap;
-	FillAttrIndexMap(*this, attrIndexMap);
+	_fillAttrIndexMap(*this, attrIndexMap);
 
 	/* Check attributes index map: */
 	{
@@ -750,9 +744,9 @@ void ATD::Shader3D::CheckAttributes()
 			m_attrIndices.positionIndex = positionAIter->second;
 			attrIndexMap.erase(positionAIter);
 		} else {
-			throw std::runtime_error(Printf(
+			throw std::runtime_error(Aux::printf(
 						"cannot create Shader3D without '%s'", 
-						AttrDescToStr(positionADesc).c_str()));
+						_attrDescToStr(positionADesc).c_str()));
 		}
 	}
 	{
@@ -781,13 +775,13 @@ void ATD::Shader3D::CheckAttributes()
 	}
 	if (attrIndexMap.size()) {
 		auto attrIter = attrIndexMap.begin();
-		std::string attrStr = AttrDescToStr(attrIter->first);
+		std::string attrStr = _attrDescToStr(attrIter->first);
 
 		attrIter++;
 		for (; attrIter != attrIndexMap.end(); attrIter++) {
-			attrStr += std::string("; ") + AttrDescToStr(attrIter->first);
+			attrStr += std::string("; ") + _attrDescToStr(attrIter->first);
 		}
-		throw std::runtime_error(Printf(
+		throw std::runtime_error(Aux::printf(
 					"unsupported attributes in Shader3D:\n%s", 
 					attrStr.c_str()));
 	}

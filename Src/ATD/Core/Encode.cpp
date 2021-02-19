@@ -10,7 +10,7 @@
 
 /* ATD::Encode::Hex auxiliary */
 
-static std::string StrToHex(const std::string &input, 
+static std::string _strToHex(const std::string &input, 
 		bool lowercase)
 {
 	std::string result;
@@ -37,7 +37,7 @@ static std::string StrToHex(const std::string &input,
 	return result;
 }
 
-static std::string HexToStr(const std::string &input)
+static std::string _hexToStr(const std::string &input)
 {
 	std::string result;
 	for (size_t i = 0; i + 1 < input.size(); i += 2) {
@@ -64,17 +64,17 @@ static std::string HexToStr(const std::string &input)
 ATD::Encode::Hex::Hex(const std::string &content, 
 		ATD::Encode::Mode mode, 
 		bool lowercase)
-	: m_str(mode == Mode::ENCODE ? StrToHex(content, lowercase) : 
-			HexToStr(content))
+	: m_str(mode == Mode::ENCODE ? _strToHex(content, lowercase) : 
+			_hexToStr(content))
 	, m_raw(content)
 {}
 
-std::string ATD::Encode::Hex::Str() const
+std::string ATD::Encode::Hex::str() const
 {
 	return m_str;
 }
 
-std::string ATD::Encode::Hex::Raw() const
+std::string ATD::Encode::Hex::raw() const
 {
 	return m_raw;
 }
@@ -102,7 +102,7 @@ const std::vector<std::pair<char, char>> ATD::Encode::CScreen::SCREEN_RULES = {
 
 /* ATD::Encode::CScreen auxiliary */
 
-static std::string StrToCScreen(const std::string &input)
+static std::string _strToCScreen(const std::string &input)
 {
 	std::string result;
 	for (size_t i = 0; i < input.size(); i++) {
@@ -122,7 +122,7 @@ static std::string StrToCScreen(const std::string &input)
 	return result;
 }
 
-static std::string CScreenToStr(const std::string &input)
+static std::string _cScreenToStr(const std::string &input)
 {
 	std::string result;
 	for (size_t i = 0; i < input.size();) {
@@ -156,17 +156,17 @@ static std::string CScreenToStr(const std::string &input)
 
 ATD::Encode::CScreen::CScreen(const std::string &content, 
 		ATD::Encode::Mode mode)
-	: m_str(mode == Mode::ENCODE ? StrToCScreen(content) : 
-			CScreenToStr(content))
+	: m_str(mode == Mode::ENCODE ? _strToCScreen(content) : 
+			_cScreenToStr(content))
 	, m_raw(content)
 {}
 
-std::string ATD::Encode::CScreen::Str() const
+std::string ATD::Encode::CScreen::str() const
 {
 	return m_str;
 }
 
-std::string ATD::Encode::CScreen::Raw() const
+std::string ATD::Encode::CScreen::raw() const
 {
 	return m_raw;
 }
@@ -174,7 +174,7 @@ std::string ATD::Encode::CScreen::Raw() const
 
 /* ATD::Encode::Base64 auxiliary */
 
-static char BitsToB64(uint8_t bits)
+static char _bitsToB64(uint8_t bits)
 {
 	char bc = (bits < 0x1A) ? 'A' + bits : 
 		(bits < 0x34) ? 'a' + (bits - 0x1A) : 
@@ -184,7 +184,7 @@ static char BitsToB64(uint8_t bits)
 	return bc;
 }
 
-static uint8_t B64ToBits(char b64)
+static uint8_t _b64ToBits(char b64)
 {
 	uint8_t bits = (b64 >= 'A' && b64 <= 'Z') ? 0x00 + (b64 - 'A') : 
 		(b64 >= 'a' && b64 <= 'z') ? 0x1A + (b64 - 'a') : 
@@ -194,7 +194,7 @@ static uint8_t B64ToBits(char b64)
 	return bits;
 }
 
-static std::string StrToBase64(const std::string &str)
+static std::string _strToBase64(const std::string &str)
 {
 	std::string base64;
 	for (size_t cIter = 0; cIter < str.size(); cIter += 3) {
@@ -210,7 +210,7 @@ static std::string StrToBase64(const std::string &str)
 		}
 		for (size_t bIter = 0; bIter < bLen; bIter++) {
 			uint32_t bits6 = (bits >> ((3 - bIter) * 6)) & 0x0000003F;
-			base64.append(1, BitsToB64(static_cast<uint8_t>(bits6)));
+			base64.append(1, _bitsToB64(static_cast<uint8_t>(bits6)));
 		}
 	}
 
@@ -220,7 +220,7 @@ static std::string StrToBase64(const std::string &str)
 	return base64;
 }
 
-static std::string Base64ToStr(const std::string &base64)
+static std::string _base64ToStr(const std::string &base64)
 {
 	size_t suffixLen = 0;
 	for (; base64[base64.size() - suffixLen - 1] == '='; suffixLen++) {}
@@ -229,18 +229,18 @@ static std::string Base64ToStr(const std::string &base64)
 	std::string result;
 	for (size_t bIter = 0; bIter < baseSize; bIter += 4) {
 		size_t cLen = 0;
-		uint32_t bits = static_cast<uint32_t>(B64ToBits(base64[bIter])) << 18;
+		uint32_t bits = static_cast<uint32_t>(_b64ToBits(base64[bIter])) << 18;
 		if (bIter + 1 < baseSize) {
 			cLen += 1;
-			bits += static_cast<uint32_t>(B64ToBits(base64[bIter + 1])) << 12;
+			bits += static_cast<uint32_t>(_b64ToBits(base64[bIter + 1])) << 12;
 			if (bIter + 2 < baseSize) {
 				cLen += 1;
 				bits += static_cast<uint32_t>(
-						B64ToBits(base64[bIter + 2])) << 6;
+						_b64ToBits(base64[bIter + 2])) << 6;
 				if (bIter + 3 < baseSize) {
 					cLen += 1;
 					bits += static_cast<uint32_t>(
-							B64ToBits(base64[bIter + 3]));
+							_b64ToBits(base64[bIter + 3]));
 				}
 			}
 		}
@@ -260,16 +260,16 @@ static std::string Base64ToStr(const std::string &base64)
 
 ATD::Encode::Base64::Base64(const std::string &content, 
 		ATD::Encode::Mode mode)
-	: m_str(mode == Mode::ENCODE ? StrToBase64(content) : Base64ToStr(content))
+	: m_str(mode == Mode::ENCODE ? _strToBase64(content) : _base64ToStr(content))
 	, m_raw(content)
 {}
 
-std::string ATD::Encode::Base64::Str() const
+std::string ATD::Encode::Base64::str() const
 {
 	return m_str;
 }
 
-std::string ATD::Encode::Base64::Raw() const
+std::string ATD::Encode::Base64::raw() const
 {
 	return m_raw;
 }

@@ -1,9 +1,10 @@
 /**
-* @file     
-* @brief    Debug class for debug + macros.
-* @details  License: GPL v3.
-* @author   ArthurTheDigital (arthurthedigital@gmail.com)
-* @since    $Id: $ */
+ * @file      
+ * @brief     Debug class for debug + macros.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #include <ATD/Core/Debug.hpp>
 
@@ -24,14 +25,14 @@ ATD::Debug::Observer::Observer()
 
 ATD::Debug::Observer::~Observer()
 {
-	Detach();
+	detach();
 }
 
-void ATD::Debug::Observer::Attach(Debug *debug, 
+void ATD::Debug::Observer::attach(Debug *debug, 
 		Debug::Level level, 
 		const Tag::Expression &tagExp)
 {
-	Detach();
+	detach();
 	if (debug) {
 		std::lock_guard<std::recursive_mutex> lock(debug->m_lock);
 
@@ -43,7 +44,7 @@ void ATD::Debug::Observer::Attach(Debug *debug,
 	}
 }
 
-void ATD::Debug::Observer::Detach()
+void ATD::Debug::Observer::detach()
 {
 	if (m_debug) {
 		std::lock_guard<std::recursive_mutex> lock(m_debug->m_lock);
@@ -84,10 +85,10 @@ ATD::Debug::~Debug()
 			}
 		}
 	}
-	for (auto &observer : observers) { observer->Detach(); }
+	for (auto &observer : observers) { observer->detach(); }
 }
 
-void ATD::Debug::Printf(const char *file, 
+void ATD::Debug::printf(const char *file, 
 		unsigned lnNumber, 
 		const char *function, 
 		Level level, 
@@ -98,7 +99,7 @@ void ATD::Debug::Printf(const char *file,
 	/* Fill the line */
 	va_list args;
 	::va_start(args, format);
-	std::string payload = VaPrintf(format, args);
+	std::string payload = Aux::vaPrintf(format, args);
 	::va_end(args);
 
 	Line line(level, 
@@ -114,19 +115,19 @@ void ATD::Debug::Printf(const char *file,
 	{
 		std::vector<Observer *> shallBeNotified;
 		{
-			/* No one shall Attach()/Detach(), while we are iterating, 
-			 * and no one shall Detach() while we are notifying.
+			/* No one shall attach()/detach(), while we are iterating, 
+			 * and no one shall detach() while we are notifying.
 			 *
-			 * If Detach() is called from OnNotify(), this is still fine, 
+			 * If detach() is called from onNotify(), this is still fine, 
 			 * because our mutex is recursive, and will be locked by the 
 			 * same thread, that locked it for notifying. */
 			std::lock_guard<std::recursive_mutex> lock(m_lock);
 
-			/* Nothing in this cycle can trigger Attach()/Detach() */
+			/* Nothing in this cycle can trigger attach()/detach() */
 			for (auto &lvIter : m_observers) {
 				if (lvIter.first >= line.level) {
 					for (auto &obsIter : lvIter.second) {
-						if (obsIter.second.Check(line.tag)) {
+						if (obsIter.second.check(line.tag)) {
 							shallBeNotified.push_back(obsIter.first);
 						}
 					}
@@ -134,10 +135,10 @@ void ATD::Debug::Printf(const char *file,
 			}
 		}
 
-		/* If triggers Detach(), that only of the node, that already 
+		/* If triggers detach(), that only of the node, that already 
 		 * have been processed */
 		for (auto &obsIter : shallBeNotified) {
-			obsIter->OnNotify(line);
+			obsIter->onNotify(line);
 		}
 	}
 }

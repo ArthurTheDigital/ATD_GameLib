@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file      
  * @brief     Window class implementation.
  * @details   ...
  * @author    ArthurTheDigital (arthurthedigital@gmail.com)
@@ -21,15 +21,20 @@
 namespace ATD {
 
 /**
- * @class ...
- * @brief ... */
+ * @brief ...
+ * @class ... */
 class Window
 {
 public:
 
+	/**
+	 * @brief ...
+	 * @class ... */
 	class Event
 	{
 	public:
+		/**
+		 * @brief ... */
 		enum Type {
 			INVALID       = 0x00000000, 
 			RESIZE        = 1 << 0, 
@@ -49,6 +54,9 @@ public:
 		static const size_t DATA_SIZE = 16;
 
 
+		/**
+		 * @brief ...
+		 * @param type - ... */
 		inline Event(const Type &n_type = INVALID)
 			: type(n_type)
 		{
@@ -57,6 +65,9 @@ public:
 			}
 		}
 
+		/**
+		 * @brief ...
+		 * @param other - ... */
 		inline Event(const Event &other)
 			: Event(other.type)
 		{ ::memcpy(data, other.data, DATA_SIZE); }
@@ -66,28 +77,43 @@ public:
 		uint8_t data[DATA_SIZE];
 	};
 
+	/**
+	 * @brief ...
+	 * @class ... */
 	class Observer
 	{
 	public:
+		/**
+		 * @brief ... */
 		Observer();
 
+		/**
+		 * @brief ... */
 		virtual ~Observer();
 
-		void Attach(Window *window, 
+		/**
+		 * @brief ...
+		 * @param window        - ...
+		 * @param eventTypeMask - ... */
+		void attach(Window *window, 
 				uint32_t eventTypeMask = 
 					static_cast<uint32_t>(Event::INVALID));
 
-		void Detach();
+		/**
+		 * @brief ... */
+		void detach();
 
-		virtual void OnPollStart() = 0;
+		virtual void onPollStart() = 0;
 
-		virtual void OnNotify(const Event &event) = 0;
+		virtual void onNotify(const Event &event) = 0;
 
 	private:
 		Window *m_window;
 	};
 
-	/* To avoid division by zero ;) */
+	/* @brief ...
+	 *
+	 * To avoid division by zero ;) */
 	enum PixelSize {
 		PIXEL_X1 = 1, 
 		PIXEL_X2 = 2, 
@@ -95,53 +121,98 @@ public:
 		PIXEL_X4 = 4
 	};
 
+	/**
+	 * @brief ...
+	 * @param size      - ...
+	 * @param position  - ...
+	 * @param title     - ...
+	 * @param pixelSize - ... */
 	Window(const Vector2S &size, 
 			const Vector2L &position, 
 			const std::string &title, 
 			const PixelSize &pixelSize = PIXEL_X1);
 
+	/**
+	 * @brief ... */
 	virtual ~Window();
 
 	/**
 	 * @brief refresh inner Event queue
 	 * @param keepEvents - whether to store the newfound events
 	 *
-	 * You may call Poll() if you don't want to handle all window events 
+	 * You may call poll() if you don't want to handle all window events 
 	 * one-by-one and totally rely on Observers automation. */
-	void Poll(bool keepEvents = false);
+	void poll(bool keepEvents = false);
 
 	/**
 	 * @brief get the latest event
 	 * @param evt - link to the result event
 	 * @return true if gathered event, otherwise false (no events yet) */
-	bool PollEvent(Event &evt);
+	bool pollEvent(Event &evt);
 
-	Vector2U Size() const;
+	/* The following methods cannot be inlined, because they use WindowInternal. */
 
-	bool HasFocus() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	Vector2U size() const;
 
-	bool IsClosed() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	bool hasFocus() const;
 
-	void SetShader2D(Shader2D::Ptr shader2DPtr);
+	/**
+	 * @brief ...
+	 * @return ... */
+	bool isClosed() const;
 
-	void SetShader3D(Shader3D::Ptr shader3DPtr);
+	/**
+	 * @brief ...
+	 * @param shader2DPtr - ... */
+	void setShader2D(Shader2D::Ptr shader2DPtr);
 
-	void SetProjection2D(const Projection2D &projection2D);
+	/**
+	 * @brief ...
+	 * @param shader3DPtr - ... */
+	void setShader3D(Shader3D::Ptr shader3DPtr);
 
-	void SetProjection3D(const Projection3D &projection3D);
+	/**
+	 * @brief ...
+	 * @param projection2D - ... */
+	void setProjection2D(const Projection2D &projection2D);
 
-	void Clear();
+	/**
+	 * @brief ...
+	 * @param projection3D - ... */
+	void setProjection3D(const Projection3D &projection3D);
 
-	void Draw(const ATD::FrameBuffer::Drawable &drawable);
+	/**
+	 * @brief ... */
+	void clear();
 
-	void Draw(const VertexBuffer2D &vertices2D, 
+	/**
+	 * @brief ...
+	 * @param drawable - ... */
+	void draw(const ATD::FrameBuffer::Drawable &drawable);
+
+	/**
+	 * @brief ...
+	 * @param vertices2D - ...
+	 * @param transform  - ... */
+	void draw(const VertexBuffer2D &vertices2D, 
 			const Transform2D &transform);
 
-	/* TODO: Draw(const VertexBuffer3D &); */
+	/* TODO: draw(const VertexBuffer3D &); */
 
-	Texture::CPtr GetColorTexture() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	Texture::CPtr getColorTexture() const;
 
-	void Display();
+	/**
+	 * @brief ... */
+	void display();
 
 private:
 	/* X11 has nasty defines in it's header files, which conflict with 
@@ -160,8 +231,8 @@ private:
 	Window(const Window &other) = delete;
 
 	/* Accessible from Observer. */
-	friend void Observer::Attach(Window *, uint32_t);
-	friend void Observer::Detach();
+	friend void Observer::attach(Window *, uint32_t);
+	friend void Observer::detach();
 
 
 	WindowX11 *m_x11; /* X11 data */

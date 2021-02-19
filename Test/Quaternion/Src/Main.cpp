@@ -29,10 +29,10 @@ int main(int argc, char** argv)
 		const ATD::Vector3D rTrue = v;
 
 		ATD::AutoTest tester("identical rotation test:");
-		ATD::Quaternion rotation = ATD::Quaternion::Rotation(angleFrc, axis);
-		ATD::Vector3D r = rotation.ApplyRotation(v);
+		ATD::Quaternion rotation = ATD::Quaternion::rotation(angleFrc, axis);
+		ATD::Vector3D r = rotation.applyRotation(v);
 
-		tester.Finish(ATD::Vector3D(r - rTrue).Length() < eps);
+		tester.finish(ATD::Vector3D(r - rTrue).length() < eps);
 	}
 
 	{
@@ -44,10 +44,10 @@ int main(int argc, char** argv)
 		const ATD::Vector3D rTrue(0., -1., 0.);
 
 		ATD::AutoTest tester("1/2 circle rotation test:");
-		ATD::Quaternion rotation = ATD::Quaternion::Rotation(angleFrc, axis);
-		ATD::Vector3D r = rotation.ApplyRotation(v);
+		ATD::Quaternion rotation = ATD::Quaternion::rotation(angleFrc, axis);
+		ATD::Vector3D r = rotation.applyRotation(v);
 
-		tester.Finish(ATD::Vector3D(r - rTrue).Length() < eps);
+		tester.finish(ATD::Vector3D(r - rTrue).length() < eps);
 	}
 
 	{
@@ -59,10 +59,10 @@ int main(int argc, char** argv)
 		const ATD::Vector3D rTrue(0., 0., -1.);
 
 		ATD::AutoTest tester("1/4 circle rotation test:");
-		ATD::Quaternion rotation = ATD::Quaternion::Rotation(angleFrc, axis);
-		ATD::Vector3D r = rotation.ApplyRotation(v);
+		ATD::Quaternion rotation = ATD::Quaternion::rotation(angleFrc, axis);
+		ATD::Vector3D r = rotation.applyRotation(v);
 
-		tester.Finish(ATD::Vector3D(r - rTrue).Length() < eps);
+		tester.finish(ATD::Vector3D(r - rTrue).length() < eps);
 	}
 
 	{
@@ -74,11 +74,11 @@ int main(int argc, char** argv)
 		const ATD::Vector4F rTrue(0., 0., -1., 1.);
 
 		ATD::AutoTest tester("1/4 circle matrix rotation test:");
-		ATD::Quaternion rotation = ATD::Quaternion::Rotation(angleFrc, axis);
-		ATD::Matrix4F rotationMatrix = rotation.GetMatrixRotation();
+		ATD::Quaternion rotation = ATD::Quaternion::rotation(angleFrc, axis);
+		ATD::Matrix4F rotationMatrix = rotation.getRotationMatrix();
 		ATD::Vector4F r = rotationMatrix * v;
 
-		tester.Finish(ATD::Vector4F(r - rTrue).Length() < eps);
+		tester.finish(ATD::Vector4F(r - rTrue).length() < eps);
 	}
 
 	{
@@ -90,11 +90,11 @@ int main(int argc, char** argv)
 		const ATD::Vector4F rTrue(0., 0., 1., 1.);
 
 		ATD::AutoTest tester("1/4 circle matrix inverse rotation test:");
-		ATD::Quaternion rotation = ATD::Quaternion::Rotation(angleFrc, axis);
-		ATD::Matrix4F rotationMatrix = rotation.Inverted().GetMatrixRotation();
+		ATD::Quaternion rotation = ATD::Quaternion::rotation(angleFrc, axis);
+		ATD::Matrix4F rotationMatrix = rotation.inverted().getRotationMatrix();
 		ATD::Vector4F r = rotationMatrix * v;
 
-		tester.Finish(ATD::Vector4F(r - rTrue).Length() < eps);
+		tester.finish(ATD::Vector4F(r - rTrue).length() < eps);
 	}
 
 	return 0;

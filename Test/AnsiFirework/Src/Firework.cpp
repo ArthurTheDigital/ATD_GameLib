@@ -22,7 +22,7 @@ const ATD::Ansi::Image Firework::Particle::HEAD_IMG = ATD::Ansi::Image(
 const ATD::Vector2S Firework::Particle::HEAD_FRAME_SIZE = ATD::Vector2S(1, 1);
 
 const size_t Firework::Particle::HEAD_FRAME_NUM = 
-	Firework::Particle::HEAD_IMG.Size().x / 
+	Firework::Particle::HEAD_IMG.size().x / 
 	Firework::Particle::HEAD_FRAME_SIZE.x;
 
 const ATD::Ansi::Image Firework::Particle::BODY_IMG = ATD::Ansi::Image(
@@ -33,7 +33,7 @@ const ATD::Ansi::Image Firework::Particle::BODY_IMG = ATD::Ansi::Image(
 const ATD::Vector2S Firework::Particle::BODY_FRAME_SIZE = ATD::Vector2S(3, 2);
 
 const size_t Firework::Particle::BODY_FRAME_NUM = 
-	Firework::Particle::BODY_IMG.Size().x / 
+	Firework::Particle::BODY_IMG.size().x / 
 	Firework::Particle::BODY_FRAME_SIZE.x;
 
 const ATD::Ansi::Image Firework::Particle::TAIL_IMG = ATD::Ansi::Image(
@@ -44,7 +44,7 @@ const ATD::Ansi::Image Firework::Particle::TAIL_IMG = ATD::Ansi::Image(
 const ATD::Vector2S Firework::Particle::TAIL_FRAME_SIZE = ATD::Vector2S(5, 3);
 
 const size_t Firework::Particle::TAIL_FRAME_NUM = 
-	Firework::Particle::TAIL_IMG.Size().x / 
+	Firework::Particle::TAIL_IMG.size().x / 
 	Firework::Particle::TAIL_FRAME_SIZE.x;
 
 const float Firework::Particle::VELOCITY_INIT = 2.5;
@@ -61,17 +61,17 @@ Firework::Particle::Particle(const ATD::Vector2L &p0,
 		unsigned char burnColor)
 	: ATD::Ansi::Image::Drawable()
 	, m_p(p0)
-	, m_v(ATD::Vector2D(VELOCITY_INIT * velocity, 0).RotatedCw(angle) - ATD::Vector2D(0., 1.))
+	, m_v(ATD::Vector2D(VELOCITY_INIT * velocity, 0).rotatedCw(angle) - ATD::Vector2D(0., 1.))
 	, m_mainColor(mainColor)
 	, m_burnColor(burnColor)
 	, m_state(State::BRIGHT)
 	, m_remain(FRAMES_BRIGHT)
 	, m_drawPos()
 {
-	Update();
+	update();
 }
 
-void Firework::Particle::Update()
+void Firework::Particle::update()
 {
 	/* Note:
 	 * Not a bug, but feature: the initial point is shifted from the given one 
@@ -82,8 +82,8 @@ void Firework::Particle::Update()
 
 	/* Update velocity */
 	m_v += ATD::Vector2D(0, ACCELERATION);
-	if (m_v.Length() > VELOCITY_MAX) {
-		m_v = m_v.Normalized() * VELOCITY_MAX;
+	if (m_v.length() > VELOCITY_MAX) {
+		m_v = m_v.normalized() * VELOCITY_MAX;
 	}
 
 	/* Update state/remain */
@@ -135,16 +135,16 @@ void Firework::Particle::Update()
 			);
 }
 
-void Firework::Particle::DrawSelf(ATD::Ansi::Image &target) const
+void Firework::Particle::drawSelf(ATD::Ansi::Image &target) const
 {
 	switch (m_state) {
 		case State::BRIGHT:
 			{
 				ATD::Ansi::Image headImage = HEAD_IMG;
-				headImage.SetForeground(m_mainColor);
-				headImage.SetMode(ATD::Ansi::Glyph::M_REVERSED);
+				headImage.setForecolor(m_mainColor);
+				headImage.setMode(ATD::Ansi::Glyph::M_REVERSED);
 
-				target.Draw(
+				target.draw(
 						m_drawPos + ATD::Vector2L(2, 1), 
 						headImage, 
 						ATD::RectL(
@@ -160,7 +160,7 @@ void Firework::Particle::DrawSelf(ATD::Ansi::Image &target) const
 		case State::BURN:
 			{
 				ATD::Ansi::Image bodyImage = BODY_IMG;
-				bodyImage.SetForeground(m_burnColor);
+				bodyImage.setForecolor(m_burnColor);
 				ATD::Vector2L bodyPos(
 					(m_v.x < -VELOCITY_INIT * 0.3) ? 2 : 
 					(m_v.x > VELOCITY_INIT * 0.3) ? 0 : 
@@ -168,7 +168,7 @@ void Firework::Particle::DrawSelf(ATD::Ansi::Image &target) const
 					(m_v.y < 0) ? 1 : 0
 					);
 
-				target.Draw(
+				target.draw(
 						m_drawPos + bodyPos, 
 						bodyImage, 
 						ATD::RectL(
@@ -180,9 +180,9 @@ void Firework::Particle::DrawSelf(ATD::Ansi::Image &target) const
 						);
 
 				ATD::Ansi::Image headImage = HEAD_IMG;
-				headImage.SetForeground(m_mainColor);
+				headImage.setForecolor(m_mainColor);
 
-				target.Draw(
+				target.draw(
 						m_drawPos + ATD::Vector2L(2, 1), 
 						headImage, 
 						ATD::RectL(
@@ -198,10 +198,10 @@ void Firework::Particle::DrawSelf(ATD::Ansi::Image &target) const
 		case State::BLINK:
 			{
 				ATD::Ansi::Image tailImage = TAIL_IMG;
-				tailImage.SetForeground(m_mainColor);
-				tailImage.SetMode(m_remain > 4 ? 0 : ATD::Ansi::Glyph::M_DIM);
+				tailImage.setForecolor(m_mainColor);
+				tailImage.setMode(m_remain > 4 ? 0 : ATD::Ansi::Glyph::M_DIM);
 
-				target.Draw(
+				target.draw(
 						m_drawPos + ATD::Vector2L(1, 0), 
 						tailImage, 
 						ATD::RectL(
@@ -233,7 +233,7 @@ const ATD::Ansi::Image Firework::MISSILE_IMG = ATD::Ansi::Image(
 const ATD::Vector2S Firework::MISSILE_FRAME_SIZE = ATD::Vector2S(3, 5);
 
 const size_t Firework::MISSILE_FRAME_NUM = 
-	Firework::MISSILE_IMG.Size().x / 
+	Firework::MISSILE_IMG.size().x / 
 	Firework::MISSILE_FRAME_SIZE.x;
 
 const ATD::Ansi::Image Firework::EXPLOSION_IMG = ATD::Ansi::Image(
@@ -247,7 +247,7 @@ const ATD::Ansi::Image Firework::EXPLOSION_IMG = ATD::Ansi::Image(
 const ATD::Vector2S Firework::EXPLOSION_FRAME_SIZE = ATD::Vector2S(9, 5);
 
 const size_t Firework::EXPLOSION_FRAME_NUM = 
-	Firework::EXPLOSION_IMG.Size().x / 
+	Firework::EXPLOSION_IMG.size().x / 
 	Firework::EXPLOSION_FRAME_SIZE.x;
 
 /**/
@@ -265,10 +265,10 @@ Firework::Firework(long x,
 	, m_frameNo(::rand() % 3)
 	, m_remain(h)
 {
-	Update();
+	update();
 }
 
-void Firework::Update()
+void Firework::update()
 {
 	/* Update state/remain */
 	switch (m_state) {
@@ -325,24 +325,24 @@ void Firework::Update()
 	}
 
 	for (auto pIter = m_particles.begin(); pIter != m_particles.end();) {
-		if (pIter->Finished()) {
+		if (pIter->finished()) {
 			pIter = m_particles.erase(pIter);
 		} else {
-			pIter->Update();
+			pIter->update();
 			pIter++;
 		}
 	}
 }
 
-void Firework::DrawSelf(ATD::Ansi::Image &target) const
+void Firework::drawSelf(ATD::Ansi::Image &target) const
 {
 	switch (m_state) {
 		case State::MISSILE:
 			{
 				ATD::Ansi::Image missileImage = MISSILE_IMG;
-				missileImage.SetForeground(m_mainColor);
+				missileImage.setForecolor(m_mainColor);
 
-				target.Draw(
+				target.draw(
 						m_pos - ATD::Vector2L(1, 1), 
 						missileImage, 
 						ATD::RectL(
@@ -359,11 +359,11 @@ void Firework::DrawSelf(ATD::Ansi::Image &target) const
 		case State::EXPLOSION:
 			{
 				ATD::Ansi::Image explosionImage = EXPLOSION_IMG;
-				explosionImage.SetForeground(
+				explosionImage.setForecolor(
 						m_frameNo ? m_mainColor : 
-						ATD::Ansi::Glyph::FOREGROUND_DEFAULT);
+						ATD::Ansi::Glyph::FORECOLOR_DEFAULT);
 
-				target.Draw(
+				target.draw(
 						m_pos - ATD::Vector2L(4, 2), 
 						explosionImage, 
 						ATD::RectL(
@@ -383,7 +383,7 @@ void Firework::DrawSelf(ATD::Ansi::Image &target) const
 	}
 
 	for (auto &p : m_particles) {
-		p.DrawSelf(target);
+		p.drawSelf(target);
 	}
 }
 

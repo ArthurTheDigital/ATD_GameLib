@@ -1,9 +1,10 @@
 /**
- * @file     
- * @brief    Terminal ansi graphics implementation.
- * @details  License: GPL v3.
- * @author   ArthurTheDigital (arthurthedigital@gmail.com)
- * @since    $Id: $ */
+ * @file      
+ * @brief     Terminal ansi graphics.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #include <ATD/Ansi/Graphics.hpp>
 
@@ -22,10 +23,10 @@
 
 /* ATD::Ansi::Glyph constants */
 
-const unsigned char ATD::Ansi::Glyph::FOREGROUND_DEFAULT = 0x07;
-const unsigned char ATD::Ansi::Glyph::BACKGROUND_DEFAULT = 0xE8;
+const unsigned char ATD::Ansi::Glyph::FORECOLOR_DEFAULT = 0x07;
+const unsigned char ATD::Ansi::Glyph::BACKCOLOR_DEFAULT = 0xE8;
 const ATD::Unicode::Glyph ATD::Ansi::Glyph::UTF8_GLYPH_DEFAULT = 
-	ATD::Unicode(" ").Front();
+	ATD::Unicode(" ").front();
 
 const std::string ATD::Ansi::Glyph::STR_RESET = "\033[00m";
 
@@ -70,12 +71,12 @@ ATD::Ansi::Glyph::Glyph()
 {}
 
 ATD::Ansi::Glyph::Glyph(const Unicode::Glyph &unicode, 
-		unsigned char foreground, 
-		unsigned char background, 
+		unsigned char forecolor, 
+		unsigned char backcolor, 
 		uint16_t mode)
 	: m_unicode(unicode)
-	, m_foreground(foreground)
-	, m_background(background)
+	, m_forecolor(forecolor)
+	, m_backcolor(backcolor)
 	, m_mode(mode)
 {}
 
@@ -83,8 +84,8 @@ bool ATD::Ansi::Glyph::operator==(const ATD::Ansi::Glyph &other) const
 {
 	return (
 			m_unicode == other.m_unicode && 
-			m_foreground == other.m_foreground && 
-			m_background == other.m_background && 
+			m_forecolor == other.m_forecolor && 
+			m_backcolor == other.m_backcolor && 
 			m_mode == other.m_mode
 			);
 }
@@ -94,41 +95,41 @@ bool ATD::Ansi::Glyph::operator!=(const ATD::Ansi::Glyph &other) const
 	return !(operator==(other));
 }
 
-std::string ATD::Ansi::Glyph::Str() const
+std::string ATD::Ansi::Glyph::str() const
 {
-	std::string str = Printf(
+	std::string str = Aux::printf(
 			"\033[38;5;%u;48;5;%u", 
-			m_foreground, 
-			m_background
+			m_forecolor, 
+			m_backcolor
 			);
 	for (size_t iM = 0; iM < MODE_NUM; iM++) {
 		if (m_mode & MODE_TABLE[iM][0]) {
-			str += Printf(";%u", static_cast<unsigned>(MODE_TABLE[iM][1]));
+			str += Aux::printf(";%u", static_cast<unsigned>(MODE_TABLE[iM][1]));
 		}
 	}
 	str += "m";
-	str += Unicode::StrFromGlyph(m_unicode);
+	str += Unicode::strFromGlyph(m_unicode);
 	str += STR_RESET;
 
 	return str;
 }
 
-std::string ATD::Ansi::Glyph::StrOptimized(const ATD::Ansi::Glyph *prev) const
+std::string ATD::Ansi::Glyph::strOptimized(const ATD::Ansi::Glyph *prev) const
 {
 	if (!prev) {
-		std::string str = Printf(
+		std::string str = Aux::printf(
 				"\033[38;5;%u;48;5;%u", 
-				m_foreground, 
-				m_background
+				m_forecolor, 
+				m_backcolor
 				);
 		for (size_t iM = 0; iM < MODE_NUM; iM++) {
 			if (m_mode & MODE_TABLE[iM][0]) {
-				str += Printf(";%u", 
+				str += Aux::printf(";%u", 
 						static_cast<unsigned>(MODE_TABLE[iM][1]));
 			}
 		}
 		str += "m";
-		str += Unicode::StrFromGlyph(m_unicode);
+		str += Unicode::strFromGlyph(m_unicode);
 
 		return str;
 	} else {
@@ -139,19 +140,19 @@ std::string ATD::Ansi::Glyph::StrOptimized(const ATD::Ansi::Glyph *prev) const
 			if ((prev->m_mode & MODE_TABLE[iM][0]) && 
 					!(m_mode & MODE_TABLE[iM][0])) {
 				prefixes.push_back(
-						Printf("%u", 
+						Aux::printf("%u", 
 							static_cast<unsigned>(MODE_TABLE[iM][2])));
 			}
 		}
 
-		/* Set foreground */
-		if (m_foreground != prev->m_foreground) {
-			prefixes.push_back(Printf("38;5;%u", m_foreground));
+		/* Set forecolor */
+		if (m_forecolor != prev->m_forecolor) {
+			prefixes.push_back(Aux::printf("38;5;%u", m_forecolor));
 		}
 
-		/* Set background */
-		if (m_background != prev->m_background) {
-			prefixes.push_back(Printf("48;5;%u", m_background));
+		/* Set backcolor */
+		if (m_backcolor != prev->m_backcolor) {
+			prefixes.push_back(Aux::printf("48;5;%u", m_backcolor));
 		}
 
 		/* Mode setters */
@@ -159,7 +160,7 @@ std::string ATD::Ansi::Glyph::StrOptimized(const ATD::Ansi::Glyph *prev) const
 			if (!(prev->m_mode & MODE_TABLE[iM][0]) && 
 					(m_mode & MODE_TABLE[iM][0])) {
 				prefixes.push_back(
-						Printf("%u", 
+						Aux::printf("%u", 
 							static_cast<unsigned>(MODE_TABLE[iM][1])));
 			}
 		}
@@ -173,7 +174,7 @@ std::string ATD::Ansi::Glyph::StrOptimized(const ATD::Ansi::Glyph *prev) const
 			str += std::string(";") + prefixes[iPre];
 		}
 		str += prefixes.size() ? "m" : "";
-		str += Unicode::StrFromGlyph(m_unicode);
+		str += Unicode::strFromGlyph(m_unicode);
 
 		return str;
 	}
@@ -181,28 +182,16 @@ std::string ATD::Ansi::Glyph::StrOptimized(const ATD::Ansi::Glyph *prev) const
 
 /* Stupid setters/getters */
 
-ATD::Unicode::Glyph ATD::Ansi::Glyph::GetUnicode() const
-{ return m_unicode; }
-
-void ATD::Ansi::Glyph::SetUnicode(const ATD::Unicode::Glyph &unicode)
+void ATD::Ansi::Glyph::setUnicode(const ATD::Unicode::Glyph &unicode)
 { m_unicode = unicode; }
 
-unsigned char ATD::Ansi::Glyph::Foreground() const
-{ return m_foreground; }
+void ATD::Ansi::Glyph::setForecolor(const unsigned char forecolor)
+{ m_forecolor = forecolor; }
 
-void ATD::Ansi::Glyph::Foreground(const unsigned char foreground)
-{ m_foreground = foreground; }
+void ATD::Ansi::Glyph::setBackcolor(const unsigned char backcolor)
+{ m_backcolor = backcolor; }
 
-unsigned char ATD::Ansi::Glyph::Background() const
-{ return m_background; }
-
-void ATD::Ansi::Glyph::Background(const unsigned char background)
-{ m_background = background; }
-
-uint16_t ATD::Ansi::Glyph::Mode() const
-{ return m_mode; }
-
-void ATD::Ansi::Glyph::Mode(uint16_t mode)
+void ATD::Ansi::Glyph::setMode(uint16_t mode)
 { m_mode = mode; }
 
 /* === */
@@ -220,7 +209,7 @@ ATD::Ansi::GlyphMask::GlyphMask()
 	: GlyphMask(Glyph(), 0x0000)
 {}
 
-bool ATD::Ansi::GlyphMask::Check(const ATD::Ansi::Glyph &glyph) const
+bool ATD::Ansi::GlyphMask::check(const ATD::Ansi::Glyph &glyph) const
 {
 	bool resultAnd = static_cast<bool>(m_bitMask & 
 			(BIT_UTF8 | BIT_FG | BIT_BG | BIT_MODE));
@@ -228,30 +217,30 @@ bool ATD::Ansi::GlyphMask::Check(const ATD::Ansi::Glyph &glyph) const
 	bool resultOr = false;
 
 	if (m_bitMask & BIT_UTF8) {
-		bool matchUnicode = (m_glyph.GetUnicode() == glyph.GetUnicode());
+		bool matchUnicode = (m_glyph.unicode() == glyph.unicode());
 
 		resultAnd = resultAnd && matchUnicode;
 		resultOr = resultOr || matchUnicode;
 	}
 
 	if (m_bitMask & BIT_FG) {
-		bool matchForeground = (m_glyph.Foreground() == glyph.Foreground());
+		bool matchForecolor = (m_glyph.forecolor() == glyph.forecolor());
 
-		resultAnd = resultAnd && matchForeground;
-		resultOr = resultOr || matchForeground;
+		resultAnd = resultAnd && matchForecolor;
+		resultOr = resultOr || matchForecolor;
 	}
 
 	if (m_bitMask & BIT_BG) {
-		bool matchBackground = (m_glyph.Background() == glyph.Background());
+		bool matchBackcolor = (m_glyph.backcolor() == glyph.backcolor());
 
-		resultAnd = resultAnd && matchBackground;
-		resultOr = resultOr || matchBackground;
+		resultAnd = resultAnd && matchBackcolor;
+		resultOr = resultOr || matchBackcolor;
 	}
 
 	if (m_bitMask & BIT_MODE) {
 		bool matchMode = (m_bitMask & BIT_M_ANY) ? 
-			static_cast<bool>(m_glyph.Mode() & glyph.Mode()) : 
-			(m_glyph.Mode() == glyph.Mode());
+			static_cast<bool>(m_glyph.mode() & glyph.mode()) : 
+			(m_glyph.mode() == glyph.mode());
 
 		resultAnd = resultAnd && matchMode;
 		resultOr = resultOr || matchMode;
@@ -260,12 +249,12 @@ bool ATD::Ansi::GlyphMask::Check(const ATD::Ansi::Glyph &glyph) const
 	return (m_bitMask & BIT_ANY) ? resultOr : resultAnd;
 }
 
-void ATD::Ansi::GlyphMask::Apply(ATD::Ansi::Glyph &glyph) const
+void ATD::Ansi::GlyphMask::apply(ATD::Ansi::Glyph &glyph) const
 {
-	if (m_bitMask & BIT_UTF8) { glyph.SetUnicode(m_glyph.GetUnicode()); }
-	if (m_bitMask & BIT_FG) { glyph.Foreground(m_glyph.Foreground()); }
-	if (m_bitMask & BIT_BG) { glyph.Background(m_glyph.Background()); }
-	if (m_bitMask & BIT_MODE) { glyph.Mode(m_glyph.Mode()); }
+	if (m_bitMask & BIT_UTF8) { glyph.setUnicode(m_glyph.unicode()); }
+	if (m_bitMask & BIT_FG) { glyph.setForecolor(m_glyph.forecolor()); }
+	if (m_bitMask & BIT_BG) { glyph.setBackcolor(m_glyph.backcolor()); }
+	if (m_bitMask & BIT_MODE) { glyph.setMode(m_glyph.mode()); }
 }
 
 
@@ -280,7 +269,7 @@ ATD::Ansi::Image::Drawable::~Drawable()
 
 /* ATD::Ansi::Image auxiliary */
 
-static void ParseAnsi(const std::string &ansi, 
+static void _parseAnsi(const std::string &ansi, 
 		unsigned char &fg, 
 		unsigned char &bg, 
 		uint16_t &mode, 
@@ -355,14 +344,14 @@ ATD::Ansi::Image::Image()
 ATD::Ansi::Image::Image(const ATD::Vector2S &size, 
 		const ATD::Ansi::Glyph &glyph)
 	: m_size(size)
-	, m_glyphs(m_size.x * m_size.y ? new Glyph[m_size.x * m_size.y] : nullptr)
+	, m_glyphs((m_size.x * m_size.y != 0) ? new Glyph[m_size.x * m_size.y] : nullptr)
 {
 	for (size_t i = 0; i < m_size.x * m_size.y; i++) { m_glyphs[i] = glyph; }
 }
 
 ATD::Ansi::Image::Image(const ATD::Ansi::Image &other)
 	: m_size(other.m_size)
-	, m_glyphs(m_size.x * m_size.y ? new Glyph[m_size.x * m_size.y] : nullptr)
+	, m_glyphs((m_size.x * m_size.y != 0) ? new Glyph[m_size.x * m_size.y] : nullptr)
 {
 	for (size_t i = 0; i < m_size.x * m_size.y; i++) {
 		m_glyphs[i] = other.m_glyphs[i];
@@ -380,34 +369,34 @@ ATD::Ansi::Image::Image(const std::string &chars,
 	size_t maxLength = 0;
 
 	Unicode unicode(chars);
-	unsigned char foreground = initFg;
-	unsigned char background = initBg;
+	unsigned char forecolor = initFg;
+	unsigned char backcolor = initBg;
 	uint16_t mode = initMode;
 
-	for (size_t uIndex = 0; uIndex < unicode.Size(); uIndex++) {
-		if (unicode[uIndex] == Unicode("\n").Front()) {
+	for (size_t uIndex = 0; uIndex < unicode.size(); uIndex++) {
+		if (unicode[uIndex] == Unicode("\n").front()) {
 			/* New line */
 			lines.push_back(std::vector<Glyph>());
-		} else if (unicode[uIndex] == Unicode("\033").Front()) {
+		} else if (unicode[uIndex] == Unicode("\033").front()) {
 			/* ANSI sequence */
 			std::string ansi;
 			size_t uIndex2 = uIndex + 1;
 
 			/* Get ANSI string. We search only for style modifying strings, 
 			 * which match expression '[*m' */
-			if (uIndex2 != unicode.Size()) {
-				if (unicode[uIndex2] != Unicode("[").Front()) { continue; }
+			if (uIndex2 != unicode.size()) {
+				if (unicode[uIndex2] != Unicode("[").front()) { continue; }
 			}
-			for (; uIndex2 != unicode.Size(); uIndex2++) {
-				ansi += unicode.Str(uIndex2);
+			for (; uIndex2 != unicode.size(); uIndex2++) {
+				ansi += unicode.str(uIndex2);
 				if (ansi.back() == 'm') { break; }
 			}
 
-			if (uIndex2 != unicode.Size()) {
+			if (uIndex2 != unicode.size()) {
 				uIndex = uIndex2;
 
-				ParseAnsi(ansi, 
-						foreground, background, mode, 
+				_parseAnsi(ansi, 
+						forecolor, backcolor, mode, 
 						initFg, initBg, initMode);
 			}
 		} else {
@@ -416,12 +405,12 @@ ATD::Ansi::Image::Image(const std::string &chars,
 			lines.back().push_back(
 					Glyph(
 						unicode[uIndex], 
-						foreground, 
-						background, 
+						forecolor, 
+						backcolor, 
 						mode
 						)
 					);
-			maxLength = Max<size_t>(maxLength, lines.back().size());
+			maxLength = max<size_t>(maxLength, lines.back().size());
 		}
 	}
 
@@ -437,9 +426,9 @@ ATD::Ansi::Image::Image(const std::string &chars,
 						(iY * m_size.x + iX) ?
 						Glyph(
 							Glyph::UTF8_GLYPH_DEFAULT, 
-							m_glyphs[iY * m_size.x + iX - 1].Foreground(), 
-							m_glyphs[iY * m_size.x + iX - 1].Background(), 
-							m_glyphs[iY * m_size.x + iX - 1].Mode()
+							m_glyphs[iY * m_size.x + iX - 1].forecolor(), 
+							m_glyphs[iY * m_size.x + iX - 1].backcolor(), 
+							m_glyphs[iY * m_size.x + iX - 1].mode()
 							) :
 						Glyph(
 							Glyph::UTF8_GLYPH_DEFAULT, 
@@ -458,11 +447,11 @@ ATD::Ansi::Image::~Image()
 	delete [] m_glyphs;
 }
 
-ATD::Ansi::Glyph ATD::Ansi::Image::GetGlyph(const Vector2L &position, 
+ATD::Ansi::Glyph ATD::Ansi::Image::getGlyph(const Vector2L &position, 
 		bool repeat) const
 {
 	if (repeat) {
-		if ((m_size.x * m_size.y)) {
+		if ((m_size.x * m_size.y != 0)) {
 			Vector2L p(position);
 
 			/* Both non-zero, division acceptable */
@@ -477,20 +466,20 @@ ATD::Ansi::Glyph ATD::Ansi::Image::GetGlyph(const Vector2L &position,
 			return Glyph();
 		}
 	} else {
-		return (RectL(m_size).Contains(position) ? 
+		return (RectL(m_size).contains(position) ? 
 				m_glyphs[position.y * m_size.x + position.x] : 
 				Glyph());
 	}
 }
 
-std::string ATD::Ansi::Image::Str(bool plain) const
+std::string ATD::Ansi::Image::str(bool plain) const
 {
 	std::string result;
 	if (plain) {
 		for (size_t iY = 0; iY < m_size.y; iY++) {
 			for (size_t iX = 0; iX < m_size.x; iX++) {
-				result += Unicode::StrFromGlyph(
-						m_glyphs[iY * m_size.x + iX].GetUnicode());
+				result += Unicode::strFromGlyph(
+						m_glyphs[iY * m_size.x + iX].unicode());
 			}
 			result += (iY + 1 < m_size.y ? "\n" : "");
 		}
@@ -499,7 +488,7 @@ std::string ATD::Ansi::Image::Str(bool plain) const
 			const Glyph *cachedPtr = nullptr;
 			for (size_t iX = 0; iX < m_size.x; iX++) {
 				const Glyph *currPtr = &(m_glyphs[iY * m_size.x + iX]);
-				result += currPtr->StrOptimized(cachedPtr);
+				result += currPtr->strOptimized(cachedPtr);
 				cachedPtr = currPtr;
 			}
 			result += Glyph::STR_RESET + (iY + 1 < m_size.y ? "\n" : "");
@@ -508,7 +497,7 @@ std::string ATD::Ansi::Image::Str(bool plain) const
 	return result;
 }
 
-std::string ATD::Ansi::Image::Str(const ATD::RectL &bounds, 
+std::string ATD::Ansi::Image::str(const ATD::RectL &bounds, 
 		bool repeat, 
 		bool plain) const
 {
@@ -528,8 +517,8 @@ std::string ATD::Ansi::Image::Str(const ATD::RectL &bounds,
 					const long index = (iY % m_size.y) * m_size.x + 
 						(iX % m_size.x);
 
-					result += Unicode::StrFromGlyph(
-							m_glyphs[index].GetUnicode());
+					result += Unicode::strFromGlyph(
+							m_glyphs[index].unicode());
 				}
 				result += (iY + 1 < b.h ? "\n" : "");
 			}
@@ -541,20 +530,20 @@ std::string ATD::Ansi::Image::Str(const ATD::RectL &bounds,
 						(iX % m_size.x);
 
 					const Glyph *currPtr = &(m_glyphs[index]);
-					result += currPtr->StrOptimized(cachedPtr);
+					result += currPtr->strOptimized(cachedPtr);
 					cachedPtr = currPtr;
 				}
 				result += Glyph::STR_RESET + (iY + 1 < b.h ? "\n" : "");
 			}
 		}
 	} else {
-		RectL b(bounds.Clamped(RectL(m_size)));
+		RectL b(bounds.clamped(RectL(m_size)));
 
 		if (plain) {
 			for (long iY = 0; iY < b.h; iY++) {
 				for (long iX = 0; iX < b.w; iX++) {
-					result += Unicode::StrFromGlyph(
-							m_glyphs[iY * m_size.x + iX].GetUnicode());
+					result += Unicode::strFromGlyph(
+							m_glyphs[iY * m_size.x + iX].unicode());
 				}
 				result += (iY + 1 < b.h ? "\n" : "");
 			}
@@ -563,7 +552,7 @@ std::string ATD::Ansi::Image::Str(const ATD::RectL &bounds,
 				const Glyph *cachedPtr = nullptr;
 				for (long iX = 0; iX < b.w; iX++) {
 					const Glyph *currPtr = &(m_glyphs[iY * m_size.x + iX]);
-					result += currPtr->StrOptimized(cachedPtr);
+					result += currPtr->strOptimized(cachedPtr);
 					cachedPtr = currPtr;
 				}
 				result += Glyph::STR_RESET + (iY + 1 < b.h ? "\n" : "");
@@ -571,21 +560,6 @@ std::string ATD::Ansi::Image::Str(const ATD::RectL &bounds,
 		}
 	}
 	return result;
-}
-
-ATD::Vector2S ATD::Ansi::Image::Size() const
-{
-	return m_size;
-}
-
-const ATD::Ansi::Glyph *ATD::Ansi::Image::Data() const
-{
-	return m_glyphs;
-}
-
-ATD::Ansi::Glyph *ATD::Ansi::Image::DataModifyable()
-{
-	return m_glyphs;
 }
 
 bool ATD::Ansi::Image::operator==(const ATD::Ansi::Image &other) const
@@ -602,101 +576,101 @@ bool ATD::Ansi::Image::operator!=(const ATD::Ansi::Image &other) const
 	return !(operator==(other));
 }
 
-void ATD::Ansi::Image::Clear(const ATD::Ansi::Glyph &glyph)
+void ATD::Ansi::Image::clear(const ATD::Ansi::Glyph &glyph)
 {
 	for (size_t iG = 0; iG < m_size.x * m_size.y; iG++) {
 		m_glyphs[iG] = glyph;
 	}
 }
 
-void ATD::Ansi::Image::SetBackground(unsigned char background)
+void ATD::Ansi::Image::setBackcolor(unsigned char backcolor)
 {
 	for (size_t iG = 0; iG < m_size.x * m_size.y; iG++) {
-		m_glyphs[iG].Background(background);
+		m_glyphs[iG].setBackcolor(backcolor);
 	}
 }
 
-void ATD::Ansi::Image::SetForeground(unsigned char foreground)
+void ATD::Ansi::Image::setForecolor(unsigned char forecolor)
 {
 	for (size_t iG = 0; iG < m_size.x * m_size.y; iG++) {
-		m_glyphs[iG].Foreground(foreground);
+		m_glyphs[iG].setForecolor(forecolor);
 	}
 }
 
-void ATD::Ansi::Image::SetMode(uint16_t mode)
+void ATD::Ansi::Image::setMode(uint16_t mode)
 {
 	for (size_t iG = 0; iG < m_size.x * m_size.y; iG++) {
-		m_glyphs[iG].Mode(mode);
+		m_glyphs[iG].setMode(mode);
 	}
 }
 
-void ATD::Ansi::Image::Draw(const ATD::Vector2L &position, 
+void ATD::Ansi::Image::draw(const ATD::Vector2L &position, 
 		const ATD::Ansi::Glyph &glyph)
 {
-	ImageImpl::DrawCell<Glyph>(
+	ImageImpl::drawCell<Glyph>(
 			m_size, m_glyphs, 
 			position, 
 			glyph
 			);
 }
 
-void ATD::Ansi::Image::Draw(const ATD::Vector2L &position, 
+void ATD::Ansi::Image::draw(const ATD::Vector2L &position, 
 		const ATD::Ansi::Image &image, 
 		ATD::Ansi::Image::MixerFunc mixer)
 {
-	ImageImpl::DrawImage<Glyph>(
+	ImageImpl::drawImage<Glyph>(
 			m_size, m_glyphs, 
 			position, 
 			image.m_size, image.m_glyphs, 
 			mixer ? mixer : [this](const Glyph &dst, const Glyph &src) {
-				return this->MixOpacity(dst, src);
+				return this->mixOpacity(dst, src);
 			}
 			);
 }
 
-void ATD::Ansi::Image::Draw(const ATD::Vector2L &position, 
+void ATD::Ansi::Image::draw(const ATD::Vector2L &position, 
 		const ATD::Ansi::Image &image, 
 		const ATD::RectL &bounds, 
 		bool repeat, 
 		ATD::Ansi::Image::MixerFunc mixer)
 {
-	ImageImpl::DrawBounded<Glyph>(
+	ImageImpl::drawBounded<Glyph>(
 			m_size, m_glyphs, 
 			position, 
 			image.m_size, image.m_glyphs, 
 			bounds, 
 			repeat, 
 			mixer ? mixer : [this](const Glyph &dst, const Glyph &src) {
-				return this->MixOpacity(dst, src);
+				return this->mixOpacity(dst, src);
 			}
 			);
 }
 
-void ATD::Ansi::Image::Draw(const ATD::Ansi::Image::Drawable &drawable)
+void ATD::Ansi::Image::draw(const ATD::Ansi::Image::Drawable &drawable)
 {
-	drawable.DrawSelf(*this);
+	drawable.drawSelf(*this);
 }
 
-void ATD::Ansi::Image::Filter(const ATD::Ansi::GlyphMask &checkMask, 
+void ATD::Ansi::Image::filter(const ATD::Ansi::GlyphMask &checkMask, 
 		const ATD::Ansi::GlyphMask &applyMask)
 {
 	for (size_t iG = 0; iG < m_size.x * m_size.y; iG++) {
-		if (checkMask.Check(m_glyphs[iG])) {
-			applyMask.Apply(m_glyphs[iG]);
+		if (checkMask.check(m_glyphs[iG])) {
+			applyMask.apply(m_glyphs[iG]);
 		}
 	}
 }
 
-ATD::Ansi::Glyph ATD::Ansi::Image::MixOpacity(const ATD::Ansi::Glyph &dst, 
+ATD::Ansi::Glyph ATD::Ansi::Image::mixOpacity(const ATD::Ansi::Glyph &dst, 
 		const ATD::Ansi::Glyph &src) const
 {
-	return src.GetUnicode() == Glyph::UTF8_GLYPH_DEFAULT ? dst : src;
+	return src.unicode() == Glyph::UTF8_GLYPH_DEFAULT ? dst : src;
 }
 
 
 /* ATD::Ansi::Screen auxiliary */
 
-static ATD::Vector2S GetTerminalSize()
+static ATD::Vector2S _getTerminalSize()
 {
 	struct winsize sz;
 	int ioctlResult;
@@ -705,7 +679,7 @@ static ATD::Vector2S GetTerminalSize()
 	if ((ioctlResult = ::ioctl(::fileno(stdout), TIOCGWINSZ, &sz)) == -1) {
 		int errnoVal = errno;
 		throw std::runtime_error(
-				ATD::Printf(
+				ATD::Aux::printf(
 					"'ioctl(fileno(stdout), TIOCGWINSZ, ..)' failure: %d %s", 
 					errnoVal, 
 					::strerror(errnoVal)
@@ -725,7 +699,7 @@ static ATD::Vector2S GetTerminalSize()
 ATD::Ansi::Screen::Screen(const ATD::Align &alignX, 
 		const ATD::Align &alignY, 
 		const ATD::Vector2L &offset)
-	: Screen(GetTerminalSize(), alignX, alignY, offset)
+	: Screen(_getTerminalSize(), alignX, alignY, offset)
 {}
 
 ATD::Ansi::Screen::Screen(const ATD::Vector2S &rtSize,  
@@ -746,47 +720,36 @@ ATD::Ansi::Screen::~Screen()
 	}
 }
 
-ATD::RectL ATD::Ansi::Screen::View() const
+ATD::RectL ATD::Ansi::Screen::view() const
 {
-	Vector2S viewSize = GetTerminalSize();
+	Vector2S viewSize = _getTerminalSize();
 	return RectL(
 			m_offset, 
-			static_cast<Vector2L>(Image::Size())
-			).AlignClamped(
+			static_cast<Vector2L>(Image::size())
+			).alignClamped(
 				RectL(viewSize), 
 				m_alignX, 
 				m_alignY
 				);
 }
 
-/* Offset setters/getters */
+/* Field setters */
 
-ATD::Vector2L ATD::Ansi::Screen::Offset() const
-{ return m_offset; }
-
-void ATD::Ansi::Screen::Offset(const ATD::Vector2L &offset)
+void ATD::Ansi::Screen::setOffset(const ATD::Vector2L &offset)
 { m_offset = offset; }
 
-/* Align setters/getters */
-
-ATD::Align ATD::Ansi::Screen::AlignX() const
-{ return m_alignX; }
-
-void ATD::Ansi::Screen::AlignX(const ATD::Align &alignX)
+void ATD::Ansi::Screen::setAlignX(const ATD::Align &alignX)
 { m_alignX = alignX; }
 
-ATD::Align ATD::Ansi::Screen::AlignY() const
-{ return m_alignY; }
-
-void ATD::Ansi::Screen::AlignY(const ATD::Align &alignY)
+void ATD::Ansi::Screen::setAlignY(const ATD::Align &alignY)
 { m_alignY = alignY; }
 
 /* === */
 
-void ATD::Ansi::Screen::Display() const
+void ATD::Ansi::Screen::display() const
 {
-	RectL view = View();
-	std::string display = Image::Str(view);
+	RectL _view = view();
+	std::string display = Image::str(_view);
 
 	/* Delete previously written lines */
 	if (m_linesDisplayed) {
@@ -803,14 +766,14 @@ void ATD::Ansi::Screen::Display() const
 	::fprintf(stdout, "%s", display.c_str());
 	::fflush(stdout);
 
-	m_linesDisplayed = view.h;
+	m_linesDisplayed = _view.h;
 }
 
-ATD::Ansi::Glyph ATD::Ansi::Screen::MixOpacity(const ATD::Ansi::Glyph &dst, 
+ATD::Ansi::Glyph ATD::Ansi::Screen::mixOpacity(const ATD::Ansi::Glyph &dst, 
 		const ATD::Ansi::Glyph &src) const
 {
-	return (src.GetUnicode() == Glyph::UTF8_GLYPH_DEFAULT) ? 
-		((dst.GetUnicode() == Glyph::UTF8_GLYPH_DEFAULT) ? src : dst) : src;
+	return (src.unicode() == Glyph::UTF8_GLYPH_DEFAULT) ? 
+		((dst.unicode() == Glyph::UTF8_GLYPH_DEFAULT) ? src : dst) : src;
 }
 
 

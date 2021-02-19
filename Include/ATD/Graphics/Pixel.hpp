@@ -1,5 +1,10 @@
 /**
- * TODO: Add hat */
+ * @file      
+ * @brief     Pixel manipulation.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -9,7 +14,8 @@
 namespace ATD {
 
 /**
- * @brief Pixel of image */
+ * @brief Pixel of image
+ * @class ... */
 class Pixel
 {
 public:
@@ -42,20 +48,31 @@ public:
 		, a(n_a) 
 	{}
 
+	/**
+	 * @brief ...
+	 * @param other - ... */
 	inline Pixel(const Pixel &other)
 		: Pixel(other.value)
 	{}
 
 	/**
-	 * @brief ... */
+	 * @brief ...
+	 * @param other - ...
+	 * @return ... */
 	inline bool operator==(const Pixel &other) const
 	{ return value == other.value; }
 
 	/**
-	 * @brief ... */
+	 * @brief ...
+	 * @param other - ...
+	 * @return ... */
 	inline bool operator!=(const Pixel &other) const
 	{ return value != other.value; }
 
+	/**
+	 * @brief ...
+	 * @param other - ...
+	 * @return ... */
 	inline Pixel &operator=(const Pixel &other)
 	{
 		value = other.value;
@@ -67,7 +84,7 @@ public:
 	 * @return ...
 	 *
 	 * Suitable for OpenGL. */
-	inline Vector4F GlColor() const
+	inline Vector4F glColor() const
 	{
 		return Vector4F(static_cast<float>(r) / 255.f, 
 				static_cast<float>(g) / 255.f, 
@@ -80,7 +97,7 @@ public:
 	 * @return ...
 	 *
 	 * Suitable for OpenGL. */
-	inline Vector3F GlColor3() const
+	inline Vector3F glColor3() const
 	{
 		return Vector3F(static_cast<float>(r) / 255.f, 
 				static_cast<float>(g) / 255.f, 

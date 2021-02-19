@@ -24,12 +24,12 @@ int main(int argc, char** argv)
 
 	{
 		ATD::AutoTest tester("forced PASS test:");
-		tester.Finish(true);
+		tester.finish(true);
 	}
 
 	{
 		ATD::AutoTest tester("forced FAIL test:");
-		tester.Finish(false);
+		tester.finish(false);
 	}
 
 	{

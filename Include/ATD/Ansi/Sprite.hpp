@@ -39,7 +39,10 @@ public:
 			double scale = 1., 
 			bool repeat = false);
 
-	virtual void DrawSelf(Image &target) const override;
+	/**
+	 * @brief ...
+	 * @param target - ... */
+	virtual void drawSelf(Image &target) const override;
 
 private:
 	Image::CPtr m_texture;
@@ -50,7 +53,7 @@ private:
 	bool m_repeat;
 };
 
-} /* namespace Con */
+} /* namespace Ansi */
 
 } /* namespace ATD */
 

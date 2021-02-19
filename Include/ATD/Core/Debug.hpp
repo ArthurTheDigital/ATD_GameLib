@@ -1,10 +1,10 @@
 /**
-* @file     
-* @brief     Debug class for debug + macros.
-* @details   ...
-* @author    ArthurTheDigital (arthurthedigital@gmail.com)
-* @copyright GPL v3.
-* @since     $Id: $ */
+ * @file      
+ * @brief     Debug class for debug + macros.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -95,7 +95,7 @@ public:
 	 *
 	 * Example:
 	 * 1. I need to print debug to file.log - 
-	 * I create "class LogWriter : public Debug::Observer", Attach() it. 
+	 * I create "class LogWriter : public Debug::Observer", attach() it. 
 	 * It gets the Line structure, formats it into a string and writes it.
 	 *
 	 * 2. Now I need a class "AutoTest : public Debug::Observer" , which stacks 
@@ -139,13 +139,13 @@ public:
 		 * @param level - max debug level to be tracked
 		 * @param tags  - a set of tags to track, lines not having common tags 
 		 *                are ignored, empty tags allows all lines */
-		void Attach(Debug *debug, 
+		void attach(Debug *debug, 
 				Level level = Level::DBGA, 
 				const Tag::Expression &tagExp = Tag::Expression());
 
 		/**
 		 * @brief ... */
-		void Detach();
+		void detach();
 
 		/**
 		 * @brief On notify callback - what to do when a new line obtained
@@ -153,7 +153,7 @@ public:
 		 * No need to check level/tags inside, as they are already checked before
 		 *
 		 * @param line - the debug line with meta information */
-		virtual void OnNotify(const Line &line) = 0;
+		virtual void onNotify(const Line &line) = 0;
 
 	private:
 		Debug *m_debug;
@@ -209,7 +209,7 @@ public:
 	 *
 	 * Be careful with C-formatted arguments. You can easily shoot your leg 
 	 * with SEGFAULT. */
-	void Printf(const char *file, 
+	void printf(const char *file, 
 			unsigned lnNumber, 
 			const char *function, 
 			Level level, 
@@ -223,8 +223,8 @@ private:
 	ObserverMap m_observers;
 	mutable std::recursive_mutex m_lock;
 
-friend void Observer::Attach(Debug *, Level, const Tag::Expression &);
-friend void Observer::Detach();
+friend void Observer::attach(Debug *, Level, const Tag::Expression &);
+friend void Observer::detach();
 };
 
 extern Debug debug;
@@ -235,7 +235,7 @@ extern Debug debug;
 #define DPRINTFx(level, tag, format, args...) \
 	do { \
 		if (level <= ATD::Debug::LEVEL) { \
-			ATD::debug.Printf( \
+			ATD::debug.printf( \
 					__FILE__, \
 					__LINE__, \
 					__PRETTY_FUNCTION__, \

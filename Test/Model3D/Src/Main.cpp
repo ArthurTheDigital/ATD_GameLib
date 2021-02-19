@@ -4,6 +4,7 @@
 
 #include <ATD/Core/Debug.hpp>
 #include <ATD/Core/ErrWriter.hpp>
+#include <ATD/Core/Fs.hpp>
 #include <ATD/Core/Vector2.hpp>
 #include <ATD/Core/Vector3.hpp>
 #include <ATD/Graphics/Shader.hpp>
@@ -35,9 +36,9 @@ int main(int argc, char **argv)
 		ATD::Keyboard kb(&win);
 
 		ATD::Image textureImg;
-		ATD::Fs::Path textureFilePath = fs.BinDir().Joined(
+		ATD::Fs::Path textureFilePath = fs.binDir().joined(
 				ATD::Fs::Path("Dice-6-0001.png"));
-		textureImg.Load(textureFilePath);
+		textureImg.load(textureFilePath);
 
 		Model model(textureImg);
 		Camera cam;
@@ -46,59 +47,59 @@ int main(int argc, char **argv)
 		while (1) {
 			std::chrono::time_point<std::chrono::steady_clock> timeStart = 
 				std::chrono::steady_clock::now();
-			win.Poll();
+			win.poll();
 
 			/* Camera: */
 
 			{
 				ATD::Vector3D center(0., 0., 5.);
 
-				if (kb.IsPressed(ATD::Key::W)) {
-					cam.RotateAround(ATD::Vector2D(ANGULAR_VELOCITY_FRC, 0.), 
+				if (kb.isPressed(ATD::Key::W)) {
+					cam.rotateAround(ATD::Vector2D(ANGULAR_VELOCITY_FRC, 0.), 
 							center);
 				}
-				if (kb.IsPressed(ATD::Key::S)) {
-					cam.RotateAround(ATD::Vector2D(-ANGULAR_VELOCITY_FRC, 0.), 
+				if (kb.isPressed(ATD::Key::S)) {
+					cam.rotateAround(ATD::Vector2D(-ANGULAR_VELOCITY_FRC, 0.), 
 							center);
 				}
-				if (kb.IsPressed(ATD::Key::A)) {
-					cam.RotateAround(ATD::Vector2D(0., -ANGULAR_VELOCITY_FRC), 
+				if (kb.isPressed(ATD::Key::A)) {
+					cam.rotateAround(ATD::Vector2D(0., -ANGULAR_VELOCITY_FRC), 
 							center);
 				}
-				if (kb.IsPressed(ATD::Key::D)) {
-					cam.RotateAround(ATD::Vector2D(0., ANGULAR_VELOCITY_FRC), 
+				if (kb.isPressed(ATD::Key::D)) {
+					cam.rotateAround(ATD::Vector2D(0., ANGULAR_VELOCITY_FRC), 
 							center);
 				}
 
-				if (kb.IsPressed(ATD::Key::Q)) {
-					cam.ChangeDistance(-RADIAL_VELOCITY, center);
+				if (kb.isPressed(ATD::Key::Q)) {
+					cam.changeDistance(-RADIAL_VELOCITY, center);
 				}
-				if (kb.IsPressed(ATD::Key::E)) {
-					cam.ChangeDistance(RADIAL_VELOCITY, center);
+				if (kb.isPressed(ATD::Key::E)) {
+					cam.changeDistance(RADIAL_VELOCITY, center);
 				}
 
-				win.SetProjection3D(cam.GetProjection());
+				win.setProjection3D(cam.getProjection());
 			}
 
 			/* Rendering: */
 
-			win.Clear();
-			win.Draw(model);
-			win.Display();
+			win.clear();
+			win.draw(model);
+			win.display();
 
 			/* Screenshot: */
 
-			if (kb[ATD::Key::P].IsHeldStart()) {
-				ATD::Texture::CPtr winColorTexture = win.GetColorTexture();
-				ATD::Image::Ptr screenshot = winColorTexture->GetImage();
-				ATD::Fs::Path screenshotFilePath = fs.BinDir().Joined(
+			if (kb[ATD::Key::P].isHeldStart()) {
+				ATD::Texture::CPtr winColorTexture = win.getColorTexture();
+				ATD::Image::Ptr screenshot = winColorTexture->getImage();
+				ATD::Fs::Path screenshotFilePath = fs.binDir().joined(
 						ATD::Fs::Path("Screenshot.png"));
 
-				if (screenshotFilePath.Exists()) {
-					screenshotFilePath.Unlink();
+				if (screenshotFilePath.exists()) {
+					screenshotFilePath.unlink();
 				}
 
-				screenshot->Save(screenshotFilePath);
+				screenshot->save(screenshotFilePath);
 			}
 
 			/* Timing: */

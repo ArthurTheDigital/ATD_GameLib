@@ -1,5 +1,10 @@
 /**
- * TODO: Add hat. */
+ * @file      
+ * @brief     Loadable interface.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -24,35 +29,35 @@ public:
 
 	~Loadable();
 
-	void Load(const Fs::Path &filename);
+	void load(const Fs::Path &filename);
 
-	void Save(const Fs::Path &filename) const;
+	void save(const Fs::Path &filename) const;
 
-	const DependencyTable &GetDependencyTable() const;
+	const DependencyTable &getDependencyTable() const;
 
 protected:
 	/* Should be called from the constructor of the derived class. */
-	void AddDependency(Loadable *dependency);
+	void addDependency(Loadable *dependency);
 
 	/* Should be called from OnLoad(..) method of the derived class. */
-	void SetDependencyPath(Loadable *dependency, const Fs::Path &filename);
+	void setDependencyPath(Loadable *dependency, const Fs::Path &filename);
 
 	/* I use to call this inside OnSave() method. */
-	const Fs::Path &GetDependencyPath(Loadable *dependency) const;
+	const Fs::Path &getDependencyPath(Loadable *dependency) const;
 
 	/* Should be called every time, the derived class is modified. */
-	void SetChanged();
+	void setChanged();
 
-	virtual void OnLoad(const Fs::Path &filename) = 0;
+	virtual void onLoad(const Fs::Path &filename) = 0;
 
-	virtual void OnLoadFinished();
+	virtual void onLoadFinished();
 
-	virtual void OnSave(const Fs::Path &filename) const = 0;
+	virtual void onSave(const Fs::Path &filename) const = 0;
 
-	virtual void OnSaveFinished() const;
+	virtual void onSaveFinished() const;
 
 private:
-	void CheckDependencyTable() const;
+	void checkDependencyTable() const;
 
 
 	DependencyTable m_dependencyTable;

@@ -1,4 +1,10 @@
-
+/**
+ * @file      
+ * @brief     Matrix4 template and classes.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -42,35 +48,35 @@ public:
 
 	inline Matrix4<T> operator*(const Matrix4<T> &mLeft) const
 	{
-		std::array<Vector4<T>, 4> rRows = GetRows();
-		std::array<Vector4<T>, 4> lCols = mLeft.GetCols();
+		std::array<Vector4<T>, 4> rRows = rows();
+		std::array<Vector4<T>, 4> lCols = mLeft.cols();
 
 		return Matrix4<T>(
 				std::array<T, 16>{{
-						rRows[0].Dot(lCols[0]), rRows[0].Dot(lCols[1]), 
-						rRows[0].Dot(lCols[2]), rRows[0].Dot(lCols[3]), 
+						rRows[0].dot(lCols[0]), rRows[0].dot(lCols[1]), 
+						rRows[0].dot(lCols[2]), rRows[0].dot(lCols[3]), 
 
-						rRows[1].Dot(lCols[0]), rRows[1].Dot(lCols[1]), 
-						rRows[1].Dot(lCols[2]), rRows[1].Dot(lCols[3]), 
+						rRows[1].dot(lCols[0]), rRows[1].dot(lCols[1]), 
+						rRows[1].dot(lCols[2]), rRows[1].dot(lCols[3]), 
 
-						rRows[2].Dot(lCols[0]), rRows[2].Dot(lCols[1]), 
-						rRows[2].Dot(lCols[2]), rRows[2].Dot(lCols[3]), 
+						rRows[2].dot(lCols[0]), rRows[2].dot(lCols[1]), 
+						rRows[2].dot(lCols[2]), rRows[2].dot(lCols[3]), 
 
-						rRows[3].Dot(lCols[0]), rRows[3].Dot(lCols[1]), 
-						rRows[3].Dot(lCols[2]), rRows[3].Dot(lCols[3])
+						rRows[3].dot(lCols[0]), rRows[3].dot(lCols[1]), 
+						rRows[3].dot(lCols[2]), rRows[3].dot(lCols[3])
 					}}
 				);
 	}
 
 	inline Vector4<T> operator*(const Vector4<T> &v) const
 	{
-		std::array<Vector4<T>, 4> rRows = GetRows();
+		std::array<Vector4<T>, 4> rRows = rows();
 
 		return Vector4<T>(
-				rRows[0].Dot(v), 
-				rRows[1].Dot(v), 
-				rRows[2].Dot(v), 
-				rRows[3].Dot(v)
+				rRows[0].dot(v), 
+				rRows[1].dot(v), 
+				rRows[2].dot(v), 
+				rRows[3].dot(v)
 				);
 	}
 
@@ -84,7 +90,7 @@ private:
 		}}
 	{}
 
-	inline std::array<Vector4<T>, 4> GetRows() const
+	inline std::array<Vector4<T>, 4> rows() const
 	{
 		return std::array<Vector4<T>, 4>{{
 			Vector4<T>((*this)[0][0], (*this)[0][1], (*this)[0][2], 
@@ -98,7 +104,7 @@ private:
 		}};
 	}
 
-	inline std::array<Vector4<T>, 4> GetCols() const
+	inline std::array<Vector4<T>, 4> cols() const
 	{
 		return std::array<Vector4<T>, 4>{{
 			Vector4<T>((*this)[0][0], (*this)[1][0], (*this)[2][0], 

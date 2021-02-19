@@ -1,9 +1,10 @@
 /**
- * @file     
- * @brief    Encode wraps.
- * @details  License: GPL v3.
- * @author   ArthurTheDigital (arthurthedigital@gmail.com)
- * @since    $Id: $ */
+ * @file      
+ * @brief     Encode wraps.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -43,12 +44,12 @@ public:
 	/**
 	 * @brief ...
 	 * @return modifyed string */
-	std::string Str() const;
+	std::string str() const;
 
 	/**
 	 * @brief ...
 	 * @return unmodifyed string */
-	std::string Raw() const;
+	std::string raw() const;
 
 private:
 	std::string m_str;
@@ -76,12 +77,12 @@ public:
 	/**
 	 * @brief ...
 	 * @return modifyed string */
-	std::string Str() const;
+	std::string str() const;
 
 	/**
 	 * @brief ...
 	 * @return unmodifyed string */
-	std::string Raw() const;
+	std::string raw() const;
 
 private:
 	std::string m_str;
@@ -106,12 +107,12 @@ public:
 	/**
 	 * @brief ...
 	 * @return modifyed string */
-	std::string Str() const;
+	std::string str() const;
 
 	/**
 	 * @brief ...
 	 * @return unmodifyed string */
-	std::string Raw() const;
+	std::string raw() const;
 
 private:
 	std::string m_str;

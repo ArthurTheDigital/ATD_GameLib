@@ -1,11 +1,10 @@
 
 
-#include "Sprite.hpp"
-
 #include <ATD/Core/Debug.hpp>
 #include <ATD/Core/ErrWriter.hpp>
 #include <ATD/Core/Fs.hpp>
 #include <ATD/Graphics/Gl.hpp>
+#include <ATD/Graphics/Sprite.hpp>
 #include <ATD/Window/Keyboard.hpp>
 #include <ATD/Window/Window.hpp>
 
@@ -29,41 +28,48 @@ int main(int argc, char **argv)
 		ATD::Keyboard kb(&win);
 
 		ATD::Image img;
-		img.Load(fs.BinDir().Joined(ATD::Fs::Path("TestTexture-0001.png")));
-		Sprite spr(img);
+		img.load(fs.binDir().joined(ATD::Fs::Path("TestTexture-0001.png")));
+
+		ATD::Sprite spr(ATD::Texture::CPtr(new ATD::Texture(img)));
 
 		while (1) {
 			std::chrono::time_point<std::chrono::steady_clock> timeStart = 
 				std::chrono::steady_clock::now();
-			win.Poll();
+			win.poll();
 
 			{ /* Update the model. */
-				if (kb[ATD::Key::UP].IsPressed()) {
-					spr.Shift(ATD::Vector2D(0., -SHIFT_STEP));
+				ATD::Vector2D deltaOffset;
+				if (kb[ATD::Key::UP].isPressed()) {
+					deltaOffset += ATD::Vector2D(0., -SHIFT_STEP);
 				}
-				if (kb[ATD::Key::DOWN].IsPressed()) {
-					spr.Shift(ATD::Vector2D(0., SHIFT_STEP));
+				if (kb[ATD::Key::DOWN].isPressed()) {
+					deltaOffset += ATD::Vector2D(0., SHIFT_STEP);
 				}
-				if (kb[ATD::Key::LEFT].IsPressed()) {
-					spr.Shift(ATD::Vector2D(-SHIFT_STEP, 0.));
+				if (kb[ATD::Key::LEFT].isPressed()) {
+					deltaOffset += ATD::Vector2D(-SHIFT_STEP, 0.);
 				}
-				if (kb[ATD::Key::RIGHT].IsPressed()) {
-					spr.Shift(ATD::Vector2D(SHIFT_STEP, 0.));
+				if (kb[ATD::Key::RIGHT].isPressed()) {
+					deltaOffset += ATD::Vector2D(SHIFT_STEP, 0.);
 				}
 
-				if (kb[ATD::Key::Q].IsPressed()) {
-					spr.RotateCw(ROTATE_STEP_FRC);
+				double deltaAngleFrc = 0.;
+				if (kb[ATD::Key::Q].isPressed()) {
+					deltaAngleFrc += ROTATE_STEP_FRC;
 				}
-				if (kb[ATD::Key::W].IsPressed()) {
-					spr.RotateCw(-ROTATE_STEP_FRC);
+				if (kb[ATD::Key::W].isPressed()) {
+					deltaAngleFrc -= ROTATE_STEP_FRC;
 				}
+
+				const ATD::Transform2D transform = spr.transform();
+				spr.setOffset(transform.offset() + deltaOffset);
+				spr.setAngleFrc(transform.angleFrc() + deltaAngleFrc);
 			}
 
-			win.Clear();
+			win.clear();
 
-			win.Draw(spr);
+			win.draw(spr);
 
-			win.Display();
+			win.display();
 
 			std::chrono::time_point<std::chrono::steady_clock> timeEnd = 
 				std::chrono::steady_clock::now();

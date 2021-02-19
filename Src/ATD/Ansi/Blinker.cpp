@@ -23,16 +23,16 @@ ATD::Ansi::Blinker &ATD::Ansi::Blinker::operator=(const ATD::Ansi::Blinker &othe
 	return *this;
 }
 
-void ATD::Ansi::Blinker::SetPosition(const ATD::Vector2L &position)
+void ATD::Ansi::Blinker::setPosition(const ATD::Vector2L &position)
 { m_position = position; }
 
-void ATD::Ansi::Blinker::Reset() const
+void ATD::Ansi::Blinker::reset() const
 { m_ticksCount = 0; }
 
-void ATD::Ansi::Blinker::Update(size_t ticksDelta) const
+void ATD::Ansi::Blinker::update(size_t ticksDelta) const
 { m_ticksCount += ticksDelta; }
 
-void ATD::Ansi::Blinker::DrawSelf(ATD::Ansi::Image &target) const
+void ATD::Ansi::Blinker::drawSelf(ATD::Ansi::Image &target) const
 {
 	if (m_ticksCount / m_ticks % 2 == 1) {
 		m_ticksCount %= m_ticks;

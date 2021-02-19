@@ -1,8 +1,10 @@
 /**
- * 
- *
- *
- * */
+ * @file      
+ * @brief     Keyboard implementation.
+ * @details   ...
+ * @author    ArthurTheDigital (arthurthedigital@gmail.com)
+ * @copyright GPL v3.
+ * @since     $Id: $ */
 
 #pragma once
 
@@ -18,6 +20,8 @@ namespace ATD {
 
 namespace Key
 {
+	/**
+	 * @brief ... */
 	enum Code
 	{
 		/* English letters: */
@@ -52,6 +56,8 @@ namespace Key
 		COUNT
 	};
 
+	/**
+	 * @brief ... */
 	enum Collective
 	{
 		SHIFT = static_cast<unsigned>(COUNT) + 1, 
@@ -69,44 +75,83 @@ namespace Key
 }
 
 
+/**
+ * @brief ...
+ * @class ... */
 class Keyboard : public Window::Observer
 {
 public:
+	/**
+	 * @brief ...
+	 * @class ... */
 	class Event : public Window::Event
 	{
 	public:
+		/**
+		 * @brief ...
+		 * @param n_type    - ...
+		 * @param n_keyCode - ... */
 		inline Event(
 				const Window::Event::Type &n_type = Window::Event::INVALID, 
 				const Key::Code &n_keyCode = Key::INVALID)
 			: Window::Event(n_type)
-		{ KeyCode() = n_keyCode; }
+		{ keyCode() = n_keyCode; }
 
+		/**
+		 * @brief ...
+		 * @param other - ... */
 		inline Event(const Event &other)
-			: Event(other.type, other.KeyCode())
+			: Event(other.type, other.keyCode())
 		{}
 
-		inline Key::Code &KeyCode()
+		/**
+		 * @brief ...
+		 * @return ... */
+		inline Key::Code &keyCode()
 		{ return (*reinterpret_cast<Key::Code *>(&data[0])); }
 
-		inline const Key::Code &KeyCode() const
+		/**
+		 * @brief ...
+		 * @return ... */
+		inline const Key::Code &keyCode() const
 		{ return (*reinterpret_cast<const Key::Code *>(&data[0])); }
 	};
 
 
+	/**
+	 * @brief ...
+	 * @param window - ... */
 	Keyboard(Window *window);
 
 	/**
 	 * @brief ...
 	 * @param pressed - key code actually pressed
 	 * @param read    - key code read by game */
-	void Remap(const Key::Code &pressed, const Key::Code &read);
+	void remap(const Key::Code &pressed, const Key::Code &read);
 
-	const KeyState &operator[](const Key::Code &code) const;
+	/**
+	 * @brief ...
+	 * @param code - ...
+	 * @return ... */
+	inline const KeyState &operator[](const Key::Code &code) const
+	{ return m_keyStates.at(code); }
 
-	bool IsPressed(const Key::Code &code) const;
-	bool IsPressed(const Key::Collective &code) const;
+	/**
+	 * @brief ...
+	 * @param code - ...
+	 * @return ... */
+	inline bool isPressed(const Key::Code &code) const
+	{ return m_keyStates.at(code).isPressed(); }
 
-	virtual void OnPollStart() override;
+	/**
+	 * @brief ...
+	 * @param code - ...
+	 * @return ... */
+	bool isPressed(const Key::Collective &code) const;
+
+	/**
+	 * @brief ... */
+	virtual void onPollStart() override;
 
 	/**
 	 * @brief ...
@@ -114,7 +159,7 @@ public:
 	 *
 	 * event.type is already supposed to be checked by Window, calling this 
 	 * method, no additional check needed. */
-	virtual void OnNotify(const Window::Event &event) override;
+	virtual void onNotify(const Window::Event &event) override;
 
 
 private:
@@ -124,6 +169,6 @@ private:
 	std::map<Key::Code, Key::Code> m_remap;
 };
 
-}
+} /* namespace ATD */
 
 

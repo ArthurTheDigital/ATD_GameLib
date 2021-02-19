@@ -18,24 +18,24 @@ ATD::VertexBuffer2D::Usage::Usage(const ATD::VertexBuffer2D &buffer)
 	: m_prevBuffer(0)
 	, m_activated(false)
 {
-	gl._GetIntegerv(Gl::ARRAY_BUFFER_BINDING, 
+	gl.getIntegerv(Gl::ARRAY_BUFFER_BINDING, 
 			reinterpret_cast<Gl::Int *>(&m_prevBuffer));
 
-	if (m_prevBuffer != buffer.GetGlId()) {
-		gl._BindBuffer(Gl::ARRAY_BUFFER, buffer.GetGlId());
+	if (m_prevBuffer != buffer.glId()) {
+		gl.bindBuffer(Gl::ARRAY_BUFFER, buffer.glId());
 		m_activated = true;
 	}
 }
 
 ATD::VertexBuffer2D::Usage::~Usage()
 {
-	if (m_activated) { gl._BindBuffer(Gl::ARRAY_BUFFER, m_prevBuffer); }
+	if (m_activated) { gl.bindBuffer(Gl::ARRAY_BUFFER, m_prevBuffer); }
 }
 
 
 /* ATD::VertexBuffer2D aux: */
 
-const std::vector<ATD::Vertex2D::GlVertex> _DFT_GL_VERTICES_VALS = {
+static const std::vector<ATD::Vertex2D::GlVertex> _DFT_GL_VERTICES_VALS = {
 	ATD::Vertex2D::GlVertex(ATD::Vector2F(-1.f,  1.f), 
 			ATD::Vector2F(0.f, 0.f), 
 			ATD::Vector4F(1.f, 1.f, 1.f, 1.f)), /* #0 */
@@ -50,7 +50,7 @@ const std::vector<ATD::Vertex2D::GlVertex> _DFT_GL_VERTICES_VALS = {
 			ATD::Vector4F(1.f, 1.f, 1.f, 1.f))  /* #3 */
 };
 
-const std::vector<ATD::Vertex2D::GlVertex> _DFT_GL_VERTICES = {
+static const std::vector<ATD::Vertex2D::GlVertex> _DFT_GL_VERTICES = {
 	_DFT_GL_VERTICES_VALS[3], 
 	_DFT_GL_VERTICES_VALS[0], 
 	_DFT_GL_VERTICES_VALS[2], 
@@ -60,24 +60,24 @@ const std::vector<ATD::Vertex2D::GlVertex> _DFT_GL_VERTICES = {
 	_DFT_GL_VERTICES_VALS[0]
 };
 
-std::vector<ATD::Vertex2D> DftVerticesFromRect(
+static std::vector<ATD::Vertex2D> _dftVerticesFromRect(
 		const ATD::RectL &textureBounds, 
 		const ATD::Pixel &color)
 {
 	const std::vector<ATD::Vertex2D> verticesVals = {
 		ATD::Vertex2D(ATD::Vector2D(0., 0.), 
-				textureBounds.Pos(), 
+				textureBounds.pos(), 
 				color), 
 		ATD::Vertex2D(
-				ATD::Vector2D(static_cast<double>(textureBounds.Size().x), 0.), 
-				textureBounds.Pos() + ATD::Vector2L(textureBounds.Size().x, 0), 
+				ATD::Vector2D(static_cast<double>(textureBounds.size().x), 0.), 
+				textureBounds.pos() + ATD::Vector2L(textureBounds.size().x, 0), 
 				color), 
-		ATD::Vertex2D(static_cast<ATD::Vector2D>(textureBounds.Size()), 
-				textureBounds.Pos() + textureBounds.Size(), 
+		ATD::Vertex2D(static_cast<ATD::Vector2D>(textureBounds.size()), 
+				textureBounds.pos() + textureBounds.size(), 
 				color), 
 		ATD::Vertex2D(
-				ATD::Vector2D(0., static_cast<double>(textureBounds.Size().y)), 
-				textureBounds.Pos() + ATD::Vector2L(0, textureBounds.Size().y), 
+				ATD::Vector2D(0., static_cast<double>(textureBounds.size().y)), 
+				textureBounds.pos() + ATD::Vector2L(0, textureBounds.size().y), 
 				color)
 	};
 
@@ -104,7 +104,7 @@ ATD::VertexBuffer2D::VertexBuffer2D()
 ATD::VertexBuffer2D::VertexBuffer2D(const ATD::RectL &textureBounds, 
 		const ATD::Vector2S &textureSize, 
 		const ATD::Pixel &color)
-	: VertexBuffer2D(DftVerticesFromRect(textureBounds, color), textureSize)
+	: VertexBuffer2D(_dftVerticesFromRect(textureBounds, color), textureSize)
 {}
 
 ATD::VertexBuffer2D::VertexBuffer2D(
@@ -119,19 +119,19 @@ ATD::VertexBuffer2D::VertexBuffer2D(
 
 	std::vector<Vertex2D::GlVertex> glVertices;
 	for (auto &vertex : vertices) {
-		Vertex2D::GlVertex glVertex = vertex.GetGlVertex(textureSize);
+		Vertex2D::GlVertex glVertex = vertex.glVertex(textureSize);
 		glVertices.push_back(glVertex);
 
-		/* verticesStr += Printf(" {pos: %f %f, tex: %f %f}", 
+		/* verticesStr += Aux::printf(" {pos: %f %f, tex: %f %f}", 
 				glVertex.position.x, glVertex.position.y, 
 				glVertex.texCoords.x, glVertex.texCoords.y); // DEBUG */
 	}
 
 	/* IPRINTF("", "GL vertices:%s", verticesStr.c_str()); // DEBUG */
 
-	gl._GenBuffers(1, &m_bufferId);
+	gl.genBuffers(1, &m_bufferId);
 	Usage use(*this);
-	gl._BufferData(Gl::ARRAY_BUFFER, sizeof(Vertex2D::GlVertex) * m_size,
+	gl.bufferData(Gl::ARRAY_BUFFER, sizeof(Vertex2D::GlVertex) * m_size,
 			glVertices.data(), Gl::STATIC_DRAW);
 }
 
@@ -142,42 +142,33 @@ ATD::VertexBuffer2D::VertexBuffer2D(
 	, m_size(glVertices.size())
 	, m_primitive(primitive)
 {
-	gl._GenBuffers(1, &m_bufferId);
+	gl.genBuffers(1, &m_bufferId);
 	Usage use(*this);
-	gl._BufferData(Gl::ARRAY_BUFFER, sizeof(Vertex2D::GlVertex) * m_size,
+	gl.bufferData(Gl::ARRAY_BUFFER, sizeof(Vertex2D::GlVertex) * m_size,
 			glVertices.data(), Gl::STATIC_DRAW);
 }
 
 ATD::VertexBuffer2D::~VertexBuffer2D()
 {
-	gl._DeleteBuffers(1, &m_bufferId);
+	gl.deleteBuffers(1, &m_bufferId);
 }
 
-ATD::Gl::Uint ATD::VertexBuffer2D::GetGlId() const
-{ return m_bufferId; }
-
-size_t ATD::VertexBuffer2D::Size() const
-{ return m_size; }
-
-ATD::VertexBuffer2D::Primitive ATD::VertexBuffer2D::GetPrimitive() const
-{ return m_primitive; }
-
-void ATD::VertexBuffer2D::DrawSelfInternal(
+void ATD::VertexBuffer2D::drawSelfInternal(
 		const ATD::VertexBuffer2D::AttrIndices &attrIndices) const
 {
-	gl._EnableVertexAttribArray(attrIndices.positionIndex);
+	gl.enableVertexAttribArray(attrIndices.positionIndex);
 	if (attrIndices.texCoordsAreRequired) {
-		gl._EnableVertexAttribArray(attrIndices.texCoordsIndex);
+		gl.enableVertexAttribArray(attrIndices.texCoordsIndex);
 	}
 	if (attrIndices.colorIsRequired) {
-		gl._EnableVertexAttribArray(attrIndices.colorIndex);
+		gl.enableVertexAttribArray(attrIndices.colorIndex);
 	}
 
 	{
 		Usage useVBuffer(*this);
 
 		/* position is set unconditionally */
-		gl._VertexAttribPointer(attrIndices.positionIndex, 
+		gl.vertexAttribPointer(attrIndices.positionIndex, 
 				static_cast<Gl::Int>(sizeof(Vector2F) / sizeof(float)), 
 				Gl::FLOAT, 
 				Gl::FALSE, 
@@ -186,7 +177,7 @@ void ATD::VertexBuffer2D::DrawSelfInternal(
 	
 		/* texCoords are set optionally */
 		if (attrIndices.texCoordsAreRequired) {
-			gl._VertexAttribPointer(attrIndices.texCoordsIndex, 
+			gl.vertexAttribPointer(attrIndices.texCoordsIndex, 
 					static_cast<Gl::Int>(sizeof(Vector2F) / sizeof(float)), 
 					Gl::FLOAT, 
 					Gl::FALSE, 
@@ -196,7 +187,7 @@ void ATD::VertexBuffer2D::DrawSelfInternal(
 	
 		/* color is set optionally */
 		if (attrIndices.colorIsRequired) {
-			gl._VertexAttribPointer(attrIndices.colorIndex, 
+			gl.vertexAttribPointer(attrIndices.colorIndex, 
 					static_cast<Gl::Int>(sizeof(Vector4F) / sizeof(float)), 
 					Gl::FLOAT, 
 					Gl::FALSE, 
@@ -210,16 +201,16 @@ void ATD::VertexBuffer2D::DrawSelfInternal(
 			m_primitive == TRIANGLE_STRIP ? Gl::TRIANGLE_STRIP : 
 			Gl::TRIANGLE_FAN;
 
-		gl._DrawArrays(primitive, 0, static_cast<Gl::Sizei>(m_size));
+		gl.drawArrays(primitive, 0, static_cast<Gl::Sizei>(m_size));
 	}
 
 	if (attrIndices.colorIsRequired) {
-		gl._DisableVertexAttribArray(attrIndices.colorIndex);
+		gl.disableVertexAttribArray(attrIndices.colorIndex);
 	}
 	if (attrIndices.texCoordsAreRequired) {
-		gl._DisableVertexAttribArray(attrIndices.texCoordsIndex);
+		gl.disableVertexAttribArray(attrIndices.texCoordsIndex);
 	}
-	gl._DisableVertexAttribArray(attrIndices.positionIndex);
+	gl.disableVertexAttribArray(attrIndices.positionIndex);
 }
 
 

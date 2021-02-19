@@ -13,6 +13,9 @@
 
 namespace ATD {
 
+/**
+ * @brief ...
+ * @class ... */
 class Gl
 {
 public:
@@ -52,9 +55,9 @@ public:
 	static const Enum INT;
 	static const Enum UNSIGNED_INT;
 	static const Enum FLOAT;
-	static const Enum _2_BYTES;
-	static const Enum _3_BYTES;
-	static const Enum _4_BYTES;
+	static const Enum M_2_BYTES;
+	static const Enum M_3_BYTES;
+	static const Enum M_4_BYTES;
 	static const Enum DOUBLE;
 
 	/* Primitives: */
@@ -258,11 +261,11 @@ public:
 	static const Enum SELECT;
 
 	/* Feedback */
-	static const Enum _2D;
-	static const Enum _3D;
-	static const Enum _3D_COLOR;
-	static const Enum _3D_COLOR_TEXTURE;
-	static const Enum _4D_COLOR_TEXTURE;
+	static const Enum M_2D;
+	static const Enum M_3D;
+	static const Enum M_3D_COLOR;
+	static const Enum M_3D_COLOR_TEXTURE;
+	static const Enum M_4D_COLOR_TEXTURE;
 	static const Enum POINT_TOKEN;
 	static const Enum LINE_TOKEN;
 	static const Enum LINE_RESET_TOKEN;
@@ -441,7 +444,7 @@ public:
 	static const Enum MAP2_GRID_SEGMENTS;
 	static const Enum COEFF;
 	static const Enum ORDER;
-	static const Enum _DOMAIN; /* FIXME: Conflicts with something? */
+	static const Enum M_DOMAIN;
 
 	/* Hints */
 	static const Enum PERSPECTIVE_CORRECTION_HINT;
@@ -1372,89 +1375,93 @@ public:
 	typedef void(DisableFunc)(Enum capability);
 
 
+	/**
+	 * @brief Constructor, loads OpenGL functions into methods. */
 	Gl();
 
+	/* Methods are basically OpenGL functions. No need to document them, their 
+	 * documentation can be found online on www.khronos.org or https://docs.gl/ */
 
-	GetErrorFunc *_GetError = nullptr;
+	GetErrorFunc *getError = nullptr;
 
-	ViewportFunc *_Viewport = nullptr;
-	ClearFunc *_Clear = nullptr;
-	GetBooleanvFunc *_GetBooleanv = nullptr;
-	GetFloatvFunc *_GetFloatv = nullptr;
-	GetIntegervFunc *_GetIntegerv = nullptr;
+	ViewportFunc *viewport = nullptr;
+	ClearFunc *clear = nullptr;
+	GetBooleanvFunc *getBooleanv = nullptr;
+	GetFloatvFunc *getFloatv = nullptr;
+	GetIntegervFunc *getIntegerv = nullptr;
 
-	GenBuffersFunc *_GenBuffers = nullptr;
-	DeleteBuffersFunc *_DeleteBuffers = nullptr;
-	BindBufferFunc *_BindBuffer = nullptr;
-	BufferDataFunc *_BufferData = nullptr;
-	MapBufferFunc *_MapBuffer = nullptr;
-	UnmapBufferFunc *_UnmapBuffer = nullptr;
-	VertexAttribPointerFunc *_VertexAttribPointer = nullptr;
-	EnableVertexAttribArrayFunc *_EnableVertexAttribArray = nullptr;
-	DisableVertexAttribArrayFunc *_DisableVertexAttribArray = nullptr;
-	DrawArraysFunc *_DrawArrays = nullptr;
-	DrawElementsFunc *_DrawElements = nullptr;
+	GenBuffersFunc *genBuffers = nullptr;
+	DeleteBuffersFunc *deleteBuffers = nullptr;
+	BindBufferFunc *bindBuffer = nullptr;
+	BufferDataFunc *bufferData = nullptr;
+	MapBufferFunc *mapBuffer = nullptr;
+	UnmapBufferFunc *unmapBuffer = nullptr;
+	VertexAttribPointerFunc *vertexAttribPointer = nullptr;
+	EnableVertexAttribArrayFunc *enableVertexAttribArray = nullptr;
+	DisableVertexAttribArrayFunc *disableVertexAttribArray = nullptr;
+	DrawArraysFunc *drawArrays = nullptr;
+	DrawElementsFunc *drawElements = nullptr;
 
-	CreateShaderFunc *_CreateShader = nullptr;
-	DeleteShaderFunc *_DeleteShader = nullptr;
-	ShaderSourceFunc *_ShaderSource = nullptr;
-	CompileShaderFunc *_CompileShader = nullptr;
-	AttachShaderFunc *_AttachShader = nullptr;
-	GetShaderivFunc *_GetShaderiv = nullptr;
-	GetShaderInfoLogFunc *_GetShaderInfoLog = nullptr;
+	CreateShaderFunc *createShader = nullptr;
+	DeleteShaderFunc *deleteShader = nullptr;
+	ShaderSourceFunc *shaderSource = nullptr;
+	CompileShaderFunc *compileShader = nullptr;
+	AttachShaderFunc *attachShader = nullptr;
+	GetShaderivFunc *getShaderiv = nullptr;
+	GetShaderInfoLogFunc *getShaderInfoLog = nullptr;
 
-	CreateProgramFunc *_CreateProgram = nullptr;
-	DeleteProgramFunc *_DeleteProgram = nullptr;
-	LinkProgramFunc *_LinkProgram = nullptr;
-	ValidateProgramFunc *_ValidateProgram = nullptr;
-	UseProgramFunc *_UseProgram = nullptr;
-	GetProgramivFunc *_GetProgramiv = nullptr;
-	GetProgramInfoLogFunc *_GetProgramInfoLog = nullptr;
+	CreateProgramFunc *createProgram = nullptr;
+	DeleteProgramFunc *deleteProgram = nullptr;
+	LinkProgramFunc *linkProgram = nullptr;
+	ValidateProgramFunc *validateProgram = nullptr;
+	UseProgramFunc *useProgram = nullptr;
+	GetProgramivFunc *getProgramiv = nullptr;
+	GetProgramInfoLogFunc *getProgramInfoLog = nullptr;
 
-	GetUniformLocationFunc *_GetUniformLocation = nullptr;
-	GetActiveUniformFunc *_GetActiveUniform = nullptr;
-	GetActiveAttribFunc *_GetActiveAttrib = nullptr;
-	Uniform1fFunc *_Uniform1f = nullptr;
-	Uniform2fFunc *_Uniform2f = nullptr;
-	Uniform3fFunc *_Uniform3f = nullptr;
-	Uniform4fFunc *_Uniform4f = nullptr;
-	Uniform1iFunc *_Uniform1i = nullptr;
-	Uniform2iFunc *_Uniform2i = nullptr;
-	Uniform3iFunc *_Uniform3i = nullptr;
-	Uniform4iFunc *_Uniform4i = nullptr;
-	Uniform1fvFunc *_Uniform1fv = nullptr;
-	Uniform2fvFunc *_Uniform2fv = nullptr;
-	Uniform3fvFunc *_Uniform3fv = nullptr;
-	Uniform4fvFunc *_Uniform4fv = nullptr;
-	Uniform1ivFunc *_Uniform1iv = nullptr;
-	Uniform2ivFunc *_Uniform2iv = nullptr;
-	Uniform3ivFunc *_Uniform3iv = nullptr;
-	Uniform4ivFunc *_Uniform4iv = nullptr;
-	UniformMatrix2fvFunc *_UniformMatrix2fv = nullptr;
-	UniformMatrix3fvFunc *_UniformMatrix3fv = nullptr;
-	UniformMatrix4fvFunc *_UniformMatrix4fv = nullptr;
+	GetUniformLocationFunc *getUniformLocation = nullptr;
+	GetActiveUniformFunc *getActiveUniform = nullptr;
+	GetActiveAttribFunc *getActiveAttrib = nullptr;
+	Uniform1fFunc *uniform1f = nullptr;
+	Uniform2fFunc *uniform2f = nullptr;
+	Uniform3fFunc *uniform3f = nullptr;
+	Uniform4fFunc *uniform4f = nullptr;
+	Uniform1iFunc *uniform1i = nullptr;
+	Uniform2iFunc *uniform2i = nullptr;
+	Uniform3iFunc *uniform3i = nullptr;
+	Uniform4iFunc *uniform4i = nullptr;
+	Uniform1fvFunc *uniform1fv = nullptr;
+	Uniform2fvFunc *uniform2fv = nullptr;
+	Uniform3fvFunc *uniform3fv = nullptr;
+	Uniform4fvFunc *uniform4fv = nullptr;
+	Uniform1ivFunc *uniform1iv = nullptr;
+	Uniform2ivFunc *uniform2iv = nullptr;
+	Uniform3ivFunc *uniform3iv = nullptr;
+	Uniform4ivFunc *uniform4iv = nullptr;
+	UniformMatrix2fvFunc *uniformMatrix2fv = nullptr;
+	UniformMatrix3fvFunc *uniformMatrix3fv = nullptr;
+	UniformMatrix4fvFunc *uniformMatrix4fv = nullptr;
 
-	GenTexturesFunc *_GenTextures = nullptr;
-	DeleteTexturesFunc *_DeleteTextures = nullptr;
-	BindTextureFunc *_BindTexture = nullptr;
-	TexImage2DFunc *_TexImage2D = nullptr;
-	TexParameterfFunc *_TexParameterf = nullptr;
-	TexParameteriFunc *_TexParameteri = nullptr;
-	TexParameterfvFunc *_TexParameterfv = nullptr;
-	TexParameterivFunc *_TexParameteriv = nullptr;
-	ActiveTextureFunc *_ActiveTexture = nullptr;
+	GenTexturesFunc *genTextures = nullptr;
+	DeleteTexturesFunc *deleteTextures = nullptr;
+	BindTextureFunc *bindTexture = nullptr;
+	TexImage2DFunc *texImage2D = nullptr;
+	TexParameterfFunc *texParameterf = nullptr;
+	TexParameteriFunc *texParameteri = nullptr;
+	TexParameterfvFunc *texParameterfv = nullptr;
+	TexParameterivFunc *texParameteriv = nullptr;
+	ActiveTextureFunc *activeTexture = nullptr;
 
-	GenFramebuffersFunc *_GenFramebuffers = nullptr;
-	DeleteFramebuffersFunc *_DeleteFramebuffers = nullptr;
-	BindFramebufferFunc *_BindFramebuffer = nullptr;
-	FramebufferTexture2DFunc *_FramebufferTexture2D = nullptr;
-	CheckFramebufferStatusFunc *_CheckFramebufferStatus = nullptr;
-	ReadPixelsFunc *_ReadPixels = nullptr;
+	GenFramebuffersFunc *genFramebuffers = nullptr;
+	DeleteFramebuffersFunc *deleteFramebuffers = nullptr;
+	BindFramebufferFunc *bindFramebuffer = nullptr;
+	FramebufferTexture2DFunc *framebufferTexture2D = nullptr;
+	CheckFramebufferStatusFunc *checkFramebufferStatus = nullptr;
+	ReadPixelsFunc *readPixels = nullptr;
 
-	FrontFaceFunc *_FrontFace = nullptr;
-	CullFaceFunc *_CullFace = nullptr;
-	EnableFunc *_Enable = nullptr;
-	DisableFunc *_Disable = nullptr;
+	FrontFaceFunc *frontFace = nullptr;
+	CullFaceFunc *cullFace = nullptr;
+	EnableFunc *enable = nullptr;
+	DisableFunc *disable = nullptr;
 };
 
 extern Gl gl;

@@ -17,53 +17,127 @@
 
 namespace ATD {
 
+/**
+ * @brief Linear 3D transform
+ * @class ... */
 class Transform3D
 {
 public:
 
+	/**
+	 * @brief ...
+	 * @param scale    - ...
+	 * @param rotation - ...
+	 * @param offset   - ... */
 	Transform3D(const Vector3D &scale = Vector3D(1., 1., 1.), 
-			const Quaternion &rotation = Quaternion::Rotation(), 
+			const Quaternion &rotation = Quaternion::rotation(), 
 			const Vector3D &offset = Vector3D());
 
+	/**
+	 * @brief ...
+	 * @param other - ... */
 	Transform3D(const Transform3D &other);
 
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline const Vector3D &scale() const
+	{ return m_scale; }
 
-	Vector3D Scale() const;
+	/**
+	 * @brief ...
+	 * @param scale - ... */
+	void setScale(const Vector3D &scale);
 
-	void SetScale(const Vector3D &scale);
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline const Quaternion &rotation() const
+	{ return m_rotation; }
 
-	Quaternion Rotation() const;
+	/**
+	 * @brief ...
+	 * @param rotation - ... */
+	void setRotation(const Quaternion &rotation);
 
-	void SetRotation(const Quaternion &rotation);
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline const Vector3D &offset() const
+	{ return m_offset; }
 
-	Vector3D Offset() const;
+	/**
+	 * @brief ...
+	 * @param offset - ... */
+	void setOffset(const Vector3D &offset);
 
-	void SetOffset(const Vector3D &offset);
+	/**
+	 * @brief Update internally cached matrix if needed. */
+	void flushMatrix() const;
 
+	/**
+	 * @brief Update internally cached reverse matrix if needed. */
+	void flushReverseMatrix() const;
 
-	Vector3D Apply(const Vector3D &target) const;
+	/**
+	 * @brief ...
+	 * @param target - ...
+	 * @return ... */
+	Vector3D apply(const Vector3D &target) const;
 
-	Vector3D ApplyReverse(const Vector3D &target) const;
+	/**
+	 * @brief ...
+	 * @param target - ...
+	 * @return ... */
+	Vector3D applyReverse(const Vector3D &target) const;
 
-	Matrix4F GetMatrix() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline const Matrix4F &matrix() const
+	{ flushMatrix(); return m_matrix; }
 
-	Matrix4F GetMatrixReverse() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	inline const Matrix4F &reverseMatrix() const
+	{ flushReverseMatrix(); return m_reverseMatrix; }
 
 protected:
-	Matrix4F GetMatrixScale() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	Matrix4F getScaleMatrix() const;
 
-	Matrix4F GetMatrixScaleReverse() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	Matrix4F getReverseScaleMatrix() const;
 
-	Matrix4F GetMatrixRotation() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	Matrix4F getRotationMatrix() const;
 
-	Matrix4F GetMatrixRotationReverse() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	Matrix4F getReverseRotationMatrix() const;
 
-	Matrix4F GetMatrixOffset() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	Matrix4F getOffsetMatrix() const;
 
-	Matrix4F GetMatrixOffsetReverse() const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	Matrix4F getReverseOffsetMatrix() const;
 
 protected:
-	virtual void InvalidateCache() const;
+	/**
+	 * @brief Invalidate both cached matrices. */
+	virtual void invalidateCache() const;
 
 private:
 	Vector3D m_scale;
@@ -72,8 +146,13 @@ private:
 
 	mutable Matrix4F m_matrix;
 	mutable bool m_matrixVld;
+
+	mutable Matrix4F m_reverseMatrix;
+	mutable bool m_reverseMatrixVld;
 };
 
+/**
+ * @brief ... */
 class Projection3D : public Transform3D
 {
 public:
@@ -82,40 +161,73 @@ public:
 
 	static const double DFT_Z_NEAR;
 	static const double DFT_Z_FAR;
-	static const double DFT_FIELD_OF_VIEW_ANGLE_FRC;
+	static const double DFT_FOV_ANGLE_FRC;
 
-
-	Projection3D(const Transform3D &transform = Transform3D(), 
-			double zNear = DFT_Z_NEAR, 
-			double zFar = DFT_Z_FAR, 
-			double fieldOfViewAngleFrc = DFT_FIELD_OF_VIEW_ANGLE_FRC);
-
-	Projection3D(const Projection3D &other);
-
-	/* TODO: Setters/getters for zNear, zFar, fieldOfViewAngleFrc */
 
 	/**
 	 * @brief ...
-	 * @param aspectRatio - screen width / height
+	 * @param transform   - ...
+	 * @param zNear       - distance to the near 'wall'
+	 * @param zFar        - distance to the far 'wall'
+	 * @param fovAngleFrc - field of view angle */
+	Projection3D(const Transform3D &transform = Transform3D(), 
+			double zNear = DFT_Z_NEAR, 
+			double zFar = DFT_Z_FAR, 
+			double fovAngleFrc = DFT_FOV_ANGLE_FRC);
+
+	/**
+	 * @brief ...
+	 * @param other - ... */
+	Projection3D(const Projection3D &other);
+
+	/* For a while no setters/getters for zNear, zFar, fovAngleFrc. */
+
+	/**
+	 * @brief ...
+	 * @param aspectRatio - screen width / height */
+	void setAspectRatio(double aspectRatio) const;
+
+	/**
+	 * @brief ... */
+	void flushMatrix() const;
+
+	/**
+	 * @brief ...
 	 * @return ... */
-	Matrix4F GetMatrix(double aspectRatio = 1.) const;
+	inline const Matrix4F &matrix() const
+	{ flushMatrix(); return m_resultMatrix; }
+
+	// TODO: Get rid of
+	// inline const Matrix4F &matrix(double aspectRatio) const
+	// { setAspectRatio(aspectRatio); flushMatrix(); return m_resultMatrix; }
 
 protected:
-	Matrix4F GetMatrixPerspective(double aspectRatio) const;
+	/**
+	 * @brief ...
+	 * @return ... */
+	Matrix4F getPerspectiveMatrix() const;
 
 protected:
-	virtual void InvalidateCache() const;
+	/**
+	 * @brief ... */
+	virtual void invalidateCache() const;
+
+	/**
+	 * @brief ... */
+	void invalidateResultCache() const;
 
 private:
-	Matrix4F GetMatrixReverse() const = delete;
+	Matrix4F reverseMatrix() const = delete;
+	void flushReverseMatrix() const = delete;
 
 
 	double m_zNear;
 	double m_zFar;
-	double m_fieldOfViewAngleFrc;
+	double m_fovAngleFrc;
 
-	mutable Matrix4F m_matrixReverse;
-	mutable bool m_matrixReverseVld;
+	mutable double m_aspectRatio;
+	mutable Matrix4F m_resultMatrix;
+	mutable bool m_resultMatrixVld;
 };
 
 } /* namespace ATD */
