@@ -2,7 +2,7 @@
 This is my personal replacement of SFML.
 
 ## Version
-0.1.0
+0.1.1
 
 ## Languages
 * C++11 (main)
@@ -63,12 +63,10 @@ tree-like.
 =----------=
 
 ### General
-* **TODO:** Refactor: functions and methods -> camelCase.
+* **TODO:** Fix test build scripts.
 * **TODO:** Basic documentation.
 * **TODO:** Audio module.
 * **TODO:** Try using Doxygen.
-* **TODO:** Cache resolved headers while building the project.
-* **TODO:** Refactor build system for tests and apps.
 
 ### Core module
 * Basic math: 2D, 3D, 4D vectors, 4D matrixes.
@@ -133,5 +131,8 @@ VertexBuffer2D and VertexBuffer3D.
 2. Tests with 3-D model are named Model3D and Model3DLight.
 3. `make -C Build/` builds the library, `make -C Test/Model3D/` builds 
 the test. Library shall be built before the test.
+4. Model3DLight is controlled via arrows, camera WASD+QE, 123 for 
+toggling lights.
+5. Model3D camera is controlled via WASD+QE.
 
 

@@ -2,8 +2,8 @@
 # Shall be predefined:
 
 # ROOTDIR - root dir for app itself
-# BUILDDIR - build dir for the app
-# NAME
+# BUILDDIR - dir with build scripts
+# NAME - the name of the app
 # LIBDIR - dir with library binaries
 # INCDIR - dir with library include headers
 
@@ -62,15 +62,26 @@ BINARY := $(BINDIR)/$(NAME)
 SRCDATA := $(call collect-files,$(DATADIR))
 BINDATA := $(patsubst $(DATADIR)/%,$(BINDIR)/%,$(SRCDATA))
 
+CURDIR := $(shell pwd)
+
 DIRS += $(patsubst %/,%,$(dir $(OBJECTS)))
 DIRS += $(patsubst %/,%,$(dir $(BINDATA)))
 DIRS := $(sort $(DIRS))
 
-CURDIR := $(shell pwd)
-
+TRACKMASTERNAME := track.master
 TRACKDIR := $(OBJDIR)/TRACKER
-TRACKMASTER := $(TRACKDIR)/track.master
+TRACKMASTER := $(TRACKDIR)/$(TRACKMASTERNAME)
 TRACKDIRSRC := $(TRACKDIR)/$(notdir $(SRCDIR))
+
+# Unconditionally update all the trackers.
+TRACKRESULT := $(shell \
+	chmod ugo+x ./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh; \
+	./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh \
+		--source-dir $(SRCDIR) \
+		--tracker-dir $(TRACKDIR) \
+		--source-files $(call cast-to-comma-list,$(SOURCES)) \
+		--sysinclude-dirs $(SRCDIR),$(INCDIR) \
+		--master-name $(TRACKMASTERNAME))
 
 
 # Compilation vars:
@@ -97,7 +108,7 @@ LDFLAGS += $(addprefix -l,$(LIBS))
 
 # Bin:
 
-bin: $(TRACKMASTER) $(BINARY) $(BINDATA)
+bin: $(BINARY) $(BINDATA)
 
 $(BINARY): $(OBJECTS) \
 	$(LIBFILES) \
@@ -112,19 +123,6 @@ $(OBJDIR)/%.cpp.o: $(SRCDIR)/%.cpp \
 $(BINDATA): $$(patsubst $$(BINDIR)/%,$$(DATADIR)/%,$$@) \
 	| $$(@D)
 	cp $(patsubst $(BINDIR)/%,$(DATADIR)/%,$@) $@
-
-
-# Tracker:
-
-tracker: $(TRACKMASTER)
-
-$(TRACKMASTER): $(FILES)
-	chmod ugo+x ./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh
-	./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh \
-		--source-dir $(SRCDIR) \
-		--tracker-dir $(TRACKDIR) \
-		--source-files $(call cast-to-comma-list,$(SOURCES)) \
-		--sysinclude-dirs $(INCDIR)
 
 
 # Clean:

@@ -174,7 +174,7 @@ void ATD::VertexBuffer2D::drawSelfInternal(
 				Gl::FALSE, 
 				static_cast<Gl::Sizei>(sizeof(Vertex2D::GlVertex)), 
 				reinterpret_cast<const void *>(0));
-	
+
 		/* texCoords are set optionally */
 		if (attrIndices.texCoordsAreRequired) {
 			gl.vertexAttribPointer(attrIndices.texCoordsIndex, 
@@ -184,7 +184,7 @@ void ATD::VertexBuffer2D::drawSelfInternal(
 					static_cast<Gl::Sizei>(sizeof(Vertex2D::GlVertex)), 
 					reinterpret_cast<const void *>(sizeof(Vector2F)));
 		}
-	
+
 		/* color is set optionally */
 		if (attrIndices.colorIsRequired) {
 			gl.vertexAttribPointer(attrIndices.colorIndex, 

@@ -10,17 +10,63 @@ INCLUDE_DIRS=""
 SYSINCLUDE_DIRS=""
 
 # Arguments:
+# $1 - tracker file
+# $2 - source file
+fn_UPD_TRACKER_FROM_SRC(){
+	mkdir -p $(dirname "$1");
+	rm -f "$1";
+	touch "$1";
+
+	# Get system includes:
+	src_sysheaders=$(cat $2 | sed -rn -e "s@(^\\#include <)([^>]*)(>)@\\2@p");
+	# echo "DBG: src_sysheaders $src_sysheaders";
+	# echo "DBG:";
+
+	for src_header in $src_sysheaders; do
+		for inc_dir in $SYSINCLUDE_DIRS; do
+			hdr_file=$inc_dir/$src_header;
+			if [ -f "$hdr_file" ]; then
+				echo "$inc_dir:$hdr_file" >> "$1";
+				break;
+			fi;
+		done;
+	done;
+
+	# Get regular includes:
+	src_regheaders=$(cat "$2" | sed -rn -e "s@(^\\#include \")([^\"]*)(\")@\\2@p");
+	# echo "DBG: src_regheaders $src_regheaders";
+	# echo "DBG:";
+
+	for src_header in $src_regheaders; do
+		hdr_file=$(dirname "$2")/"$src_header";
+		if [ -f "$hdr_file" ]; then
+			echo "$root_dir:$hdr_file" >> "$1";
+		else
+			for inc_dir in $INCLUDE_DIRS; do
+				hdr_file="$inc_dir"/"$src_header";
+				if [ -f "$hdr_file" ]; then
+					echo "$inc_dir:$hdr_file" >> "$1";
+					break;
+				fi;
+			done;
+		fi;
+	done;
+}
+
+# Arguments:
 # $1 - root dir (either $SRC_DIR or one of $(INCLUDE_DIRS) $(SYSINCLUDE_DIRS))
 # $2 - source file path
 fn_UPD_INCLUDE_TRACKERS_RC(){
-	local root_dir=$1;
-	local src_file=$2;
+	root_dir=$1;
+	src_file=$2;
 
-	local root_base=$(basename "$root_dir")
+	root_base=$(basename "$root_dir")
 
+	# Must survive recursion
 	local trk_file=$(echo "$src_file" | \
 		sed -rn -e "s@($root_dir/)(.*)@$TRK_DIR/$root_base/\\2.tracker@p");
 
+	# Must survive recursion
 	local trk_marker=$(echo "$trk_file" | \
 		sed -rn -e "s@(.*)(\\.tracker\$)@\\1.marker@p");
 
@@ -33,64 +79,26 @@ fn_UPD_INCLUDE_TRACKERS_RC(){
 
 	# Update current tracker file, if it is older, than the source.
 	if [ "$trk_file" -ot "$src_file" ]; then
-		mkdir -p $(dirname "$trk_file");
-		rm -f "$trk_file";
-		touch "$trk_file";
-
-		# Get system includes:
-		local src_sysheaders=$(cat $src_file | \
-			sed -rn -e "s@(^\\#include <)([^>]*)(>)@\\2@p");
-		# echo "DBG: src_sysheaders $src_sysheaders";
-		# echo "DBG:";
-
-		for src_header in $src_sysheaders; do
-			for inc_dir in $SYSINCLUDE_DIRS; do
-				local hdr_file=$inc_dir/$src_header;
-				if [ -f "$hdr_file" ]; then
-					echo "$inc_dir:$hdr_file" >> "$trk_file";
-					break;
-				fi;
-			done;
-		done;
-
-		# Get regular includes:
-		local src_regheaders=$(cat "$src_file" | \
-			sed -rn -e "s@(^\\#include \")([^\"]*)(\")@\\2@p");
-		# echo "DBG: src_regheaders $src_regheaders";
-		# echo "DBG:";
-
-		for src_header in $src_regheaders; do
-			local hdr_file=$(dirname "$src_file")/"$src_header";
-			if [ -f "$hdr_file" ]; then
-				echo "$root_dir:$hdr_file" >> "$trk_file";
-			else
-				for inc_dir in $INCLUDE_DIRS; do
-					hdr_file="$inc_dir"/"$src_header";
-					if [ -f "$hdr_file" ]; then
-						echo "$inc_dir:$hdr_file" >> "$trk_file";
-						break;
-					fi;
-				done;
-			fi;
-		done;
+		fn_UPD_TRACKER_FROM_SRC "$trk_file" "$src_file"
 	fi;
 
 	# Now trk_file exists and is full of fresh paths to all the includes.
 	# Time to apply the recursion!
 	local src_hdr_files=$(cat "$trk_file");
 	for child_paths_str in $src_hdr_files; do
-		local child_paths=(${child_paths_str//:/ });
+		child_paths=(${child_paths_str//:/ });
 
-		local child_root_dir=${child_paths[0]};
-		local child_src_file=${child_paths[1]};
+		child_root_dir=${child_paths[0]};
+		child_src_file=${child_paths[1]};
 
-		local child_root_base=$(basename "$child_root_dir");
+		child_root_base=$(basename "$child_root_dir");
 
+		# Must survive recursion
 		local child_trk_file=$(echo "$child_src_file" | \
 			sed -rn -e \
 			"s@($child_root_dir/)(.*)@$TRK_DIR/$child_root_base/\\2.tracker@p");
 
-		local child_trk_marker=$(echo "$child_trk_file" | \
+		child_trk_marker=$(echo "$child_trk_file" | \
 			sed -rn -e "s@(.*)(.tracker\$)@\\1.marker@p");
 
 		# echo "DBG: child_root_dir $child_root_dir";
@@ -105,10 +113,11 @@ fn_UPD_INCLUDE_TRACKERS_RC(){
 			# echo "DBG: fn_UPD_INCLUDE_TRACKERS_RC args: $child_src_file";
 			# echo "DBG:";
 			fn_UPD_INCLUDE_TRACKERS_RC $child_root_dir $child_src_file;
-			if [ "$trk_file" -ot "$child_trk_file" ]; then
-				touch "$trk_file";
-			fi;
 		fi;
+		if [ "$trk_file" -ot "$child_trk_file" ]; then
+			touch "$trk_file";
+		fi;
+
 	done;
 
 	# Now all the subtree of the tracker is fresh.
@@ -155,6 +164,11 @@ while [[ $# -gt 0 ]]; do
 			shift;
 			shift;
 			;;
+		--master-name) # Track master filename
+			TRK_MASTER_NAME=$2;
+			shift;
+			shift;
+			;;
 		*)
 			SPIT_BACK+=$1; # remember to spit $1 back
 			shift; # but for now swallow it
@@ -174,11 +188,9 @@ set -- "${SPIT_BACK[@]}"; # spit back everything, that is not ours
 mkdir -p $TRK_DIR;
 touch $TRK_DIR/$TRK_MASTER_NAME;
 for file in $SRC_FILES; do
-	if [ -n "$(echo "$file" | grep '.*\.cpp')" ]; then
-		# echo "DBG: fn_UPD_INCLUDE_TRACKERS_RC args: $SRC_DIR $file";
-		# echo "DBG:";
-		fn_UPD_INCLUDE_TRACKERS_RC $SRC_DIR $file;
-	fi;
+	# echo "DBG: fn_UPD_INCLUDE_TRACKERS_RC args: $SRC_DIR $file";
+	# echo "DBG:";
+	fn_UPD_INCLUDE_TRACKERS_RC $SRC_DIR $file;
 done;
 
 

@@ -1,12 +1,12 @@
 
 # Shall be predefined:
 
-# ROOTDIR
-# BUILDDIR
-# NAME
+# ROOTDIR - root dir for library and tests
+# BUILDDIR - dir with build scripts
+# NAME - the name of the lib component
 
-# LIBS
-# ATD_LIBS
+# LIBS - libs, the component depends on
+# ATD_LIBS - other ATD components, the current one depends on
 
 
 # Primary vars:
@@ -47,11 +47,9 @@ lowercase = $(foreach wrd,$(1),$(shell \
 # Make library .so filename from a component name.
 comp-bin-so = $(patsubst %,$(LIBDIR)/libatd-%.so,$(call lowercase,$(1)))
 
-# List files if exist
-list-existing-files = $(foreach wrd,$(1),$(shell \
-	if [ -f $(wrd) ];\
-		then echo "$(wrd)";\
-	fi;\
+# List only files that exist from a given list
+list-existing-files=$(foreach wrd,$(1),$(shell \
+	if [ -f $(wrd) ]; then echo "$(wrd)"; fi;\
 ))
 
 
@@ -66,9 +64,20 @@ BINARY := $(call comp-bin-so,$(NAME))
 DIRS += $(patsubst %/,%,$(dir $(OBJECTS)))
 DIRS := $(sort $(DIRS))
 
+TRACKMASTERNAME := track-$(call lowercase,$(NAME)).master
 TRACKDIR := $(OBJDIR)/TRACKER
-TRACKMASTER := $(TRACKDIR)/track.master
+TRACKMASTER := $(TRACKDIR)/$(TRACKMASTERNAME)
 TRACKDIRSRC := $(TRACKDIR)/$(notdir $(SRCDIR))
+
+# Unconditionally update all the trackers.
+TRACKRESULT := $(shell \
+	chmod ugo+x ./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh; \
+	./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh \
+		--source-dir $(SRCDIR) \
+		--tracker-dir $(TRACKDIR) \
+		--source-files $(call cast-to-comma-list,$(SOURCES)) \
+		--sysinclude-dirs $(SRCDIR),$(INCDIR) \
+		--master-name $(TRACKMASTERNAME))
 
 
 # Compilation vars:
@@ -92,14 +101,14 @@ LDFLAGS += $(addprefix -latd-,$(ATDLIBS))
 
 # Targets:
 
-.PHONY: lib tracker clean
+.PHONY: lib clean
 .SECONDEXPANSION:
 
 
 # Lib:
 
 # Do not change prerequisites order here!
-lib: $(TRACKMASTER) $(BINARY)
+lib: $(BINARY)
 
 # Black magic with linker requires cd. I don't know exactly, why, but it requires.
 #
@@ -117,19 +126,6 @@ $(OBJDIR)/%.cpp.o: $(SRCDIR)/%.cpp \
 	$$(call list-existing-files,$$(TRACKDIRSRC)/%.cpp.tracker) \
 	| $$(@D)
 	$(CXX) -c $(CFLAGS) $(INCFLAGS) -o $@ $<
-
-
-# Tracker:
-
-tracker: $(TRACKMASTER)
-
-$(TRACKMASTER): $(FILES)
-	chmod ugo+x ./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh
-	./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh \
-		--source-dir $(SRCDIR) \
-		--tracker-dir $(TRACKDIR) \
-		--source-files $(call cast-to-comma-list,$(filter %.cpp,$(FILES))) \
-		--sysinclude-dirs $(SRCDIR),$(INCDIR)
 
 
 # Clean:

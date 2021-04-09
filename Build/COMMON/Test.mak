@@ -1,9 +1,9 @@
 
 # Shall be predefined:
 
-# ROOTDIR
-# BUILDDIR
-# NAME
+# ROOTDIR - root dir for library and tests
+# BUILDDIR - dir with build scripts
+# NAME - the name of the test
 
 # DEFINES
 # LIBS
@@ -40,11 +40,9 @@ collect-files = $(foreach directory,$(1),$(shell \
 # Cast a list to comma-separated list.
 cast-to-comma-list = $(subst $(SPACE),$(COMMA),$(strip $(1)))
 
-# List files if exist
-list-existing-files = $(foreach wrd,$(1),$(shell \
-	if [ -f $(wrd) ];\
-		then echo "$(wrd)";\
-	fi;\
+# List only files that exist from a given list
+list-existing-files=$(foreach wrd,$(1),$(shell \
+	if [ -f $(wrd) ]; then echo "$(wrd)"; fi;\
 ))
 
 
@@ -65,9 +63,20 @@ DIRS += $(patsubst %/,%,$(dir $(OBJECTS)))
 DIRS += $(patsubst %/,%,$(dir $(BINDATA)))
 DIRS := $(sort $(DIRS))
 
+TRACKMASTERNAME := track.master
 TRACKDIR := $(OBJDIR)/TRACKER
-TRACKMASTER := $(TRACKDIR)/track.master
+TRACKMASTER := $(TRACKDIR)/$(TRACKMASTERNAME)
 TRACKDIRSRC := $(TRACKDIR)/$(notdir $(SRCDIR))
+
+# Unconditionally update all the trackers.
+TRACKRESULT := $(shell \
+	chmod ugo+x ./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh; \
+	./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh \
+		--source-dir $(SRCDIR) \
+		--tracker-dir $(TRACKDIR) \
+		--source-files $(call cast-to-comma-list,$(SOURCES)) \
+		--sysinclude-dirs $(SRCDIR),$(INCDIR) \
+		--master-name $(TRACKMASTERNAME))
 
 
 # Compilation vars:
@@ -88,13 +97,13 @@ LDFLAGS += $(addprefix -l,$(LIBS))
 
 # Targets:
 
-.PHONY: bin tracker clean
+.PHONY: bin clean
 .SECONDEXPANSION:
 
 
 # Bin:
 
-bin: $(TRACKMASTER) $(BINARY) $(BINDATA)
+bin: $(BINARY) $(BINDATA)
 
 $(BINARY): $(OBJECTS) \
 	| $$(@D)
@@ -108,19 +117,6 @@ $(OBJDIR)/%.cpp.o: $(SRCDIR)/%.cpp \
 $(BINDATA): $$(patsubst $$(BINDIR)/%,$$(DATADIR)/%,$$@) \
 	| $$(@D)
 	cp $(patsubst $(BINDIR)/%,$(DATADIR)/%,$@) $@
-
-
-# Tracker:
-
-tracker: $(TRACKMASTER)
-
-$(TRACKMASTER): $(FILES)
-	chmod ugo+x ./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh
-	./$(BUILDDIR)/SCRIPTS/UpdateTrackers.sh \
-		--source-dir $(SRCDIR) \
-		--tracker-dir $(TRACKDIR) \
-		--source-files $(call cast-to-comma-list,$(SOURCES)) \
-		--sysinclude-dirs $(INCDIR)
 
 
 # Clean:
